@@ -1,0 +1,266 @@
+@font-face {
+  font-family: 'Avenir_Next_W1G_Italic';
+  src: url('../fonts/Аvеnіr_Nехt_W1G/Avenir\ Next\ W1G\ \ Italic.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+.form {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.8s ease;
+  will-change: opacity;
+  height: 100dvh;
+  background: #121315;
+  width: 100dvw;
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.form.visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto !important;
+  z-index: 260;
+}
+.form p{
+  color: #fff;
+}
+.form a{
+  color: #fff;
+}
+
+
+.form__content{
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100dvh;
+  padding-top: 8.125vw;
+  padding-bottom: 6.72vw;
+}
+
+.form__top, .form__center, .form__bottom{
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 0.48fr 0.88fr 1fr 1fr 0.63fr;
+}
+.form__top{
+  align-items: top;
+  justify-items: center;
+}
+
+/* 1-й ряд: 1 | 2-3-4 | 5 */
+.form__item1  { grid-column: 1 / 2; }     /* колонка 1 */
+.form__item2  { 
+  grid-column: 2 / 5;
+  padding-left: 50px; 
+}     /* колонки 2+3+4 */
+
+.form__item3  { 
+  grid-column: 5 / 6; 
+  margin-left: auto;
+}     /* колонка 5 */
+
+/* 2-й ряд: 1-2 | 3-4 | 5 */
+.form__item4  { grid-column: 1 / 3; }     /* колонки 1+2 */
+.form__item5  { grid-column: 3 / 5; }     /* колонки 3+4 */
+.form__item6  { grid-column: 5 / 6; }     /* колонка 5 */
+
+/* 3-й ряд: все 5 колонок отдельно */
+.form__item7  { grid-column: 1 / 2; }
+.form__item8  { grid-column: 2 / 3; }
+.form__item9  { grid-column: 3 / 4; }
+.form__item10 { grid-column: 4 / 5; }
+.form__item11 { grid-column: 5 / 6; }
+
+.form__content p{
+    color:white;
+    width: 100%;
+}
+
+.form__quotes{
+  font-family: 'Avenir_Next_W1G_Italic';
+  font-size: 128px;
+  opacity: 24%;
+  margin-top: -15px;
+}
+
+.form__text{
+  font-family: 'Avenir_Next_W1G_Italic';
+  font-size: 2.5vw;
+  opacity: 74%;
+  text-transform: uppercase;
+  margin-top: -80px;
+  line-height: 140%;
+  letter-spacing: -3%;
+}
+
+.form__photo{
+  width: 221px;
+  margin-bottom: 10px;
+}
+.form__name{
+  font-size: 24px;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.form__job{
+  font-size: 23px;
+  opacity: 70%;
+}
+
+.form-item{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.form__title{
+  font-size: 2.6vw;
+  text-transform: uppercase;
+}
+
+.form__info-title{
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+.form__info-content{
+  color:#fff;
+  font-size: 16px;
+  opacity: 60%;
+  text-decoration: none;
+  font-style: normal;
+}
+.form__item7{
+  display: flex;
+  flex-direction: column;
+  gap: 43px;
+}
+.form__item9, .form__item10{
+  display: flex;
+  flex-direction: column;
+}
+.form__item10{
+  justify-content: space-between;
+}
+
+.form__input{
+  background: transparent;
+  padding: 30px 0;
+  box-shadow: none;
+  border: none;
+  border-bottom: 1px solid #717173;
+  font-size: 23px;
+  color: #fff;
+  outline: none;
+}
+.form__input::placeholder{
+  color: #fff;
+  font-size: 23px;
+}
+
+.custom-checkbox__label {
+  color: #979798;
+  line-height: 1.6;
+  letter-spacing: -2%;
+}
+
+.custom-checkbox__label a {
+  color: #fff;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.custom-checkbox__label a:hover {
+  color: #979798;
+}
+
+/* Скрываем настоящий чекбокс */
+.custom-checkbox__input {
+  display: none;
+}
+
+/* Основной круг */
+.custom-checkbox__checkmark {
+  display: inline-block;
+  width: 26px;
+  height: 26px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+/* При нажатом состоянии — меняем обводку + добавляем внутренний круг */
+.custom-checkbox__input:checked + .custom-checkbox__checkmark {
+  border-color: #414244;
+}
+
+/* Внутренний маленький круг */
+.custom-checkbox__input:checked + .custom-checkbox__checkmark::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  background-color: #D9D9D9;
+  border-radius: 50%;
+  opacity: 1;
+  transition: all 0.3s ease;
+}
+
+.form__custom-checkbox{
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  justify-content: center;
+}
+
+.form__submit{
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+  margin-top: 30px;
+}
+
+.form__submit-btn{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 96px;
+  height: 96px;
+  background: #B62A2A;
+  border-radius: 50%;
+  position: absolute;
+}
+
+.form__submit-decor {
+  animation: rotateDecor 25s linear infinite;
+  transform-origin: center center;   /* вращение строго по центру */
+  z-index: 1;
+  pointer-events: auto;
+}
+
+@keyframes rotateDecor {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

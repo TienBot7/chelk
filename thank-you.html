@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Спасибо | Алхимический запрос принят</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="stylesheet" href="./css/loading.css">
+  <link rel="stylesheet" href="./css/thank-you.css">
+
+</head>
+
+<body>
+  <header class="header" style="display:none;">
+    <img src="./other/logo.svg" alt="Логотип Щёлк" class="header__logo" />
+  </header>
+
+  <main class="thank-you" style="display:none;">
+    <div class="container">
+      <div class="thank-you__wrapper">
+        <!-- Circles Background -->
+        <div class="thank-you__circles" id="circlesImage">
+          <svg class="thank-you__circles__inner" width="794" height="754" viewBox="0 0 794 754" fill="none"
+            xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path
+              d="M368.361 101.843C435.604 101.843 505.125 125.469 557.819 165.898C610.507 206.322 646.301 263.482 646.301 330.559C646.301 397.742 615.88 470.902 568.6 527.275C521.316 583.652 457.307 623.084 390.239 623.084C323.047 623.084 253.537 594.48 200.825 549.038C148.112 503.597 112.298 441.41 112.298 374.314C112.298 307.143 142.71 239.009 189.969 187.659C237.229 136.31 301.244 101.843 368.361 101.843Z"
+              stroke="#C4142D" stroke-opacity="0.49" stroke-width="2" />
+            <path
+              d="M327.725 672.044C248.739 650.88 174.515 601.248 125.343 537.173C76.1746 473.103 52.1048 394.672 73.2262 315.846C94.3752 236.918 153.138 160.56 226.408 109.23C299.684 57.8964 387.298 31.7095 466.115 52.8284C545.053 73.9795 617.697 129.46 665.31 199.425C712.924 269.39 735.432 353.724 714.306 432.569C693.16 511.485 635.988 581.947 564.316 627.388C492.644 672.828 406.59 693.176 327.725 672.044Z"
+              stroke="#C4142D" stroke-opacity="0.22" stroke-width="2" />
+            <circle cx="381.123" cy="363.375" r="243.301" stroke="#C4142D" stroke-width="2" />
+          </svg>
+          <div class="loading__counter">
+            <div class="counter-container">
+              <div class="digit" id="tens">0</div>
+              <div class="digit" id="units">0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center Content -->
+      <div class="thank-you__center">
+        <div class="thank-you__main">
+          <!-- <h1 class="thank-you__title">Спасибо</h1> -->
+        </div>
+      </div>
+
+      <!-- Bottom Content -->
+      <div class="thank-you__bottom">
+        <!-- <a href="./index.html" class="mix-btn" type="button">( Создать новую формулу )</a> -->
+        <a href="./index.html" class="mix-btn" type="button">
+          <svg width="9" height="42" viewBox="0 0 9 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M0 20.842C0 16.8777 0.723044 13.0583 2.16913 9.38382C3.61522 5.70931 5.70825 2.58137 8.4482 0L8.96194 0.47413C7.08457 2.26529 5.63214 5.03763 4.60465 8.79116C3.58985 12.5315 3.08245 16.588 3.08245 20.9605C3.08245 25.3462 3.59619 29.4158 4.62368 33.1693C5.65116 36.9229 7.10994 39.6886 9 41.4666L8.4482 42C5.77167 39.4581 3.69133 36.317 2.20719 32.5767C0.735729 28.8363 0 24.9247 0 20.842ZM9 0.434619V0.533396L8.96194 0.47413L9 0.434619Z"
+              fill="white" fill-opacity="0.5" />
+          </svg>
+          Создать новую формулу
+          <svg width="9" height="42" viewBox="0 0 9 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M9 21.158C9 25.1223 8.27696 28.9417 6.83087 32.6162C5.38478 36.2907 3.29175 39.4186 0.551797 42L0.0380555 41.5259C1.91543 39.7347 3.36787 36.9624 4.39535 33.2088C5.41015 29.4685 5.91755 25.412 5.91755 21.0395C5.91755 16.6538 5.40381 12.5842 4.37632 8.83067C3.34884 5.07714 1.89007 2.31138 3.62513e-06 0.533393L0.551801 -7.38565e-07C3.22833 2.54186 5.30867 5.68297 6.79281 9.42333C8.26427 13.1637 9 17.0753 9 21.158ZM3.79956e-08 41.5654L4.6631e-08 41.4666L0.0380555 41.5259L3.79956e-08 41.5654Z"
+              fill="white" fill-opacity="0.5" />
+          </svg>
+        </a>
+      </div>
+    </div>
+    </div>
+  </main>
+
+  <script type="importmap">
+      {
+        "imports": {
+          "@vfx-js/core": "https://esm.sh/@vfx-js/core@0.11.1"
+        }
+      }
+    </script>
+
+  <script>
+    const tensElement = document.getElementById('tens')
+    const unitsElement = document.getElementById('units')
+    let counterPercent = 0
+    let counterFrame = null
+
+    const updateDigits = (percent) => {
+      const tens = Math.floor(percent / 10)
+      const units = percent % 10
+      if (tensElement) tensElement.textContent = String(tens)
+      if (unitsElement) unitsElement.textContent = String(units)
+    }
+
+    const revealVfxCanvas = () => {
+      const canvasRoot = document.querySelector('vfx-js-canvas') || document.querySelector('canvas')
+      if (!canvasRoot) {
+        setTimeout(revealVfxCanvas, 50)
+        return
+      }
+      canvasRoot.classList.add('visible-vfx')
+    }
+
+    const animateCounter = () => {
+      if (counterPercent < 99) {
+        counterPercent += 1
+        updateDigits(counterPercent)
+        if (counterPercent === 99) {
+          const inner = document.querySelector('.thank-you__circles__inner')
+          const counter = document.querySelector('.loading__counter')
+          if (inner) {
+            inner.style.transform = 'translate(-50%, -50%) rotate(0deg)'
+          }
+          if (counter) {
+            counter.style.transition = 'opacity 0.35s ease'
+            counter.style.opacity = '0'
+            setTimeout(() => {
+              counter.style.display = 'none'
+              revealVfxCanvas()
+            }, 360)
+          } else {
+            revealVfxCanvas()
+          }
+        }
+        counterFrame = requestAnimationFrame(() => {
+          setTimeout(animateCounter, 12)
+        })
+      }
+    }
+
+    const initThankYouPage = () => {
+      const loader = document.querySelector('.loading')
+      const header = document.querySelector('header')
+      const main = document.querySelector('main')
+
+      if (header) header.style.display = ''
+      if (main) main.style.display = ''
+
+      if (!loader) return
+
+      const onTransitionEnd = (event) => {
+        if (event.propertyName !== 'opacity') return
+        loader.removeEventListener('transitionend', onTransitionEnd)
+        clearTimeout(fallback)
+        loader.remove()
+      }
+
+      const fallback = setTimeout(() => {
+        loader.removeEventListener('transitionend', onTransitionEnd)
+        loader.remove()
+      }, 1200)
+
+      if (counterFrame) cancelAnimationFrame(counterFrame)
+      updateDigits(99)
+
+      loader.addEventListener('transitionend', onTransitionEnd)
+      requestAnimationFrame(() => {
+        loader.classList.add('hide')
+      })
+    }
+
+    updateDigits(0)
+    animateCounter()
+
+    if (document.readyState === 'complete') {
+      initThankYouPage()
+    } else {
+      window.addEventListener('load', initThankYouPage)
+    }
+  </script>
+
+  <script type="module" script src="js/thank-you.js"></script>
+</body>
+
+</html>

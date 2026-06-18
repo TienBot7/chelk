@@ -1,0 +1,106 @@
+.head {
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 800ms cubic-bezier(0.2, 0, 0.1, 1), visibility 0ms linear 0ms;
+  z-index: 300;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+.head.visible {
+  opacity: 1;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+
+.viewer-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.head__title{
+    position: fixed;
+    color: white;
+    font-family: 'Comforter', sans-serif;
+    font-size: 13.020833vw;
+    pointer-events: none;
+    letter-spacing: -3%;
+}
+
+.head__title.left{
+    top: 18%;
+    left: 5%;
+}
+.head__title.right{
+    bottom: 6%;
+    right: 11%;
+}
+
+.head__description{
+    position: fixed;
+    color: white;
+    opacity: 0.5;
+    font-size: 1.042vw;
+    left: 40px;
+    bottom: 60px;
+    max-width: 450px;
+    pointer-events: none;
+    line-height: 140%;
+    letter-spacing: -4%;
+}
+
+.scroll-down {
+  position: absolute;
+  border-radius: 15px;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  bottom: 50px;
+  /* pointer-events: none; */
+  opacity: 0;
+  transition: opacity 320ms ease, transform 320ms ease, visibility 0ms linear 320ms;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  
+}
+.scroll-down__text{
+  color: #616366;
+  margin-top: 20px;
+  padding: 3px 12px;
+  border-radius: 41px;
+  font-size: 12px;
+  background: #0E0F11;
+}
+
+.head.scroll-hint-visible .scroll-down {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+.scroll-down__indicator {
+  background: #FFFFFF;
+  opacity: 70%;
+  width: 3px;
+  height: 29px;
+  position: absolute;
+  border-radius: 15px;
+  top: -29px;
+  animation: scrollDownIndicator 1.4s cubic-bezier(0.35, 0.05, 0.85, 0.3) infinite;
+}
+
+@keyframes scrollDownIndicator {
+  0% {
+    top: -29px;
+  }
+  100% {
+    top: calc(100% + 5px);
+  }
+}

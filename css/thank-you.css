@@ -1,0 +1,364 @@
+*,
+*::after,
+*::before {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+@font-face {
+  font-family: 'Comforter';
+  src: url('../fonts/Comforter/Comforter-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Avenir_Next_W1G_Medium';
+  src: url('../fonts/Аvеnіr_Nехt_W1G/Avenir_Next_W1G_Medium.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Avenir_Next_W1G_UltraLight';
+  src: url('../fonts/Аvеnіr_Nехt_W1G/Avenir_Next_W1G_UltraLight.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+
+/* Body */
+body {
+  font-family: 'Avenir_Next_W1G_Medium';
+  font-weight: 400;
+  font-style: normal;
+  background: #121315;
+  color: #fff;
+  overflow-x: hidden;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  overflow: hidden;
+}
+
+/* Typography */
+h1,
+h2 {
+  font-family: 'Comforter', cursive;
+  font-weight: 400;
+  font-style: normal;
+}
+
+/* Container */
+.container {
+  padding: 0 40px;
+}
+
+/* Header */
+.header {
+  position: fixed;
+  top: 30px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  z-index: 10;
+}
+
+.header__logo {
+  display: block;
+}
+
+/* Thank You Page */
+.thank-you {
+  width: 100%;
+  min-height: 100vh;
+}
+
+.thank-you__wrapper {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* Circles Background */
+.thank-you__circles {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  --circle-scale: 1;
+  transform: scale(var(--circle-scale));
+  transform-origin: center center;
+  transition: transform 0.35s ease;
+  z-index: 0;
+  pointer-events: none;
+  margin-left: 20px;
+  margin-top: 20px;
+}
+
+.thank-you__circles__inner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: block;
+  width: 44%;
+  height: auto;
+  max-width: 90vw;
+  max-height: 90vh;
+  transform-origin: center center;
+  transform-box: fill-box;
+  will-change: transform;
+  transform: translate(-50%, -50%) rotate(0deg);
+}
+
+.thank-you__circles__inner path {
+  transform-origin: center center;
+  transform-box: fill-box;
+  animation: rotateCW 10s linear infinite;
+}
+
+.thank-you__circles.pressed {
+  --circle-scale: 3;
+}
+
+.thank-you__circles.animate-click {
+  animation: expandThenShrink var(--click-duration, 1.4s) ease-in-out forwards;
+}
+
+vfx-js-canvas,
+canvas {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  display: block !important;
+  transition: opacity 3s ease, visibility 3s ease;
+}
+
+vfx-js-canvas.visible-vfx,
+canvas.visible-vfx {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  display: block !important;
+}
+
+@keyframes expandThenShrink {
+  0% {
+    transform: scale(1);
+  }
+  12% {
+    transform: scale(3);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes rotateCW {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Center Content */
+.thank-you__center {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  z-index: 2;
+}
+
+.thank-you__side {
+  flex: 1;
+}
+
+.thank-you__side-text {
+  opacity: 0.5;
+  font-size: 18px;
+  letter-spacing: 2px;
+}
+
+.thank-you__side--left .thank-you__side-text {
+  text-align: left;
+}
+
+.thank-you__side--right .thank-you__side-text {
+  text-align: right;
+}
+
+.thank-you__main {
+  flex: 2;
+  text-align: center;
+  position: relative;
+}
+
+.thank-you__title {
+  font-size: 250px;
+  line-height: 80%;
+  /* margin-bottom: 20px; */
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.thank-you__subtitle {
+  font-size: 64px;
+}
+
+/* Bottom Content */
+.thank-you__bottom {
+  position: absolute;
+  bottom: 50px;
+  left: 0;
+  right: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  z-index: 10;
+}
+
+.thank-you__text {
+  text-align: center;
+  max-width: 500px;
+  font-size: 16px;
+  line-height: 1.5;
+  opacity: 0.8;
+}
+
+.thank-you__button {
+  background: transparent;
+  border: 0;
+  color: #fff;
+  opacity: 0.5;
+  font-size: 16px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+  padding: 10px 20px;
+}
+
+.thank-you__button:hover {
+  opacity: 1;
+}
+
+/* Canvas от VFX между circles.svg и текстом */
+vfx-js-canvas {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
+  background: transparent !important;
+}
+canvas {
+  z-index: 0 !important;
+}
+/* Adaptive */
+@media (max-width: 1200px) {
+  .thank-you__title {
+    font-size: 180px;
+  }
+  .thank-you__subtitle {
+    font-size: 48px;
+  }
+}
+
+@media (max-width: 768px) {
+  .thank-you__title {
+    font-size: 80px;
+  }
+  .thank-you__subtitle {
+    font-size: 28px;
+  }
+  .container {
+    padding: 0 20px;
+  }
+  .thank-you__side-text {
+    font-size: 12px;
+  }
+  .thank-you__text {
+    font-size: 14px;
+    max-width: 90%;
+  }
+}
+
+.mix-btn {
+  pointer-events: auto;
+  color: #fff;
+  font-size: 12px;
+  transition: all 0.6s ease-out;
+  text-transform: uppercase;
+  opacity: 0.5;
+  width: 229px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-decoration: none;
+  font-family: 'Roboto', sans-serif;
+}
+
+.mix-btn:hover {
+  opacity: 1;
+}
+.mix-btn path {
+  transition: all 0.6s ease-out
+}
+.mix-btn:hover path{
+  fill-opacity: 1;
+}
+
+.thank-you__loading .loading__counter{
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  height: min-content;
+}
+
+.thank-you__loading .loading__wrapper{
+  position: relative;
+}
+
+.thank-you .loading__counter{
+  left: 50%;
+  top: 50%;
+  transform: translate(calc(-50% - 5px), -50%);
+  height: max-content;
+}
+
+.thank-you .thank-you__circles__inner{
+  transform: translate(-50%, -50%) rotate(0deg) scale(0.34);
+  transition: transform 1s ease;
+}
+
+.loading__counter {
+  transition: opacity 0.35s ease;
+}
+
+@media (max-width: 480px) {
+  .thank-you__title {
+    font-size: 60px;
+  }
+  .thank-you__subtitle {
+    font-size: 24px;
+  }
+  .thank-you__side-text {
+    font-size: 10px;
+  }
+}
