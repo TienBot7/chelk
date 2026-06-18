@@ -12,11 +12,11 @@
 </head>
 
 <body>
-  <header class="header" style="display:none;">
+  <header class="header">
     <img src="./other/logo.svg" alt="Логотип Щёлк" class="header__logo" />
   </header>
 
-  <main class="thank-you" style="display:none;">
+  <main class="thank-you">
     <div class="container">
       <div class="thank-you__wrapper">
         <!-- Circles Background -->
@@ -159,14 +159,14 @@
     updateDigits(0)
     animateCounter()
 
-    if (document.readyState === 'complete') {
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
       initThankYouPage()
     } else {
-      window.addEventListener('load', initThankYouPage)
+      window.addEventListener('DOMContentLoaded', initThankYouPage)
     }
   </script>
 
-  <script type="module" script src="js/thank-you.js"></script>
+  <script type="module" src="js/thank-you.js"></script>
 </body>
 
 </html>
