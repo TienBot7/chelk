@@ -428,10 +428,12 @@ function playLottieAnimation(path) {
     return
   }
   
-  // Ensure overlay is visible
-  overlay.style.display = 'flex'
-  overlay.style.visibility = 'visible'
-  overlay.style.opacity = '1'
+  // Keep overlay hidden until the Lottie is ready and the delay has passed
+  overlay.classList.remove('show')
+  overlay.style.removeProperty('display')
+  overlay.style.visibility = 'hidden'
+  overlay.style.opacity = '0'
+  overlay.style.pointerEvents = 'none'
   
   scrollArea.style.overflowY = 'auto'
   scrollArea.scrollTop = 0
@@ -530,26 +532,31 @@ function playLottieAnimation(path) {
       lottieScrollHandler = updateFrame
       scrollArea.addEventListener('scroll', lottieScrollHandler)
 
+      let revealOverlayTimeout = null
+      const showLottieOverlay = () => {
+        if (overlay.classList.contains('show')) return
+        overlay.classList.add('show')
+        overlay.style.visibility = 'visible'
+        overlay.style.opacity = '1'
+        overlay.style.pointerEvents = 'auto'
+        updateFrame()
+      }
+
       const revealLottieOverlay = () => {
-        if (!overlay.classList.contains('show')) {
-          overlay.classList.add('show')
-          updateFrame()
-        }
+        if (overlay.classList.contains('show') || revealOverlayTimeout !== null) return
+        revealOverlayTimeout = setTimeout(() => {
+          revealOverlayTimeout = null
+          showLottieOverlay()
+        }, 1200)
       }
 
-      lottieAnimation.addEventListener('DOMLoaded', revealLottieOverlay)
-      lottieAnimation.addEventListener('data_ready', revealLottieOverlay)
       lottieAnimation.addEventListener('loaded_images', revealLottieOverlay)
-
-      if (lottieAnimation && lottieAnimation.totalFrames > 0) {
-        revealLottieOverlay()
-      }
 
       setTimeout(() => {
         if (lottieAnimation && !overlay.classList.contains('show')) {
-          revealLottieOverlay()
+          showLottieOverlay()
         }
-      }, 250)
+      }, 1600)
     })
     .catch((err) => {
       console.error('❌ Failed to load lottie:', err);
