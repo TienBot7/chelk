@@ -288,7 +288,9 @@ function attachBehavior(bubble, item) {
     }, 200)
   }
 
-  inner.addEventListener('click', () => {
+  inner.addEventListener('click', (event) => {
+    event.stopPropagation()
+    event.preventDefault()
     playBubblePopSound()
     if (isGameActive()) {
       updateCursor()
@@ -356,12 +358,17 @@ function spawnBubble(item, fixedTarget, sourcePoint) {
     const bRect = bubble.getBoundingClientRect()
     const btn = document.querySelector('.bubbles-btn')
 
-    const buttonCenterX = btn
+    let buttonCenterX = btn
       ? Math.round(btn.getBoundingClientRect().left - cRect.left + btn.getBoundingClientRect().width / 2)
       : Math.round(cRect.width * 0.5)
-    const buttonCenterY = btn
+    let buttonCenterY = btn
       ? Math.round(btn.getBoundingClientRect().top - cRect.top + btn.getBoundingClientRect().height / 2)
       : Math.round(cRect.height * 0.37)
+
+    if (sourcePoint && typeof sourcePoint.sx === 'number' && typeof sourcePoint.sy === 'number') {
+      buttonCenterX = Math.round(Math.max(0, Math.min(1, sourcePoint.sx)) * cRect.width)
+      buttonCenterY = Math.round(Math.max(0, Math.min(1, sourcePoint.sy)) * cRect.height)
+    }
 
     const startLeft = Math.round(buttonCenterX - bRect.width / 2)
     const startTop = Math.round(buttonCenterY - bRect.height / 2)
@@ -458,7 +465,19 @@ function triggerBubbleSpawn({ triggeredBy, sourcePoint } = {}) {
   spawnLocked = true
   if (spawnBtn) spawnBtn.disabled = true
 
+  const headMobileMode = triggeredBy === 'head' && window.innerWidth <= 500
+  if (triggeredBy === 'head' && !sourcePoint) {
+    sourcePoint = {
+      sx: 0.5,
+      sy: window.innerWidth <= 1024 ? 0.62 : 0.48,
+    }
+  }
+
   const existing = Array.from(container.querySelectorAll('.bubble'))
+  const mobileSpawnOptions = headMobileMode
+    ? { count: 2, fixedTargets: headMobileFixedTargets, pickMode: 'headMobile' }
+    : undefined
+
   if (existing.length === 0) {
     let activeMain = null
     try {
@@ -474,15 +493,20 @@ function triggerBubbleSpawn({ triggeredBy, sourcePoint } = {}) {
     else if (nm === 'косметика') forcedGroup = itemsPurple
 
     if (forcedGroup) console.log('[bubbles] forced group by mainObject:', activeMain)
-    spawnThreeWithStagger(() => {
-      spawnLocked = false
-      if (spawnBtn) spawnBtn.disabled = false
-    }, forcedGroup, sourcePoint)
+    spawnThreeWithStagger(
+      () => {
+        spawnLocked = false
+        if (spawnBtn) spawnBtn.disabled = false
+      },
+      forcedGroup,
+      sourcePoint,
+      mobileSpawnOptions,
+    )
     return
   }
 
-  const fallDuration = 2000 // ms for translate (shorter, smoother)
-  const fadeBefore = 300 // ms before end to start fade
+  const fallDuration = 1500 // ms for translate (shorter, smoother)
+  const fadeBefore = 0 // ms before end to start fade
   existing.forEach((b) => {
     b.style.animation = 'none'
     b.style.animationPlayState = 'paused'
@@ -498,12 +522,7 @@ function triggerBubbleSpawn({ triggeredBy, sourcePoint } = {}) {
         easing: 'ease-in-out',
         fill: 'forwards',
       })
-      setTimeout(
-        () => {
-          b.style.opacity = '0'
-        },
-        Math.max(0, fallDuration - fadeBefore),
-      )
+      
       anim.onfinish = () => {
         b.style.transform = endTransform
       }
@@ -519,16 +538,11 @@ function triggerBubbleSpawn({ triggeredBy, sourcePoint } = {}) {
       b.style.transition = `transform ${fallDuration}ms ease-in, opacity 600ms linear`
       void b.offsetWidth
       b.style.transform = `translate3d(${tx}px, ${ty + fallPx}px, 0)`
-      setTimeout(
-        () => {
-          b.style.opacity = '0'
-        },
-        Math.max(0, fallDuration - fadeBefore),
-      )
+      
     }
   })
 
-  const fallWait = fallDuration + 80 // small buffer after fade
+  const fallWait = fallDuration - 500 // spawn new bubbles immediately after the fall ends
   setTimeout(() => {
     existing.forEach(removeBubbleImmediate)
     let activeMain2 = null
@@ -544,10 +558,15 @@ function triggerBubbleSpawn({ triggeredBy, sourcePoint } = {}) {
     else if (nm2 === 'косметика') forcedGroup2 = itemsPurple
     if (forcedGroup2) console.log('[bubbles] forced group by mainObject (after fall):', activeMain2)
 
-    spawnThreeWithStagger(() => {
-      spawnLocked = false
-      if (spawnBtn) spawnBtn.disabled = false
-    }, forcedGroup2, sourcePoint)
+    spawnThreeWithStagger(
+      () => {
+        spawnLocked = false
+        if (spawnBtn) spawnBtn.disabled = false
+      },
+      forcedGroup2,
+      sourcePoint,
+      mobileSpawnOptions,
+    )
   }, fallWait)
 }
 
@@ -571,14 +590,65 @@ function removeBubbleImmediate(bubble) {
   if (bubble.parentNode) bubble.parentNode.removeChild(bubble)
 }
 
-function spawnThreeWithStagger(done, forcedGroup, sourcePoint) {
+function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[arr[i], arr[j]] = [arr[j], arr[i]]
+  }
+}
+
+function pickTwoMobileHeadItems(chosenGroup) {
+  if (!Array.isArray(chosenGroup) || chosenGroup.length === 0) return []
+  const copy = chosenGroup.slice()
+  shuffleArray(copy)
+
+  const grayItems = copy.filter((item) => item && item.color === '#9E9E9E')
+  const coloredItems = copy.filter((item) => item && item.color !== '#9E9E9E')
+  if (grayItems.length > 0 && coloredItems.length > 0) {
+    return [grayItems[0], coloredItems[0]]
+  }
+
+  const picks = []
+  const colorCounts = {}
+  for (let i = 0; i < copy.length && picks.length < 2; i++) {
+    const it = copy[i]
+    const c = it && it.color ? it.color : ''
+    const cnt = colorCounts[c] || 0
+    if (cnt < 2) {
+      picks.push(it)
+      colorCounts[c] = cnt + 1
+    }
+  }
+
+  if (picks.length < 2) {
+    for (let i = 0; i < copy.length && picks.length < 2; i++) {
+      const it = copy[i]
+      if (!picks.includes(it)) picks.push(it)
+    }
+  }
+  return picks
+}
+
+const headMobileFixedTargets = [
+  { fx: 0.18, fy: 0.35 },
+  { fx: 0.78, fy: 0.27 },
+]
+
+function spawnThreeWithStagger(done, forcedGroup, sourcePoint, options = {}) {
+  const count = Number.isFinite(options.count) ? Math.max(1, Math.min(3, options.count)) : 3
   const stagger = 220 // ms between spawns
   // fixed relative target positions for the three bubbles (fractions of available area)
-  const fixedTargets = [
+  const defaultFixedTargets = [
     { fx: 0.95, fy: 0.54 },
     { fx: 0.14, fy: 0.66 },
     { fx: 0.79, fy: 0.2 },
   ]
+  const narrowFixedTargets = [
+    { fx: 0.97, fy: 0.70 },
+    { fx: 0.05, fy: 0.60 },
+    { fx: 0.79, fy: 0.38 },
+  ]
+  const fixedTargets = options.fixedTargets || (window.innerWidth <= 1024 ? narrowFixedTargets : defaultFixedTargets)
 
   const groups = [itemsGreen, itemsRed, itemsPurple]
 
@@ -592,6 +662,7 @@ function spawnThreeWithStagger(done, forcedGroup, sourcePoint) {
   // Choose group strictly based on forcedGroup or current mainObject value (no random group selection)
   let picks = null
   let chosenGroup = null
+  const pickMode = options.pickMode || 'default'
   if (Array.isArray(forcedGroup) && forcedGroup.length > 0) {
     chosenGroup = forcedGroup
   } else {
@@ -610,42 +681,47 @@ function spawnThreeWithStagger(done, forcedGroup, sourcePoint) {
     if (chosenGroup) console.log('[bubbles] chosen group by mainObject (spawn):', activeMain || '<none>')
   }
 
-  // pick first 3 items from chosenGroup (shuffle to vary order)
+  // pick items based on the requested mode
   if (chosenGroup) {
-    const copy = chosenGroup.slice()
-    shuffleArray(copy)
+    if (pickMode === 'headMobile') {
+      picks = pickTwoMobileHeadItems(chosenGroup)
+    } else {
+      const copy = chosenGroup.slice()
+      shuffleArray(copy)
 
-    // pick up to 3 items but allow at most 2 items of the same color
-    picks = []
-    const colorCounts = {}
-    for (let i = 0; i < copy.length && picks.length < 3; i++) {
-      const it = copy[i]
-      const c = it && it.color ? it.color : ''
-      const cnt = colorCounts[c] || 0
-      if (cnt < 2) {
-        picks.push(it)
-        colorCounts[c] = cnt + 1
-      }
-    }
-
-    // if we couldn't gather 3 items under the constraint, fill remaining slots ignoring color
-    if (picks.length < 3) {
+      // pick up to 3 items but allow at most 2 items of the same color
+      picks = []
+      const colorCounts = {}
       for (let i = 0; i < copy.length && picks.length < 3; i++) {
         const it = copy[i]
-        if (!picks.includes(it)) picks.push(it)
+        const c = it && it.color ? it.color : ''
+        const cnt = colorCounts[c] || 0
+        if (cnt < 2) {
+          picks.push(it)
+          colorCounts[c] = cnt + 1
+        }
+      }
+
+      // if we couldn't gather 3 items under the constraint, fill remaining slots ignoring color
+      if (picks.length < 3) {
+        for (let i = 0; i < copy.length && picks.length < 3; i++) {
+          const it = copy[i]
+          if (!picks.includes(it)) picks.push(it)
+        }
       }
     }
   }
 
-  // finally spawn the three picked items in order with stagger
-  for (let i = 0; i < 3; i++) {
+  const finalCount = Math.min(count, picks.length)
+  // finally spawn the picked items in order with stagger
+  for (let i = 0; i < finalCount; i++) {
     setTimeout(() => {
       spawnBubble(picks[i], fixedTargets[i], sourcePoint)
     }, i * stagger)
   }
 
   if (typeof done === 'function') {
-    const totalSpawnTime = (3 - 1) * stagger + 700 + 80 // last spawn start + anim duration + buffer
+    const totalSpawnTime = (finalCount - 1) * stagger + 700 + 80 // last spawn start + anim duration + buffer
     setTimeout(() => done(), totalSpawnTime)
   }
 }

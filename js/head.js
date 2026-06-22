@@ -1,21 +1,21 @@
-import * as THREE from 'three'
+import { WebGLRenderer, Scene, PerspectiveCamera, Color, AmbientLight, PointLight, Group, Raycaster, Vector2, Vector3, Box3 } from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js'
 
 // --- ИНИЦИАЛИЗАЦИЯ ---
 const canvas = document.getElementById('canvas')
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true })
+const renderer = new WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true })
 renderer.setSize(window.innerWidth, window.innerHeight)
 renderer.setPixelRatio(window.devicePixelRatio)
 renderer.setClearColor(0x121315, 1)
 renderer.shadowMap.enabled = false
 
-const scene = new THREE.Scene()
-scene.background = new THREE.Color(0x121315)
+const scene = new Scene()
+scene.background = new Color(0x121315)
 
 // === ПРЕДУСТАНОВЛЕННЫЕ НАСТРОЙКИ КАМЕРЫ ===
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000)
+const camera = new PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000)
 camera.position.set(0.0, 0.8, 0.5)
 
 const controls = new OrbitControls(camera, renderer.domElement)
@@ -33,39 +33,39 @@ controls.enableZoom = false
 // === ОСВЕЩЕНИЕ (предустановленные параметры) ===
 
 // Окружающий свет
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.35)
+const ambientLight = new AmbientLight(0xffffff, 0.35)
 scene.add(ambientLight)
 
 // Контровой левый
-const rimLeftLight = new THREE.PointLight(0xc4142d, 0.7)
+const rimLeftLight = new PointLight(0xc4142d, 0.7)
 rimLeftLight.position.set(-2.4, 1.2, -7.0)
 rimLeftLight.distance = 20
 rimLeftLight.decay = 1.0
 scene.add(rimLeftLight)
 
 // Контровой правый
-const rimRightLight = new THREE.PointLight(0xc4142d, 2.1)
+const rimRightLight = new PointLight(0xc4142d, 2.1)
 rimRightLight.position.set(2.8, -1.0, -6.0)
 rimRightLight.distance = 20
 rimRightLight.decay = 1.0
 scene.add(rimRightLight)
 
 // Передний свет (фиксированный белый)
-const frontLight = new THREE.PointLight(0xffffff, 2.5)
+const frontLight = new PointLight(0xffffff, 2.5)
 frontLight.position.set(1.4, 1.7, 3.0)
 frontLight.distance = 10
 frontLight.decay = 1.0
 scene.add(frontLight)
 
 // Fill light (фиксированный голубой)
-const fillLight = new THREE.PointLight(0x87a9fe, 0.45)
+const fillLight = new PointLight(0x87a9fe, 0.45)
 fillLight.position.set(1.2, 1.0, 2.0)
 fillLight.distance = 12
 fillLight.decay = 1.0
 scene.add(fillLight)
 
 // Группа для экспорта
-const exportGroup = new THREE.Group()
+const exportGroup = new Group()
 scene.add(exportGroup)
 exportGroup.add(ambientLight)
 exportGroup.add(rimLeftLight)
@@ -73,13 +73,13 @@ exportGroup.add(rimRightLight)
 exportGroup.add(frontLight)
 exportGroup.add(fillLight)
 
-const headHighlightLight = new THREE.PointLight(0xFFAA66, 0.0)
+const headHighlightLight = new PointLight(0xFFAA66, 0.0)
 headHighlightLight.position.set(0, 0.7, 0.5)
 headHighlightLight.distance = 3.0
 headHighlightLight.decay = 1.2
 scene.add(headHighlightLight)
 
-const headGlowLight = new THREE.PointLight(0xFF8855, 0.0)
+const headGlowLight = new PointLight(0xFF8855, 0.0)
 headGlowLight.distance = 2.5
 headGlowLight.decay = 1.5
 scene.add(headGlowLight)
@@ -88,8 +88,8 @@ exportGroup.add(headHighlightLight)
 exportGroup.add(headGlowLight)
 
 let currentModel = null
-let raycaster = new THREE.Raycaster()
-let mouseVector = new THREE.Vector2()
+let raycaster = new Raycaster()
+let mouseVector = new Vector2()
 let targetHighlightIntensity = 0
 let currentHighlightIntensity = 0
 let targetGlowIntensity = 0
@@ -180,6 +180,14 @@ try {
 // === ЗАГРУЗКА МОДЕЛИ ===
 const loader = new GLTFLoader()
 
+function getHeadModelScaleFactor() {
+  return window.innerWidth <= 1024 ? 0.78 : 1.0
+}
+
+function getHeadModelYOffset() {
+  return window.innerWidth <= 1024 ? 0.08 : -0.02
+}
+
 // Загружает модель по URL (локальный файл в проекте)
 function loadModelFromURL(url, name = '') {
 
@@ -193,20 +201,20 @@ function loadModelFromURL(url, name = '') {
 
       currentModel = gltf.scene
 
-      currentModel.position.set(0.01, -0.02, 0.01)
+      currentModel.position.set(0.01, getHeadModelYOffset(), 0.01)
       currentModel.rotation.set(0, 0, 0)
-      currentModel.scale.setScalar(1.03)
+      currentModel.scale.setScalar(1.03 * getHeadModelScaleFactor())
 
       exportGroup.add(currentModel)
 
-      const box = new THREE.Box3().setFromObject(currentModel)
+      const box = new Box3().setFromObject(currentModel)
       const modelCenterX = (box.min.x + box.max.x) / 2
       const modelCenterZ = (box.min.z + box.max.z) / 2
       const headHeight = box.max.y
       headHighlightLight.position.set(modelCenterX, headHeight - 0.1, modelCenterZ + 0.3)
       headGlowLight.position.set(modelCenterX, headHeight - 0.15, modelCenterZ + 0.25)
       findHeadMeshes(currentModel)
-      const size = box.getSize(new THREE.Vector3())
+      const size = box.getSize(new Vector3())
       try {
         if (window.preloader && typeof window.preloader.markModelLoaded === 'function') {
           window.preloader.markModelLoaded()
@@ -248,7 +256,7 @@ function findHeadMeshes(model) {
     let highestMesh = null
     model.traverse((child) => {
       if (child.isMesh) {
-        const box = new THREE.Box3().setFromObject(child)
+        const box = new Box3().setFromObject(child)
         const centerY = (box.min.y + box.max.y) / 2
         if (centerY > highestY) {
           highestY = centerY
@@ -304,7 +312,7 @@ function checkHeadHover(clientX, clientY) {
     const allIntersects = raycaster.intersectObjects(allMeshes, true)
     if (allIntersects.length > 0) {
       const hitPoint = allIntersects[0].point
-      const modelBox = new THREE.Box3().setFromObject(currentModel)
+      const modelBox = new Box3().setFromObject(currentModel)
       const headThreshold = modelBox.min.y + (modelBox.max.y - modelBox.min.y) * 0.7
       if (hitPoint.y > headThreshold) intersects = [allIntersects[0]]
     }
@@ -314,8 +322,8 @@ function checkHeadHover(clientX, clientY) {
     targetHighlightIntensity = 2.2
     targetGlowIntensity = 1.5
     const hitPoint = intersects[0].point
-    headHighlightLight.position.copy(hitPoint.clone().add(new THREE.Vector3(0.1, 0.25, 0.25)))
-    headGlowLight.position.copy(hitPoint.clone().add(new THREE.Vector3(0.05, 0.15, 0.2)))
+    headHighlightLight.position.copy(hitPoint.clone().add(new Vector3(0.1, 0.25, 0.25)))
+    headGlowLight.position.copy(hitPoint.clone().add(new Vector3(0.05, 0.15, 0.2)))
     if (renderer && renderer.domElement) renderer.domElement.style.cursor = 'pointer'
     return true
   } else {
@@ -390,9 +398,9 @@ function resetView() {
   controls.target.set(0.0, 0.6, -0.1)
   controls.update()
   if (currentModel) {
-    currentModel.position.set(0.01, -0.02, 0.01)
+    currentModel.position.set(0.01, getHeadModelYOffset(), 0.01)
     currentModel.rotation.set(0, 0, 0)
-    currentModel.scale.setScalar(1.0)
+    currentModel.scale.setScalar(1.0 * getHeadModelScaleFactor())
   }
 }
 
@@ -405,7 +413,7 @@ function exportSceneToGLB(filename = 'exported_scene.glb') {
     console.warn('Export skipped — no model loaded')
     return
   }
-  const exportScene = new THREE.Scene()
+  const exportScene = new Scene()
   exportScene.background = scene.background.clone()
   const lightsToClone = [ambientLight, rimLeftLight, rimRightLight, frontLight, fillLight]
   lightsToClone.forEach((light) => {

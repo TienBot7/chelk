@@ -74,6 +74,38 @@ const ANIMATION_DURATION = 1000;
 let scrollScaleEnabled = false;
 const MIN_MODEL_SCALE = 0.2;
 const MAX_MODEL_SCALE = 3.0;
+
+let lastTouchYForScale = null;
+
+function getResponsiveModelScaleFactor() {
+  if (window.innerWidth <= 500) return 0.55;
+  if (window.innerWidth <= 1024) return 0.65;
+  return 1;
+}
+
+function onTouchStartScale(e) {
+  if (!e.touches || !e.touches.length) return;
+  lastTouchYForScale = e.touches[0].clientY;
+}
+
+function onTouchMoveScale(e) {
+  if (!scrollScaleEnabled || !e.touches || !e.touches.length) return;
+  const currentY = e.touches[0].clientY;
+  if (lastTouchYForScale === null) {
+    lastTouchYForScale = currentY;
+    return;
+  }
+  const deltaY = lastTouchYForScale - currentY;
+  if (Math.abs(deltaY) > 2) {
+    onWheelScale({ deltaY });
+  }
+  lastTouchYForScale = currentY;
+}
+
+function onTouchEndScale() {
+  lastTouchYForScale = null;
+}
+
 // Scroll/zoom tuning
 const SCALE_SENSITIVITY = 0.00009; // legacy sensitivity (not used for time-based scaling)
 // Time-based constant scaling rate (scale units per second)
@@ -129,15 +161,15 @@ function onWheelScale(e) {
     const baseDist = inst.baseCameraDistance || cam.position.distanceTo(tgt);
     const curDist = cam.position.distanceTo(tgt);
     if (delta < 0 && curDist < baseDist) {
-      const dirBack = new THREE.Vector3().subVectors(cam.position, tgt).normalize();
+      const dirBack = new Vector3().subVectors(cam.position, tgt).normalize();
       const moveBack = Math.abs(delta) * CAMERA_MOVE_SENSITIVITY * 0.001;
       cam.position.addScaledVector(dirBack, moveBack);
       // clamp not to exceed baseDist
       const newDist = cam.position.distanceTo(tgt);
       if (newDist > baseDist) {
         // snap to baseDist
-        const adj = new THREE.Vector3().subVectors(cam.position, tgt).setLength(baseDist);
-        cam.position.copy(new THREE.Vector3().addVectors(tgt, adj));
+        const adj = new Vector3().subVectors(cam.position, tgt).setLength(baseDist);
+        cam.position.copy(new Vector3().addVectors(tgt, adj));
       }
       inst.controls.update();
         // reduce accumulated darkness when moving back
@@ -199,7 +231,10 @@ function enableCenterScrollScale() {
   if (scrollScaleEnabled) return;
   scrollScaleEnabled = true;
   window.addEventListener('wheel', onWheelScale, { passive: true });
-  console.log('enableCenterScrollScale: wheel scaling enabled for center model');
+  window.addEventListener('touchstart', onTouchStartScale, { passive: true });
+  window.addEventListener('touchmove', onTouchMoveScale, { passive: true });
+  window.addEventListener('touchend', onTouchEndScale, { passive: true });
+  console.log('enableCenterScrollScale: wheel and touch scaling enabled for center model');
 }
 
 // ========== ПЛАВНАЯ СМЕНА ЦВЕТА ==========
@@ -337,31 +372,31 @@ async function syncSwitchToWord(newIndex) {
 // ========== НАСТРОЙКА ОСВЕЩЕНИЯ (НОВОЕ) ==========
 function setupLighting(scene) {
   // Ambient light - общая освещенность
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0);
+  const ambientLight = new AmbientLight(0xffffff, 0);
   scene.add(ambientLight);
   
   // Основной направленный свет спереди-сверху
-  const mainLight = new THREE.DirectionalLight(0xffffff, 5.81);
+  const mainLight = new DirectionalLight(0xffffff, 5.81);
   mainLight.position.set(2, 5, 3);
   scene.add(mainLight);
   
   // Дополнительный свет справа
-  const rightLight = new THREE.DirectionalLight(0xffffff, 2.03);
+  const rightLight = new DirectionalLight(0xffffff, 2.03);
   rightLight.position.set(1.8, 2, 1.1);
   scene.add(rightLight);
   
   // Дополнительный свет слева
-  const leftLight = new THREE.DirectionalLight(0xffffff, 2.03);
+  const leftLight = new DirectionalLight(0xffffff, 2.03);
   leftLight.position.set(-8, 4.2, -5);
   scene.add(leftLight);
   
   // Свет сзади для подсветки контуров
-  const backLight = new THREE.DirectionalLight(0xffffff, 12);
+  const backLight = new DirectionalLight(0xffffff, 12);
   backLight.position.set(0.4, 2, -8);
   scene.add(backLight);
   
   // Мягкий свет снизу
-  const fillLight = new THREE.PointLight(0xffffff, 5);
+  const fillLight = new PointLight(0xffffff, 5);
   fillLight.position.set(3, -2, 3);
   scene.add(fillLight);
   
@@ -480,9 +515,9 @@ function enhanceMaterials(model) {
   model.traverse((child) => {
     if (child.isMesh) {
       // Если материал не является MeshStandardMaterial, конвертируем его
-      if (!(child.material instanceof THREE.MeshStandardMaterial)) {
+      if (!(child.material instanceof MeshStandardMaterial)) {
         const oldMat = child.material;
-        const newMat = new THREE.MeshStandardMaterial({
+        const newMat = new MeshStandardMaterial({
           color: oldMat.color,
           map: oldMat.map,
           metalness: 0.7,
@@ -545,8 +580,8 @@ async function stabilizeInstanceAsIfShifted(inst, slideIndex) {
     const wrapper = inst.modelGroup;
     try { if (typeof wrapper.updateWorldMatrix === 'function') wrapper.updateWorldMatrix(true, true); } catch (e) {}
     try {
-      const box = new THREE.Box3().setFromObject(wrapper);
-      const size = box.getSize(new THREE.Vector3());
+      const box = new Box3().setFromObject(wrapper);
+      const size = box.getSize(new Vector3());
       const maxDim = Math.max(size.x || 1e-6, size.y || 1e-6, size.z || 1e-6);
       const DESIRED_NORMALIZED = 0.6;
       let finalAutoScale = (inst.modelConfig.scale || 1) * (DESIRED_NORMALIZED / maxDim);
@@ -558,7 +593,7 @@ async function stabilizeInstanceAsIfShifted(inst, slideIndex) {
         finalAutoScale = clamp(finalAutoScale, MIN_MODEL_SCALE, MAX_MODEL_SCALE);
       } catch (e) { finalAutoScale = clamp(finalAutoScale, MIN_MODEL_SCALE, MAX_MODEL_SCALE); }
       wrapper.scale.set(finalAutoScale, finalAutoScale, finalAutoScale);
-      try { const sph = new THREE.Sphere(); box.getBoundingSphere(sph); if (threeInstances[slideIndex]) threeInstances[slideIndex].baseBoundingRadius = sph.radius * (finalAutoScale || 1); } catch (e) {}
+      try { const sph = new Sphere(); box.getBoundingSphere(sph); if (threeInstances[slideIndex]) threeInstances[slideIndex].baseBoundingRadius = sph.radius * (finalAutoScale || 1); } catch (e) {}
       updateModelScale(inst, slideIndex === currentSlideIndex, inst.modelConfig);
       applyCameraSettings(inst);
       try { inst.renderer.render(inst.scene, inst.camera); } catch (e) {}
@@ -579,6 +614,7 @@ function updateModelScale(instance, isActive, modelConfig) {
   } else {
     targetScale = isActive ? modelConfig.activeScale || modelConfig.scale : modelConfig.scale;
   }
+  targetScale *= getResponsiveModelScaleFactor();
   instance.modelGroup.scale.set(targetScale, targetScale, targetScale);
 }
 
@@ -607,7 +643,7 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
     enhanceMaterials(model);
 
     // Wrap model in a parent group so scaling happens around a stable origin
-    const wrapper = new THREE.Group();
+    const wrapper = new Group();
 
     wrapper.add(model);
 
@@ -619,7 +655,7 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
           const s = child.scale;
           if (!s) return;
           if (Math.abs(s.x - 1) > 1e-6 || Math.abs(s.y - 1) > 1e-6 || Math.abs(s.z - 1) > 1e-6) {
-            const m = new THREE.Matrix4().makeScale(s.x, s.y, s.z);
+            const m = new Matrix4().makeScale(s.x, s.y, s.z);
             try {
               child.geometry.applyMatrix4(m);
               child.scale.set(1, 1, 1);
@@ -637,9 +673,9 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
     try { bakeNodeScales(model); } catch (e) {}
 
     // Compute bounding box on the raw model, then center the model inside the wrapper
-    const box = new THREE.Box3().setFromObject(model);
-    const size = box.getSize(new THREE.Vector3());
-    const center = box.getCenter(new THREE.Vector3());
+    const box = new Box3().setFromObject(model);
+    const size = box.getSize(new Vector3());
+    const center = box.getCenter(new Vector3());
     console.log(`[slide ${slideIndex}] model bbox size:`, size, 'center:', center);
     // Center the wrapper by offsetting the model (geometry baked into children)
     model.position.x = -center.x;
@@ -660,7 +696,7 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
       // compute bounding sphere radius (base, unscaled) and store on instance for camera-edge limits
       let baseSphereRadius = 0;
       try {
-        const sphere = new THREE.Sphere();
+        const sphere = new Sphere();
         box.getBoundingSphere(sphere);
         baseSphereRadius = sphere.radius || 0;
       } catch (e) {}
@@ -672,12 +708,13 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
       try {
         const maxDim = Math.max(size.x || 1e-6, size.y || 1e-6, size.z || 1e-6);
         const DESIRED_NORMALIZED = 0.6; // target size in world units relative to scale baseline
-        let autoScale = (modelConfig.scale || 1) * (DESIRED_NORMALIZED / maxDim);
-        // clamp relative to original modelConfig.scale to avoid huge jumps for tiny models
+        const responsiveFactor = getResponsiveModelScaleFactor();
+        const baseScale = (modelConfig.scale || 1) * responsiveFactor;
+        let autoScale = baseScale * (DESIRED_NORMALIZED / maxDim);
+        // clamp relative to responsive base scale to avoid huge jumps for tiny models
         try {
-          const base = modelConfig.scale || 1;
-          const minRel = base * 0.4;
-          const maxRel = base * 2.2;
+          const minRel = baseScale * 0.4;
+          const maxRel = baseScale * 2.2;
           autoScale = clamp(autoScale, minRel, maxRel);
           autoScale = clamp(autoScale, MIN_MODEL_SCALE, MAX_MODEL_SCALE);
         } catch (e) {}
@@ -686,8 +723,9 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
         if (threeInstances[slideIndex]) threeInstances[slideIndex].baseBoundingRadius = baseSphereRadius * (autoScale || 1);
         console.log(`[slide ${slideIndex}] applied autoScale=${autoScale.toFixed(4)} (maxDim=${maxDim.toFixed(4)})`);
       } catch (e) {
-        wrapper.scale.set(modelConfig.scale, modelConfig.scale, modelConfig.scale);
-        if (threeInstances[slideIndex]) threeInstances[slideIndex].baseBoundingRadius = baseSphereRadius * (modelConfig.scale || 1);
+        const responsiveScale = (modelConfig.scale || 1) * getResponsiveModelScaleFactor();
+        wrapper.scale.set(responsiveScale, responsiveScale, responsiveScale);
+        if (threeInstances[slideIndex]) threeInstances[slideIndex].baseBoundingRadius = baseSphereRadius * (responsiveScale || 1);
       }
 
     inst.scene.add(wrapper);
@@ -703,22 +741,23 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
       // Recompute bbox from the wrapper (after any world updates) and reapply a stable autoScale
       try {
         if (typeof wrapper.updateWorldMatrix === 'function') wrapper.updateWorldMatrix(true, true);
-        const finalBox = new THREE.Box3().setFromObject(wrapper);
-        const finalSize = finalBox.getSize(new THREE.Vector3());
+        const finalBox = new Box3().setFromObject(wrapper);
+        const finalSize = finalBox.getSize(new Vector3());
         const finalMaxDim = Math.max(finalSize.x || 1e-6, finalSize.y || 1e-6, finalSize.z || 1e-6);
         const DESIRED_NORMALIZED = 0.6;
-        let finalAutoScale = (modelConfig.scale || 1) * (DESIRED_NORMALIZED / finalMaxDim);
+        const responsiveFactor = getResponsiveModelScaleFactor();
+        const baseScale = (modelConfig.scale || 1) * responsiveFactor;
+        let finalAutoScale = baseScale * (DESIRED_NORMALIZED / finalMaxDim);
         try {
-          const base = modelConfig.scale || 1;
-          const minRel = base * 0.4;
-          const maxRel = base * 2.2;
+          const minRel = baseScale * 0.4;
+          const maxRel = baseScale * 2.2;
           finalAutoScale = clamp(finalAutoScale, minRel, maxRel);
           finalAutoScale = clamp(finalAutoScale, MIN_MODEL_SCALE, MAX_MODEL_SCALE);
         } catch (e) { finalAutoScale = clamp(finalAutoScale, MIN_MODEL_SCALE, MAX_MODEL_SCALE); }
         wrapper.scale.set(finalAutoScale, finalAutoScale, finalAutoScale);
         // update stored base bounding radius to reflect applied wrapper scale
         try {
-          const sphere = new THREE.Sphere();
+          const sphere = new Sphere();
           finalBox.getBoundingSphere(sphere);
           if (threeInstances[slideIndex]) threeInstances[slideIndex].baseBoundingRadius = sphere.radius * (finalAutoScale || 1);
         } catch (e) {}
@@ -741,7 +780,7 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
     try {
       // Ensure world matrices are updated so bounding calculations are correct
       if (model && typeof model.updateWorldMatrix === 'function') model.updateWorldMatrix(true, true);
-      const ws = new THREE.Vector3();
+      const ws = new Vector3();
       try { model.getWorldScale(ws); } catch (e) { ws.set(1,1,1); }
       console.log(`[slide ${slideIndex}] model worldScale=${ws.toArray().map(v=>v.toFixed(4))}`);
       console.log(`[slide ${slideIndex}] camera pos ${JSON.stringify(inst.camera.position.toArray())} target ${JSON.stringify(inst.controls.target.toArray())} aspect=${inst.camera.aspect}`);
@@ -774,20 +813,21 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
               // recompute bbox and reapply scale
               try {
                 if (typeof wrapper.updateWorldMatrix === 'function') wrapper.updateWorldMatrix(true, true);
-                const finalBox2 = new THREE.Box3().setFromObject(wrapper);
-                const finalSize2 = finalBox2.getSize(new THREE.Vector3());
+                const finalBox2 = new Box3().setFromObject(wrapper);
+                const finalSize2 = finalBox2.getSize(new Vector3());
                 const finalMaxDim2 = Math.max(finalSize2.x || 1e-6, finalSize2.y || 1e-6, finalSize2.z || 1e-6);
                 const DESIRED_NORMALIZED = 0.6;
-                let finalAutoScale2 = (modelConfig.scale || 1) * (DESIRED_NORMALIZED / finalMaxDim2);
+                const responsiveFactor2 = getResponsiveModelScaleFactor();
+                const baseScale2 = (modelConfig.scale || 1) * responsiveFactor2;
+                let finalAutoScale2 = baseScale2 * (DESIRED_NORMALIZED / finalMaxDim2);
                 try {
-                  const base = modelConfig.scale || 1;
-                  const minRel = base * 0.4;
-                  const maxRel = base * 2.2;
+                  const minRel = baseScale2 * 0.4;
+                  const maxRel = baseScale2 * 2.2;
                   finalAutoScale2 = clamp(finalAutoScale2, minRel, maxRel);
                   finalAutoScale2 = clamp(finalAutoScale2, MIN_MODEL_SCALE, MAX_MODEL_SCALE);
                 } catch (e) { finalAutoScale2 = clamp(finalAutoScale2, MIN_MODEL_SCALE, MAX_MODEL_SCALE); }
                 wrapper.scale.set(finalAutoScale2, finalAutoScale2, finalAutoScale2);
-                try { const sph = new THREE.Sphere(); finalBox2.getBoundingSphere(sph); if (threeInstances[slideIndex]) threeInstances[slideIndex].baseBoundingRadius = sph.radius * (finalAutoScale2 || 1); } catch (e) {}
+                try { const sph = new Sphere(); finalBox2.getBoundingSphere(sph); if (threeInstances[slideIndex]) threeInstances[slideIndex].baseBoundingRadius = sph.radius * (finalAutoScale2 || 1); } catch (e) {}
                 console.log(`[slide ${slideIndex}] DPR change handled: set pixelRatio=${usedDpr}, finalAutoScale=${finalAutoScale2.toFixed(4)}`);
               } catch (e) {}
             } catch (e) {}
@@ -807,21 +847,22 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
           // wait two frames to ensure any layout changes applied
           await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
           if (typeof wrapper.updateWorldMatrix === 'function') wrapper.updateWorldMatrix(true, true);
-          const stableBox = new THREE.Box3().setFromObject(wrapper);
-          const stableSize = stableBox.getSize(new THREE.Vector3());
+          const stableBox = new Box3().setFromObject(wrapper);
+          const stableSize = stableBox.getSize(new Vector3());
           const stableMaxDim = Math.max(stableSize.x || 1e-6, stableSize.y || 1e-6, stableSize.z || 1e-6);
           const DESIRED_NORMALIZED = 0.6;
-          let stableAutoScale = (modelConfig.scale || 1) * (DESIRED_NORMALIZED / stableMaxDim);
+          const responsiveFactor3 = getResponsiveModelScaleFactor();
+          const baseScale3 = (modelConfig.scale || 1) * responsiveFactor3;
+          let stableAutoScale = baseScale3 * (DESIRED_NORMALIZED / stableMaxDim);
           try {
-            const base = modelConfig.scale || 1;
-            const minRel = base * 0.4;
-            const maxRel = base * 2.2;
+            const minRel = baseScale3 * 0.4;
+            const maxRel = baseScale3 * 2.2;
             stableAutoScale = clamp(stableAutoScale, minRel, maxRel);
             stableAutoScale = clamp(stableAutoScale, MIN_MODEL_SCALE, MAX_MODEL_SCALE);
           } catch (e) { stableAutoScale = clamp(stableAutoScale, MIN_MODEL_SCALE, MAX_MODEL_SCALE); }
           wrapper.scale.set(stableAutoScale, stableAutoScale, stableAutoScale);
           try {
-            const sph = new THREE.Sphere();
+            const sph = new Sphere();
             stableBox.getBoundingSphere(sph);
             if (threeInstances[slideIndex]) threeInstances[slideIndex].baseBoundingRadius = sph.radius * (stableAutoScale || 1);
           } catch (e) {}
@@ -843,9 +884,9 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
   } catch (err) {
     console.error(`❌ Ошибка загрузки модели "${modelConfig.name}":`, err);
     // Создаем простую фигуру-заглушку
-    const geometry = new THREE.SphereGeometry(0.5, 32, 32);
-    const material = new THREE.MeshStandardMaterial({ color: 0x666666, metalness: 0.7, roughness: 0.3 });
-    const fallbackMesh = new THREE.Mesh(geometry, material);
+    const geometry = new SphereGeometry(0.5, 32, 32);
+    const material = new MeshStandardMaterial({ color: 0x666666, metalness: 0.7, roughness: 0.3 });
+    const fallbackMesh = new Mesh(geometry, material);
     fallbackMesh.scale.set(0.8, 0.8, 0.8);
     inst.scene.add(fallbackMesh);
     inst.modelGroup = fallbackMesh;
@@ -897,7 +938,7 @@ async function initThreeForSlide(slideElement, modelConfig, slideIndex) {
   canvas.style.background = 'transparent';
   slideElement.appendChild(canvas);
 
-  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+  const renderer = new WebGLRenderer({ canvas, alpha: true });
   // Limit devicePixelRatio to avoid enormous drawing buffers on some setups
   const initialDpr = Math.min(window.devicePixelRatio || 1, 2);
   renderer.setPixelRatio(initialDpr);
@@ -936,7 +977,7 @@ async function initThreeForSlide(slideElement, modelConfig, slideIndex) {
   // Включаем тени
   renderer.shadowMap.enabled = true;
 
-  const scene = new THREE.Scene();
+  const scene = new Scene();
   scene.background = null;
 
   // НАСТРАИВАЕМ ОСВЕЩЕНИЕ
@@ -957,7 +998,7 @@ async function initThreeForSlide(slideElement, modelConfig, slideIndex) {
   } catch (e) {
     initialAspect = 1;
   }
-  const camera = new THREE.PerspectiveCamera(42, initialAspect, 0.1, 1000);
+  const camera = new PerspectiveCamera(42, initialAspect, 0.1, 1000);
   camera.position.set(
     CAMERA_SETTINGS.position.x,
     CAMERA_SETTINGS.position.y,
@@ -1007,6 +1048,21 @@ async function initThreeForSlide(slideElement, modelConfig, slideIndex) {
   if (typeof updateRendererSizeToCanvas === 'function') {
     // attach helper to instance for external calls
     instance.updateRendererSizeToCanvas = updateRendererSizeToCanvas;
+    // update on slide resize as well, not only on window resize
+    if (typeof ResizeObserver !== 'undefined') {
+      try {
+        instance.resizeObserver = new ResizeObserver(() => {
+          try {
+            updateRendererSizeToCanvas();
+          } catch (innerErr) {
+            console.warn('[resizeObserver] updateRendererSizeToCanvas failed:', innerErr);
+          }
+        });
+        instance.resizeObserver.observe(slideElement);
+      } catch (observerErr) {
+        console.warn('[buildCarousel] ResizeObserver failed:', observerErr);
+      }
+    }
     // call once to sync initial size
     updateRendererSizeToCanvas();
   }
@@ -1057,9 +1113,9 @@ async function initThreeForSlide(slideElement, modelConfig, slideIndex) {
             try {
               const tgt = instance.controls.target;
               const cam = instance.camera;
-              const dirBack = new THREE.Vector3().subVectors(cam.position, tgt).normalize();
+              const dirBack = new Vector3().subVectors(cam.position, tgt).normalize();
               const adj = dirBack.multiplyScalar(minAllowed);
-              cam.position.copy(new THREE.Vector3().addVectors(tgt, adj));
+              cam.position.copy(new Vector3().addVectors(tgt, adj));
               instance.controls.update();
             } catch (e) {}
           }
@@ -1282,44 +1338,49 @@ async function buildCarousel() {
   prevBtn.addEventListener('click', prevSlide);
   nextBtn.addEventListener('click', nextSlide);
 
-  let touchStartX = 0;
-  document.addEventListener('touchstart', (e) => {
-    touchStartX = e.changedTouches[0].screenX;
-  });
-  document.addEventListener('touchend', (e) => {
-    const touchEndX = e.changedTouches[0].screenX;
-    if (Math.abs(touchEndX - touchStartX) > 50 && !isTransitioning) {
-      if (touchEndX < touchStartX) nextSlide();
-      else prevSlide();
-    }
-  });
+  // Swipe navigation disabled: slide changes only via buttons and dots
+  // let touchStartX = 0;
+  // document.addEventListener('touchstart', (e) => {
+  //   touchStartX = e.changedTouches[0].screenX;
+  // });
+  // document.addEventListener('touchend', (e) => {
+  //   if (window.innerWidth <= 500) return;
+  //   const touchEndX = e.changedTouches[0].screenX;
+  //   if (Math.abs(touchEndX - touchStartX) > 50 && !isTransitioning) {
+  //     if (touchEndX < touchStartX) nextSlide();
+  //     else prevSlide();
+  //   }
+  // });
 
   window.addEventListener('resize', () => {
     slidesArray.forEach((slide, idx) => {
       const inst = threeInstances[idx];
       if (!inst || !slide) return;
       try {
-        const canvas = inst.renderer.domElement;
-        let displayW = slide.clientWidth;
-        let displayH = slide.clientHeight;
-        try {
-          const rect = canvas.getBoundingClientRect();
-          if (rect.width && rect.height) {
-            displayW = Math.max(1, Math.floor(rect.width));
-            displayH = Math.max(1, Math.floor(rect.height));
+        if (typeof inst.updateRendererSizeToCanvas === 'function') {
+          inst.updateRendererSizeToCanvas();
+        } else {
+          const canvas = inst.renderer.domElement;
+          let displayW = slide.clientWidth;
+          let displayH = slide.clientHeight;
+          try {
+            const rect = canvas.getBoundingClientRect();
+            if (rect.width && rect.height) {
+              displayW = Math.max(1, Math.floor(rect.width));
+              displayH = Math.max(1, Math.floor(rect.height));
+            }
+          } catch (e) {}
+          const maxViewport = Math.max(window.innerWidth || 1024, window.innerHeight || 1024);
+          const cap = Math.max(1024, Math.min(8192, Math.floor(maxViewport * 2)));
+          if (displayW > cap) displayW = cap;
+          if (displayH > cap) displayH = cap;
+          const usedDpr = Math.min(window.devicePixelRatio || 1, 2);
+          inst.renderer.setPixelRatio(usedDpr);
+          inst.renderer.setSize(displayW, displayH, false);
+          if (inst.camera) {
+            inst.camera.aspect = displayW / displayH;
+            inst.camera.updateProjectionMatrix();
           }
-        } catch (e) {}
-        // clamp sizes to reasonable maximums
-        const maxViewport = Math.max(window.innerWidth || 1024, window.innerHeight || 1024);
-        const cap = Math.max(1024, Math.min(8192, Math.floor(maxViewport * 2)));
-        if (displayW > cap) displayW = cap;
-        if (displayH > cap) displayH = cap;
-        const usedDpr = Math.min(window.devicePixelRatio || 1, 2);
-        inst.renderer.setPixelRatio(usedDpr);
-        inst.renderer.setSize(displayW, displayH, false);
-        if (inst.camera) {
-          inst.camera.aspect = displayW / displayH;
-          inst.camera.updateProjectionMatrix();
         }
       } catch (e) {}
     });
@@ -1345,7 +1406,8 @@ async function buildCarousel() {
       // Never reset the currently centered model here; allow center wheel handler to control it
       if (idx === currentSlideIndex) return;
       try {
-        inst.modelGroup.scale.set(inst.modelConfig.scale, inst.modelConfig.scale, inst.modelConfig.scale);
+        const resetScale = (inst.modelConfig.scale || 1) * getResponsiveModelScaleFactor();
+        inst.modelGroup.scale.set(resetScale, resetScale, resetScale);
       } catch (e) {
         // ignore
       }
@@ -1472,6 +1534,6 @@ function initChoiseButton() {
 initChoiseButton()
 
 // --- Three.js and controls imports ---
-import * as THREE from 'three';
+import { WebGLRenderer, Scene, PerspectiveCamera, AmbientLight, PointLight, DirectionalLight, Group, Matrix4, Mesh, MeshStandardMaterial, Sphere, SphereGeometry, Vector3, Box3 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';

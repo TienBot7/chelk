@@ -1,4 +1,4 @@
-import { VFX } from '@vfx-js/core'
+let VFX = null
 
 // Параметры эффекта
 const PARAMS = {
@@ -19,6 +19,7 @@ const postEffectShader = `
         uniform vec2 mouse;
         uniform vec2 lag;
         uniform float time;
+        uniform float effectScale;
         out vec4 outColor;
 
         const float SPHERE_R = ${PARAMS.sphereR.toFixed(4)};
@@ -64,13 +65,13 @@ const postEffectShader = `
           sp.xy *= rot(time * 0.55);
           sp.xz *= rot(time * 0.45);
 
-          float d = sdSphere(sp, SPHERE_R);
+          float d = sdSphere(sp, SPHERE_R * effectScale);
 
           for (int i = 0; i < N_BUBBLES; i++) {
             int b = i * 4;
             vec3 bPos = vec3(bubbleData[b], bubbleData[b+1], bubbleData[b+2]);
             float r = bubbleData[b+3];
-            d = smin(d, sdSphere(q - bPos, max(r, 0.001)), BUBBLE_SMOOTH);
+            d = smin(d, sdSphere(q - bPos, max(r, 0.001) * effectScale), BUBBLE_SMOOTH);
           }
 
           return d;
@@ -249,42 +250,87 @@ const setCenterTarget = () => {
   }
 }
 
+const updatePointerPosition = (clientX, clientY) => {
+  p0.x = clientX
+  p0.y = window.innerHeight - clientY
+}
+
+const pressStart = (clientX, clientY) => {
+  isPressed = true
+  circlesElement?.classList.add('pressed')
+  updatePointerPosition(clientX, clientY)
+  p1.x = p0.x; p1.y = p0.y
+  p2.x = p0.x; p2.y = p0.y
+}
+
+const pressEnd = () => {
+  isPressed = false
+  circlesElement?.classList.remove('pressed')
+  setCenterTarget()
+}
+
+const addCaptureListener = (target, type, handler) => {
+  target.addEventListener(type, handler, { passive: false, capture: true })
+}
+
 if (buttonElement) {
   buttonElement.addEventListener('pointerdown', () => circlesElement?.classList.add('pressed'))
   buttonElement.addEventListener('pointerup', () => circlesElement?.classList.remove('pressed'))
   buttonElement.addEventListener('pointercancel', () => circlesElement?.classList.remove('pressed'))
 }
 
-window.addEventListener('pointerdown', (e) => {
-  isPressed = true
-  circlesElement?.classList.add('pressed')
-  p0.x = e.clientX
-  p0.y = window.innerHeight - e.clientY
+addCaptureListener(window, 'pointerdown', (e) => {
+  pressStart(e.clientX, e.clientY)
+  if (e.pointerType === 'touch' && e.cancelable) e.preventDefault()
 })
 
-window.addEventListener('pointerup', () => {
-  isPressed = false
-  circlesElement?.classList.remove('pressed')
-  setCenterTarget()
+addCaptureListener(window, 'pointerup', () => {
+  pressEnd()
 })
 
-window.addEventListener('pointercancel', () => {
-  isPressed = false
-  circlesElement?.classList.remove('pressed')
-  setCenterTarget()
+addCaptureListener(window, 'pointercancel', () => {
+  pressEnd()
 })
+
+addCaptureListener(window, 'pointermove', (e) => {
+  if (!isPressed) return
+  updatePointerPosition(e.clientX, e.clientY)
+})
+
+const touchStartHandler = (e) => {
+  const touch = e.changedTouches[0]
+  if (!touch) return
+  pressStart(touch.clientX, touch.clientY)
+  if (e.cancelable) e.preventDefault()
+}
+
+const touchMoveHandler = (e) => {
+  if (!isPressed) return
+  const touch = e.changedTouches[0]
+  if (!touch) return
+  updatePointerPosition(touch.clientX, touch.clientY)
+  if (e.cancelable) e.preventDefault()
+}
+
+const touchEndHandler = () => {
+  pressEnd()
+}
+
+addCaptureListener(window, 'touchstart', touchStartHandler)
+addCaptureListener(document, 'touchstart', touchStartHandler)
+addCaptureListener(window, 'touchmove', touchMoveHandler)
+addCaptureListener(document, 'touchmove', touchMoveHandler)
+addCaptureListener(window, 'touchend', touchEndHandler)
+addCaptureListener(document, 'touchend', touchEndHandler)
+addCaptureListener(window, 'touchcancel', touchEndHandler)
+addCaptureListener(document, 'touchcancel', touchEndHandler)
 
 window.addEventListener('resize', () => {
   setCenterTarget()
   if (vfx) {
     vfx.update(app)
   }
-})
-
-window.addEventListener('pointermove', (e) => {
-  if (!isPressed) return
-  p0.x = e.clientX
-  p0.y = window.innerHeight - e.clientY
+  applyThankYouVfxScale()
 })
 
 const bubbles = new Float32Array(N * 4)
@@ -347,19 +393,9 @@ function tick() {
 tick()
 
 // Создаём VFX
-vfx = new VFX({
-  postEffect: {
-    shader: postEffectShader,
-    uniforms: {
-      lag: () => [p2.x * devicePixelRatio, p2.y * devicePixelRatio],
-      mouse: () => [0, 0],
-      bubbleData: () => bubbles,
-    },
-  },
-})
-
-await vfx.addHTML(app, { shader: 'none' })
-vfx.play()
+function getThankYouEffectScale() {
+  return window.innerWidth <= 1024 ? 1.58 : 1
+}
 
 // Прозрачный фон
 const style = document.createElement('style')
@@ -369,6 +405,157 @@ style.textContent = `
   }
 `
 document.head.appendChild(style)
+
+async function initializeVfx() {
+  if (!VFX) {
+    const LoadedVFX = await loadVfxModule()
+    if (!LoadedVFX) return
+    VFX = LoadedVFX
+  }
+
+  try {
+    vfx = new VFX({
+      postEffect: {
+        shader: postEffectShader,
+        uniforms: {
+          lag: () => [p2.x * devicePixelRatio, p2.y * devicePixelRatio],
+          mouse: () => [0, 0],
+          bubbleData: () => bubbles,
+          effectScale: () => getThankYouEffectScale(),
+        },
+      },
+    })
+
+    await vfx.addHTML(app, { shader: 'none' })
+    vfx.play()
+  } catch (e) {
+    console.warn('[thank-you] VFX initialization failed:', e)
+    vfx = null
+  }
+}
+
+initializeVfx().catch((err) => {
+  console.warn('[thank-you] initializeVfx failed:', err)
+})
+
+const tensElement = document.getElementById('tens')
+const unitsElement = document.getElementById('units')
+let counterPercent = 0
+let counterFrame = null
+const titleElement = document.querySelector('.thank-you__title')
+
+const updateDigits = (percent) => {
+  const tens = Math.floor(percent / 10)
+  const units = percent % 10
+  if (tensElement) tensElement.textContent = String(tens)
+  if (unitsElement) unitsElement.textContent = String(units)
+}
+
+const getThankYouVfxScale = () => {
+  return window.innerWidth <= 1024 ? 1.18 : 1
+}
+
+const applyThankYouVfxScale = () => {
+  const canvasRoot = document.querySelector('vfx-js-canvas') || document.querySelector('canvas')
+  if (!canvasRoot) return
+  const scale = getThankYouVfxScale()
+  canvasRoot.style.transformOrigin = 'center center'
+  canvasRoot.style.transform = scale === 1 ? '' : `scale(${scale})`
+}
+
+const revealVfxCanvas = () => {
+  const canvasRoot = document.querySelector('vfx-js-canvas') || document.querySelector('canvas')
+  if (!canvasRoot) {
+    if (!vfx) return
+    setTimeout(revealVfxCanvas, 50)
+    return
+  }
+  canvasRoot.classList.add('visible-vfx')
+  applyThankYouVfxScale()
+}
+
+async function loadVfxModule(timeoutMs = 3000) {
+  try {
+    const importPromise = import('@vfx-js/core')
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('VFX import timeout')), timeoutMs))
+    const mod = await Promise.race([importPromise, timeoutPromise])
+    if (!mod || !mod.VFX) throw new Error('VFX module missing')
+    VFX = mod.VFX
+    return VFX
+  } catch (err) {
+    console.warn('[thank-you] VFX module failed to load:', err)
+    return null
+  }
+}
+
+const animateCounter = () => {
+  if (counterPercent < 99) {
+    counterPercent += 1
+    updateDigits(counterPercent)
+    if (counterPercent === 99) {
+      const inner = document.querySelector('.thank-you__circles__inner')
+      const counter = document.querySelector('.loading__counter')
+      if (inner) {
+        inner.style.transform = 'translate(-50%, -50%) rotate(0deg)'
+      }
+      if (counter) {
+        counter.style.transition = 'opacity 0.35s ease'
+        counter.style.opacity = '0'
+        setTimeout(() => {
+          counter.style.display = 'none'
+          titleElement?.classList.add('visible-title')
+          revealVfxCanvas()
+        }, 360)
+      } else {
+        titleElement?.classList.add('visible-title')
+        revealVfxCanvas()
+      }
+    }
+    counterFrame = requestAnimationFrame(() => {
+      setTimeout(animateCounter, 12)
+    })
+  }
+}
+
+const initThankYouPage = () => {
+  const loader = document.querySelector('.loading')
+  const header = document.querySelector('header')
+  const main = document.querySelector('main')
+
+  if (header) header.style.display = ''
+  if (main) main.style.display = ''
+
+  if (!loader) return
+
+  const onTransitionEnd = (event) => {
+    if (event.propertyName !== 'opacity') return
+    loader.removeEventListener('transitionend', onTransitionEnd)
+    clearTimeout(fallback)
+    loader.remove()
+  }
+
+  const fallback = setTimeout(() => {
+    loader.removeEventListener('transitionend', onTransitionEnd)
+    loader.remove()
+  }, 1200)
+
+  if (counterFrame) cancelAnimationFrame(counterFrame)
+  updateDigits(99)
+
+  loader.addEventListener('transitionend', onTransitionEnd)
+  requestAnimationFrame(() => {
+    loader.classList.add('hide')
+  })
+}
+
+updateDigits(0)
+animateCounter()
+
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  initThankYouPage()
+} else {
+  window.addEventListener('DOMContentLoaded', initThankYouPage)
+}
 
 // === Аудио и анимация (без изменений) ===
 const thankYouLink = document.querySelector('.thank-you__bottom a.mix-btn')

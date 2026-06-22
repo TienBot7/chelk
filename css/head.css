@@ -11,6 +11,7 @@
   justify-content: center;
   align-items: center;
   height: 100%;
+  background: #121315;
 }
 .head.visible {
   opacity: 1;
@@ -29,28 +30,45 @@
     position: fixed;
     color: white;
     font-family: 'Comforter', sans-serif;
-    font-size: 13.020833vw;
+    font-size: calc(8.63vw + 8.63vh);
     pointer-events: none;
-    letter-spacing: -3%;
+    letter-spacing: 5%;
+    line-height: 1;
 }
 
 .head__title.left{
-    top: 18%;
-    left: 5%;
+    /* top: 18%; */
+    /* top: calc(9.17vw + 9.17vh); */
+    /* top: 10%; */
+    /* top: calc(6.5vw + 6.5vh); */
+    /* top: 18dvh; */
+    /* top: 200px; */
+    top: 250px;
+    /* left: 5%; */
+    left: 52px;
+}
+.head__title.left span{
+  display: none;
 }
 .head__title.right{
-    bottom: 6%;
-    right: 11%;
+    /* bottom: 10%; */
+    /* bottom: calc(3.67vw + 3.67vh); */
+    /* bottom: calc(3.67vw + 3.67vh); */
+    /* bottom: 10dvh; */
+    bottom: 80px;
+    /* right: 2%; */
+    right: 89px;
 }
 
 .head__description{
     position: fixed;
     color: white;
-    opacity: 0.5;
+    opacity: 0.5 !important;
     font-size: 1.042vw;
     left: 40px;
     bottom: 60px;
-    max-width: 450px;
+    /* max-width: 450px; */
+    max-width: calc(15vw + 15vh);
     pointer-events: none;
     line-height: 140%;
     letter-spacing: -4%;
@@ -102,5 +120,60 @@
   }
   100% {
     top: calc(100% + 5px);
+  }
+}
+
+@media (max-width: 1440px) {
+  .head__title{
+    font-size: calc(8.12vw + 8.12vh);
+  }
+  .head__title.left{
+    left: 20px;
+  }
+  .head__title.right{
+    right: 29px;
+  }
+  .head__description{
+    left: 20px;
+    font-size: calc(0.81vw + 0.81vh);
+    max-width: calc(18.06vw + 18.06vh);
+  }
+}
+@media (max-width: 1024px) {
+  .head__description{
+    font-size: calc(0.59vw + 0.59vh);
+    /* max-width: calc(18.62vw + 18.62vh); */
+  }
+  .head__title{
+    font-size: calc(7.0vw + 7.0vh);
+  }
+  .head__title.left{
+    top: 173px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: calc(1.26vw + 1.26vh);
+  }
+  .head__title.left span{
+    display: inline;
+  }
+  .head__title.right{
+    display: none;
+  }
+  #canvas{
+    position: absolute;
+    bottom: calc((5.40vw + 5.40vh) * -1);
+  }
+}
+@media (max-width: 500px) {
+  .head__title{
+    font-size: calc(5.19vw + 5.19vh);
+  }
+  .head__title.left{
+    top: 100px;
+  }
+  .head__description{
+    font-size: calc(1.13vw + 1.13vh);
+    max-width: calc(19.69vw + 19.69vh);
   }
 }

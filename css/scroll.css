@@ -24,6 +24,10 @@
     overflow: hidden;
 }
 
+.scroll-section.visible .scroll-card{
+    pointer-events: auto;
+}
+
 .scroll-section .scroll-down {
     opacity: 0;
     visibility: hidden;
@@ -93,9 +97,9 @@
 }
 
 .scroll-card{
-    padding: 19px 31px;
-    font-size: 24px;
-    max-width: 426px;
+    padding: calc(0.63vw + 0.63vh) calc(1.03vw + 1.03vh);
+    font-size: calc(0.80vw + 0.80vh);
+    max-width: calc(14.20vw + 14.20vh);
     box-shadow: 0 6px 24px rgba(0,0,0,0.35);
     background-clip: padding-box;
     -webkit-backdrop-filter: blur(15px);
@@ -105,7 +109,7 @@
     border: 1px solid hsl(0deg 0% 100% / 10%);
     border-radius: 1.3888888889vw;
     text-align: left;
-    pointer-events: auto !important;
+    /* pointer-events: auto !important; */
     cursor: pointer;
     transition: all 0.5s ease;
 }
@@ -133,11 +137,11 @@
 .scroll-card__button{
     border: none;
     background: none;
-    width: 51px;
-    height: 51px;
+    width: calc(1.70vw + 1.70vh);
+    height: calc(1.70vw + 1.70vh);
     border: 1px solid #505050;
     border-radius: 50%;
-    padding: 4px;
+    padding: calc(0.13vw + 0.13vh);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -154,6 +158,10 @@
     justify-content: center;
     align-items: center;
     transition: all 0.5s ease;
+}
+.scroll-card__button-content svg{
+    width: calc(0.53vw + 0.53vh);
+    height: auto;
 }
 .scroll-card__button:hover{
     transform: rotate(0);
@@ -191,9 +199,54 @@
 
 /* Smooth spacing when content appears */
 .scroll-card__content p{
-    margin: 16px 0 0 0;
-    padding-top: 32px;
-    font-size: 16px;
+    margin: calc(0.53vw + 0.53vh) 0 0 0;
+    padding-top: calc(1.07vw + 1.07vh);
+    font-size: calc(0.53vw + 0.53vh);
     opacity: 0.5;
     border-top: 1px solid #505050;
+}
+
+@media (max-width: 1024px) {
+    .scroll-card {
+        padding: calc(0.79vw + 0.79vh) calc(1.30vw + 1.30vh);
+        max-width: calc(17.82vw + 17.82vh);
+        font-size: calc(1.00vw + 1.00vh);
+    }
+    .scroll-card__button{
+        width: calc(2.13vw + 2.13vh);
+        height: calc(2.13vw + 2.13vh);
+    }
+    .scroll-card__button-content svg{
+        width: calc(0.67vw + 0.67vh);
+    }
+    .scroll-card__content p{
+        font-size: calc(0.67vw + 0.67vh);
+    }
+}
+
+@media (max-width: 768px) {
+    .text-left > *{
+        right: 14vw;
+        top: 18vw;
+    }
+    .text-right > *{
+        left: 16vw;
+        bottom: 18vw;
+    }
+}
+
+@media (max-width: 768px) {
+    .text-left > *{
+        left: 50%;
+        transform: translateX(-50%);
+        top: 18vw;
+    }
+    .text-right > *{
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: 18vw;
+    }
+    .scroll-card{
+        max-width: calc(20.50vw + 20.50vh);
+    }
 }

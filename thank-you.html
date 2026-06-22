@@ -43,7 +43,7 @@
       <!-- Center Content -->
       <div class="thank-you__center">
         <div class="thank-you__main">
-          <!-- <h1 class="thank-you__title">Спасибо</h1> -->
+          <h1 class="thank-you__title">Спасибо</h1>
         </div>
       </div>
 
@@ -75,96 +75,6 @@
         }
       }
     </script>
-
-  <script>
-    const tensElement = document.getElementById('tens')
-    const unitsElement = document.getElementById('units')
-    let counterPercent = 0
-    let counterFrame = null
-
-    const updateDigits = (percent) => {
-      const tens = Math.floor(percent / 10)
-      const units = percent % 10
-      if (tensElement) tensElement.textContent = String(tens)
-      if (unitsElement) unitsElement.textContent = String(units)
-    }
-
-    const revealVfxCanvas = () => {
-      const canvasRoot = document.querySelector('vfx-js-canvas') || document.querySelector('canvas')
-      if (!canvasRoot) {
-        setTimeout(revealVfxCanvas, 50)
-        return
-      }
-      canvasRoot.classList.add('visible-vfx')
-    }
-
-    const animateCounter = () => {
-      if (counterPercent < 99) {
-        counterPercent += 1
-        updateDigits(counterPercent)
-        if (counterPercent === 99) {
-          const inner = document.querySelector('.thank-you__circles__inner')
-          const counter = document.querySelector('.loading__counter')
-          if (inner) {
-            inner.style.transform = 'translate(-50%, -50%) rotate(0deg)'
-          }
-          if (counter) {
-            counter.style.transition = 'opacity 0.35s ease'
-            counter.style.opacity = '0'
-            setTimeout(() => {
-              counter.style.display = 'none'
-              revealVfxCanvas()
-            }, 360)
-          } else {
-            revealVfxCanvas()
-          }
-        }
-        counterFrame = requestAnimationFrame(() => {
-          setTimeout(animateCounter, 12)
-        })
-      }
-    }
-
-    const initThankYouPage = () => {
-      const loader = document.querySelector('.loading')
-      const header = document.querySelector('header')
-      const main = document.querySelector('main')
-
-      if (header) header.style.display = ''
-      if (main) main.style.display = ''
-
-      if (!loader) return
-
-      const onTransitionEnd = (event) => {
-        if (event.propertyName !== 'opacity') return
-        loader.removeEventListener('transitionend', onTransitionEnd)
-        clearTimeout(fallback)
-        loader.remove()
-      }
-
-      const fallback = setTimeout(() => {
-        loader.removeEventListener('transitionend', onTransitionEnd)
-        loader.remove()
-      }, 1200)
-
-      if (counterFrame) cancelAnimationFrame(counterFrame)
-      updateDigits(99)
-
-      loader.addEventListener('transitionend', onTransitionEnd)
-      requestAnimationFrame(() => {
-        loader.classList.add('hide')
-      })
-    }
-
-    updateDigits(0)
-    animateCounter()
-
-    if (document.readyState === 'complete' || document.readyState === 'interactive') {
-      initThankYouPage()
-    } else {
-      window.addEventListener('DOMContentLoaded', initThankYouPage)
-    }
-  </script>
 
   <script type="module" src="js/thank-you.js"></script>
 </body>

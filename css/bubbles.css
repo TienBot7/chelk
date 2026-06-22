@@ -10,7 +10,7 @@
 
 .bubble {
   position: absolute;
-  width: 15.1vw;
+  width: calc(9.67vw + 9.67vh);
   max-width: none;
   cursor: pointer;
   transition: transform 3.5s ease-in;
@@ -91,7 +91,7 @@
   width: 84%;
   text-align: center;
   color: rgba(255, 255, 255, 0.95);
-  font-size: calc(0.83vw);
+  font-size: calc(0.53vw + 0.53vh);
   line-height: 1.15;
   pointer-events: none;
   opacity: 0;
@@ -107,7 +107,7 @@
 }
 .bubble-label{
   color: #616366;
-  font-size: 12px;
+  font-size: calc(0.40vw + 0.40vh);
   background-color: #0E0F11;
   border-radius: 41px;
   padding: 3px 12px;
@@ -161,4 +161,19 @@
   cursor: pointer;
   background: white;
   pointer-events: auto;
+}
+
+@media (max-width: 1440px) {
+  .bubble-label{
+    font-size: calc(0.49vw + 0.49vh);
+  }
+  .bubble-text{
+    font-size: calc(0.65vw + 0.65vh);
+  }
+}
+
+@media (max-width: 500px) {
+  .bubble{
+    width: calc(11.72vw + 11.72vh);
+  }
 }

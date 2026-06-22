@@ -389,11 +389,11 @@ function preloadLottieResources() {
         }),
     ),
   );
-  return loadLottieLib().then(() => jsonPreload);
+  return jsonPreload;
 }
 
 function preloadStartupResources() {
-  const tasks = [preloadAudioFiles(), preloadLottieResources()];
+  const tasks = [preloadAudioFiles()];
   if (typeof window !== 'undefined' && window.preloader && typeof window.preloader.addWaitTask === 'function') {
     tasks.forEach((task) => window.preloader.addWaitTask(task));
   }
@@ -467,6 +467,34 @@ function playLottieAnimation(path) {
         const frame = Math.round(progress * (totalFrames - 1))
         lottieAnimation.goToAndStop(frame, true)
 
+        if (window.innerWidth <= 500) {
+          if (frame === 39) {
+            if (selectedColorVariant === '#C4142D') {
+              overlay.style.left = '-230%'
+              overlay.style.right = ''
+            } else if (selectedColorVariant === '#1D737B') {
+              overlay.style.right = '-230%'
+              overlay.style.left = ''
+            }
+          } else if (frame < 39) {
+            overlay.style.left = ''
+            overlay.style.right = ''
+          }
+        } else if (window.innerWidth <= 1024) {
+          if (frame === 39) {
+            if (selectedColorVariant === '#C4142D') {
+              overlay.style.left = '-140%'
+              overlay.style.right = ''
+            } else if (selectedColorVariant === '#1D737B') {
+              overlay.style.right = '-140%'
+              overlay.style.left = ''
+            }
+          } else if (frame < 39) {
+            overlay.style.left = ''
+            overlay.style.right = ''
+          }
+        }
+
         const scaleFrame = Math.min(frame, 15)
         const scale = 0.6 + 0.4 * Math.min(1, scaleFrame / 15)
         lottieContainerEl.style.transform = `scale(${scale})`
@@ -482,11 +510,12 @@ function playLottieAnimation(path) {
           const startThreshold = 0.92
           let sectionProgress = 0
           if (progress > startThreshold) {
-            sectionProgress = Math.max(0, Math.min((progress - startThreshold) / (1 - startThreshold), 1))
+            sectionProgress = (progress - startThreshold) / (1 - startThreshold)
           }
-          if (maxScroll > 0 && scrollArea.scrollTop >= maxScroll - 1) {
+          if (maxScroll > 0 && (scrollArea.scrollTop >= maxScroll - 2 || progress >= 0.999)) {
             sectionProgress = 1
           }
+          sectionProgress = Math.max(0, Math.min(sectionProgress, 1))
           section.style.transform = `translateX(${100 - sectionProgress * 100}%)`
         }
 
@@ -714,17 +743,20 @@ if (platformDevice) {
   platformDevice.style.setProperty('--c5', selectedColorVariant)
 }
 updatePlatformLiquid(0)
-loadLottieLib()
 
-const BUBBLE_SIZE = 200
 const GAP = 16
-
+let bubbleSize = getBubbleSize()
 let columnsCount = 1
 let columnsOccupied = []
 
+function getBubbleSize() {
+  return Math.round((6.67 * window.innerWidth + 6.67 * window.innerHeight) / 100)
+}
+
 function updateColumns() {
+  bubbleSize = getBubbleSize()
   const width = Math.max(320, bubblesContainer.clientWidth)
-  columnsCount = Math.max(1, Math.floor(width / (BUBBLE_SIZE + GAP)))
+  columnsCount = Math.max(1, Math.floor(width / (bubbleSize + GAP)))
   columnsOccupied = new Array(columnsCount).fill(false)
 }
 
@@ -744,10 +776,10 @@ function spawnDrop(forceColor = false) {
 
   const bubble = document.createElement('div')
   bubble.className = 'bubble'
-  bubble.style.width = BUBBLE_SIZE + 'px'
+  bubble.style.width = bubbleSize + 'px'
   bubble.style.left = computeLeftForColumn(col) + 'px'
   bubble.dataset.col = String(col)
-  bubble.style.top = `-${BUBBLE_SIZE}px`
+  bubble.style.top = `-${bubbleSize}px`
   bubble.style.cursor = 'default'
 
   const colorOptions = forceColor || !initialColoredSpawned ? [selectedColorVariant] : gameColors
@@ -763,7 +795,7 @@ function spawnDrop(forceColor = false) {
   const anim = bubble.animate(
     [
       { transform: 'translateY(0)', opacity: 1 },
-      { transform: `translateY(${bubblesContainer.clientHeight + BUBBLE_SIZE}px)`, opacity: 0.95 },
+      { transform: `translateY(${bubblesContainer.clientHeight + bubbleSize}px)`, opacity: 0.95 },
     ],
     {
       duration: duration,
@@ -801,9 +833,9 @@ function spawnDrop(forceColor = false) {
 }
 
 function computeLeftForColumn(colIndex) {
-  const totalWidth = columnsCount * BUBBLE_SIZE + (columnsCount - 1) * GAP
+  const totalWidth = columnsCount * bubbleSize + (columnsCount - 1) * GAP
   const offset = Math.max(0, (bubblesContainer.clientWidth - totalWidth) / 2)
-  return Math.round(offset + colIndex * (BUBBLE_SIZE + GAP))
+  return Math.round(offset + colIndex * (bubbleSize + GAP))
 }
 
 // game state
@@ -856,12 +888,16 @@ function showPlatformRow() {
   const baseLeft = platform.offsetLeft
   const baseTop = platform.offsetTop
   const width = platform.offsetWidth
-  const rowWidth = 1055
-  const rowCenter = baseLeft + width / 2
-  const startLeft = rowCenter - rowWidth / 2
-  const margin = (rowWidth / 5 - width) / 2
-  const gap = width + 2 * margin
-  const positions = [0, 1, 2, 3, 4].map((i) => startLeft + margin + i * gap)
+  const containerWidth = bubblesContainer.clientWidth
+  const maxBottleSpread = 971
+  const maxStep = Math.min(maxBottleSpread / 4, (containerWidth - width) / 4)
+  const availableLeft = baseLeft
+  const availableRight = containerWidth - width - baseLeft
+  const step = Math.max(
+    0,
+    Math.min(maxStep, availableLeft / 2, availableRight / 2),
+  )
+  const positions = [baseLeft - 2 * step, baseLeft - step, baseLeft, baseLeft + step, baseLeft + 2 * step]
   const winColors = getWinColors()
   const targetIndices = [0, 1, 3, 4]
 
@@ -892,7 +928,7 @@ function showPlatformRow() {
       clone.style.opacity = '1'
       applyPlatformProgress(clone, 60)
     })
-    platform.style.setProperty('left', `${positions[2]}px`, 'important')
+    platform.style.setProperty('left', `${baseLeft}px`, 'important')
     applyPlatformColor(platform, winColors[2])
     setBottleState(platform, 'half')
     updateBottleUnitsDisplay()
@@ -1040,8 +1076,9 @@ const platform = document.querySelector('.platform')
 const initialPlatformX = bubblesContainer.getBoundingClientRect().left + bubblesContainer.clientWidth / 2
 const initialPlatformWidth = platform.offsetWidth || 220
 const rect = bubblesContainer.getBoundingClientRect()
-const minX = 150
-const maxX = Math.max(minX, rect.width - 150 - initialPlatformWidth)
+const edgeMargin = window.innerWidth <= 768 ? 0 : 150
+const minX = edgeMargin
+const maxX = Math.max(minX, rect.width - edgeMargin - initialPlatformWidth)
 let initialX = initialPlatformX - rect.left - initialPlatformWidth / 2
 initialX = Math.max(minX, Math.min(maxX, initialX))
 platform.style.left = initialX + 'px'
@@ -1088,8 +1125,9 @@ function updatePlatformPosition(clientX) {
   const rect = bubblesContainer.getBoundingClientRect()
   const pEl = platform.querySelector('.device-rotator') || platform
   const pW = pEl.offsetWidth || 220
-  const minX = 150
-  const maxX = Math.max(minX, rect.width - 150 - pW)
+  const edgeMargin = window.innerWidth <= 768 ? 0 : 150
+  const minX = edgeMargin
+  const maxX = Math.max(minX, rect.width - edgeMargin - pW)
   let x = clientX - rect.left - pW / 2
   x = clamp(x, minX, maxX)
   platform.style.left = x + 'px'

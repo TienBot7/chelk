@@ -8,8 +8,12 @@ let zSpacing = -1000,
 // Virtual scroll support: if document scrolling is disabled (overflow:hidden),
 // we listen to wheel/touch and update a virtual `top` value.
 let virtualTop = 0
+let virtualTopTarget = 0
 const maxTop = Math.max(1, frames.length * Math.abs(zSpacing))
 let ticking = false
+let wheelAnimating = false
+const WHEEL_SCROLL_SCALE = 0.75
+const WHEEL_SCROLL_LERP = 0.22
 // whether the carousel video has been activated by user click
 let videoActivated = false
 // timeout id for hiding the scroll-section after fade
@@ -156,19 +160,9 @@ function updateFrames(top){
             } else {
                 headSection.classList.remove('visible')
             }
-            // Toggle `.lines` visibility opposite to `head`, but only after user has enabled lines (choiseBtn click)
-            try {
-                if (window._linesEnabled && !window.bubbleClick) {
-                    const linesEl = document.querySelector('.lines') || document.querySelector('section.lines') || document.getElementById('lines')
-                    if (linesEl) {
-                        if (headSection.classList.contains('visible')) {
-                            linesEl.classList.remove('visible')
-                        } else {
-                            linesEl.classList.add('visible')
-                        }
-                    }
-                }
-            } catch (e) {}
+            // Keep `.lines` visible during scroll once enabled.
+            // The old toggling logic hid lines on scroll, which caused accumulated animation.
+            // No action needed here.
         }
     } catch(e) {}
 
@@ -223,13 +217,25 @@ function onScrollNative(){
 
 function onWheel(e){
     if (!isScrollSectionVisible()) return
-    virtualTop = Math.min(Math.max(0, virtualTop + e.deltaY), maxTop)
-    if (!ticking) {
-        window.requestAnimationFrame(() => {
-            updateFrames(virtualTop)
-            ticking = false
-        })
-        ticking = true
+    virtualTopTarget = Math.min(Math.max(0, virtualTopTarget + e.deltaY * WHEEL_SCROLL_SCALE), maxTop)
+    if (!wheelAnimating) {
+        wheelAnimating = true
+        window.requestAnimationFrame(animateWheelScroll)
+    }
+}
+
+function animateWheelScroll(){
+    if (!wheelAnimating) return
+    const delta = virtualTopTarget - virtualTop
+    if (Math.abs(delta) < 0.5) {
+        virtualTop = virtualTopTarget
+        wheelAnimating = false
+    } else {
+        virtualTop += delta * WHEEL_SCROLL_LERP
+    }
+    updateFrames(virtualTop)
+    if (wheelAnimating) {
+        window.requestAnimationFrame(animateWheelScroll)
     }
 }
 
@@ -257,6 +263,7 @@ window.addEventListener('scroll', onScrollNative, {passive: true})
 window.addEventListener('wheel', onWheel, {passive: true})
 window.addEventListener('touchstart', e => { lastTouchY = e.touches[0] ? e.touches[0].clientY : null }, {passive: true})
 window.addEventListener('touchmove', onTouchMove, {passive: true})
+window.requestAnimationFrame(animateWheelScroll)
 
 // observe scroll-section visibility and start hint delay when it opens
 try {

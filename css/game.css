@@ -94,7 +94,9 @@
   position: absolute;
   left: 0;
   pointer-events: auto;
-  bottom: -6.48vh;
+  /* bottom: -6.48vh; */
+  bottom: -60px;
+  /* bottom: calc((4.17vw + 4.17vh) * -1); */
   max-width: calc(100% - 300px);
   box-sizing: border-box;
   height: max-content;
@@ -580,7 +582,7 @@ body {
   padding: 12px 24px;
   border-radius: 60px;
   pointer-events: auto;
-  flex-wrap: wrap;
+  /* flex-wrap: wrap; */
   justify-content: center;
   border: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
@@ -692,8 +694,11 @@ body {
   height: 100%;
   top: 0;
   left: 0;
-  cursor: pointer;
+  cursor: unset;
   z-index: 3;
+}
+.controls-panel.show .range-input{
+  cursor: pointer;
 }
 
 .mix-button-wrapper {
@@ -843,18 +848,18 @@ body {
   max-width: 100%;
   margin: 0 auto;
   text-align: center;
-  pointer-events: auto;
+  pointer-events: none;
 }
 #lottieSection p {
   margin: 0;
   margin-bottom: 100px;
   padding: 0 24px;
   /* font-size: 64px; */
-  font-size: 3.333vw;
+  font-size: calc(2.13vw + 2.13vh);
   text-align: center;
   color: #fff;
   line-height: 110%;
-  letter-spacing: 2%;
+  letter-spacing: 5%;
   z-index: 1;
   position: relative;
   font-family: 'Comforter', sans-serif;
@@ -862,12 +867,13 @@ body {
 .lottie-pattern {
   /* height: 680px; */
   /* width: 39.50dvw; */
-  width: 33dvw;
+  width: calc(21.13vw + 21.13vh);
   display: block;
   position: absolute;
   left: 50%;
   top: 37%;
   transform: translate(-50%, -50%);
+  pointer-events: none;
 }
 .lottie-actions{
   position: absolute;
@@ -879,6 +885,7 @@ body {
 .lottie-actions .mix-btn{
   width: 169px;
   font-size: 11px;
+  pointer-events: auto;
 }
 
 #lottieSpacer {
@@ -933,6 +940,7 @@ body {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.55s cubic-bezier(0.25, 0.1, 0.25, 1), transform 0.55s cubic-bezier(0.25, 0.1, 0.25, 1);
+  width: 100%;
 }
 .point-desc.show {
   opacity: 1;
@@ -980,8 +988,9 @@ body {
   position: absolute;
   left: 50%;
   transform: translateX(-50%) translateY(0);
-  /* bottom: 33px; */
-  bottom: 4.06vh;
+  bottom: 34px;
+  /* bottom: 4.06vh; */
+  /* bottom: calc(2.60vw + 2.60vh); */
   width: 289px;
   display: flex;
   justify-content: space-between;
@@ -1028,7 +1037,46 @@ body {
   cursor: default;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 1440px) {
+  #lottieContainer svg{
+    height: 100% !important;
+  }
+  #lottieSection p {
+    font-size: calc(2.60vw + 2.60vh);
+  }
+  .lottie-pattern{
+    width: calc(25.49vw + 25.49vh);
+  }
+}
+
+@media (max-width: 1024px) {
+  .colb-card {
+    padding: unset;
+  }
+  .platform{
+    /* bottom: calc(2.93vw - 2.93vh); */
+    /* bottom: -5.3vw; */
+    bottom: -6vw;
+  }
+  .glass-range{
+    width: calc(6vw + 6vh);
+  }
+  .colbs-panel{
+    gap: calc(0.4vw + 0.4vh);
+  }
+  .message-panel{
+    flex-direction: column;
+    gap: 25px;
+    align-items: center;
+    padding: 0 20px;
+  }
+  .message-item{
+    max-width: unset;
+  }
+}
+
+
+@media (max-width: 768px) {
   .device {
     transform: scale(0.8);
   }
@@ -1038,17 +1086,9 @@ body {
   .flasks-container {
     gap: 10px;
   }
-  .glass-range {
-    width: 130px;
-    padding: 0 8px;
-    gap: 6px;
-  }
+  
   .range-title {
     font-size: 10px;
-  }
-  .mix-btn {
-    font-size: 1.4rem;
-    padding: 10px 28px;
   }
   .theme-btn {
     padding: 4px 16px;
@@ -1057,5 +1097,37 @@ body {
   .point {
     width: 24px;
     height: 8px;
+  }
+  .controls-panel {
+    padding: 0 20px;
+  }
+  .platform{
+    bottom: calc((2.40vw + 2.40vh) * -1);
+  }
+  .range-line-track{
+    display: none;
+  }
+  .glass-range{
+    padding: 0;
+    display: flex;
+    justify-content: center;
+  }
+  .platform.end-vertical{
+    top: 55% !important;
+  }
+  .points-wrapper{
+    bottom: calc((1vw + 1vh));
+  }
+}
+
+@media (max-width: 500px) {
+  .glass-text {
+    font-size: 16px;
+  }
+  .glass-blink{
+    display: none;
+  }
+  #lottieSection p{
+    margin-bottom: 30px;
   }
 }
