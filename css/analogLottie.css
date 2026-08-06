@@ -1,0 +1,226 @@
+.analogSection {
+  height: 100vh;
+  position: fixed;
+  overflow: hidden;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: -5;
+}
+
+.content {
+  position: relative;
+  z-index: 25;
+  text-align: center;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 20px;
+}
+
+#wavesCanvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  pointer-events: none;
+}
+
+#shopImage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  /* transition: opacity 1.8s ease; */
+  z-index: 5;
+}
+
+.cans-image {
+  position: absolute;
+  width: 3.75vw;
+  opacity: 0;
+  transition: opacity 0.5s;
+  z-index: 6;
+  pointer-events: none;
+  left: 0;
+  top: 0;
+}
+.tubes-image {
+  position: absolute;
+  width: 1.67vw;
+  opacity: 0;
+  transition: opacity 0.5s;
+  z-index: 6;
+  pointer-events: none;
+  left: 0;
+  top: 0;
+}
+.t-shirts-image {
+  position: absolute;
+  opacity: 0;
+  transition: opacity 0.5s;
+  z-index: 6;
+  pointer-events: none;
+  left: 0;
+  top: 0;
+}
+
+.t-shirts-image.tshirt-0 {
+  width: 18.06vw;
+}
+
+.t-shirts-image.tshirt-1 {
+  width: 20.14vw;
+}
+.cloud-image {
+  position: absolute;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 70;
+  pointer-events: none;
+  left: 0;
+  top: 0;
+  transform-origin: center center;
+}
+
+.person {
+  position: absolute;
+  width: auto;
+  z-index: 15;
+}
+
+.blue-screen {
+  position: relative;
+  top: 0;
+  left: 100%;
+  right: 0;
+  height: 100%;
+  background: #121315;
+  transition: none;
+  z-index: 110;
+  pointer-events: none;
+}
+
+#person1 {
+  height: 57.64vw;
+  right: -200vw;
+}
+#person2 {
+  height: 50.69vw;
+  right: -200vw;
+}
+#person3 {
+  height: 55.56vw;
+  right: -200vw;
+}
+#person4 {
+  height: 100%;
+  left: 100%;
+  top: 0;
+  z-index: 100;
+}
+
+.green-cloud1 {
+  width: 31.9vw;
+}
+.green-cloud2 {
+  width: 39.9vw;
+}
+.red-cloud1 {
+  width: 9.7vw;
+}
+.red-cloud2 {
+  width: 10.4vw;
+}
+.red-cloud3 {
+  width: 11.1vw;
+}
+.red-cloud4 {
+  width: 13.2vw;
+}
+.purple-cloud1 {
+  width: 8.7vw;
+}
+.purple-cloud2 {
+  width: 10.1vw;
+}
+.purple-cloud3 {
+  width: 11.5vw;
+}
+.purple-cloud4 {
+  width: 8.7vw;
+}
+.purple-cloud5 {
+  width: 10.4vw;
+}
+.purple-cloud6 {
+  width: 12.5vw;
+}
+
+@media (max-aspect-ratio: 16/9) {
+  .cans-image {
+    width: 6.7vh;
+  }
+  .tubes-image {
+    width: 3vh;
+  }
+  .t-shirts-image.tshirt-0 {
+    width: 32vh;
+  }
+  .t-shirts-image.tshirt-1 {
+    width: 36vh;
+  }
+  #person1 {
+    height: 102.7vh;
+  }
+  #person2 {
+    height: 89.9vh;
+    right: -40%;
+  }
+  #person3 {
+    height: 98.54vh;
+  }
+  .green-cloud1 {
+    width: 56.7vh;
+  }
+  .green-cloud2 {
+    width: 70.9vh;
+  }
+  .red-cloud1 {
+    width: 17.3vh;
+  }
+  .red-cloud2 {
+    width: 18.6vh;
+  }
+  .red-cloud3 {
+    width: 19.8vh;
+  }
+  .red-cloud4 {
+    width: 23.5vh;
+  }
+  .purple-cloud1 {
+    width: 15.5vh;
+  }
+  .purple-cloud2 {
+    width: 18.1vh;
+  }
+  .purple-cloud3 {
+    width: 20.5vh;
+  }
+  .purple-cloud4 {
+    width: 15.5vh;
+  }
+  .purple-cloud5 {
+    width: 18.6vh;
+  }
+  .purple-cloud6 {
+    width: 22.5vh;
+  }
+}
