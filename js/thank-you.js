@@ -665,11 +665,18 @@ if (thankYouLink) {
   thankYouLink.addEventListener('click', (event) => {
     event.preventDefault()
     const targetHref = thankYouLink.getAttribute('href') || './index.html'
-    const audio = getButtonAudio(false)
+    const navigate = () => {
+      window.location.assign(targetHref)
+    }
 
-    const navigate = () => window.location.href = targetHref
-    audio.addEventListener('ended', navigate, { once: true })
-    audio.addEventListener('error', navigate, { once: true })
+    const audio = getButtonAudio(false)
+    if (audio && typeof audio.addEventListener === 'function') {
+      audio.addEventListener('ended', navigate, { once: true })
+      audio.addEventListener('error', navigate, { once: true })
+    }
+
+    playCheklSound()
+    setTimeout(navigate, 220)
   })
 }
 

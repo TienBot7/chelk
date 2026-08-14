@@ -1242,10 +1242,10 @@ body {
     bottom: 50px;
   }
   .points-wrapper {
-    bottom: 30px;
+    bottom: 3vh;
   }
   .platform{
-    bottom: -100px;
+    bottom: -9.9vh;
   }
   .platform.end-vertical {
     --glass-w: 5vh;
@@ -1280,6 +1280,10 @@ body {
   }
   .controls-panel {
     bottom: 24.3vh;
+  }
+  :root {
+    --glass-w: 5.4vh;
+    --glass-h: 37.5vh;
   }
 }
 

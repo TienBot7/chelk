@@ -1068,6 +1068,12 @@ section.loading.hide {
     /* font-size: calc(8vw + 8vh); */
     font-size: 144px;
   }
+  .word-slide[data-word-idx="0"] .letter{
+    font-size: 114px;
+  }
+  .word-slide[data-word-idx="2"] .letter{
+    font-size: 114px;
+  }
   .slide {
     width: 100vw;
     left: 50%;
@@ -1151,6 +1157,7 @@ section.loading.hide {
   .help{
     right: 10px;
     padding: 12px;
+    bottom: 50px;
   }
   .help.open{
     max-width: 370px;

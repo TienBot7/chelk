@@ -214,7 +214,7 @@
 
 .custom-checkbox__label {
   color: #979798;
-  line-height: 1.2;
+  line-height: 1.6;
   letter-spacing: -2%;
   /* font-size: calc(0.53vw + 0.53vh); */
   font-size: 16px;
@@ -281,7 +281,7 @@
   justify-content: start;
   /* padding: calc(1.00vw + 1.00vh) 0; */
   padding: 30px 0;
-  padding-top: 25px;
+  padding-top: 26px;
 }
 
 .form__submit{
@@ -355,7 +355,7 @@
 .form__bottom-content{
   display: flex;
   flex-direction: column;
-  height: 100%;
+  /* height: 100%; */
   gap: 55px;
 }
 
@@ -376,8 +376,10 @@
 
 @media (max-width: 1440px) {
   .form__content{
-    padding-top: 130px;
-    gap: 186px;
+    padding-top: 12.8vh;
+    /* gap: 18.4vh; */
+    gap: unset;
+    height: 100vh;
   }
   .form__text{
     /* font-size: calc(1.30vw + 1.30vh); */
@@ -394,7 +396,7 @@
     grid-template-columns: 0.48fr 0.08fr 0.89fr 1fr 0.48fr;
   }
   .form__bottom-content{
-    gap: 47px;
+    gap: 30px;
   }
 }
 

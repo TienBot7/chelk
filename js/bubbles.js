@@ -217,7 +217,7 @@ function attachBehavior(bubble, item) {
   const gameSection = document.querySelector('.game')
   let timeoutId = null
   let swapTimeout = null
-  bubble.dataset.bubbleTextState = bubble.dataset.bubbleTextState || '0'
+  bubble.dataset.bubbleTextState = bubble.dataset.bubbleTextState || '1'
 
   function isGameActive() {
     if (!gameSection) return false
@@ -347,7 +347,7 @@ function attachBehavior(bubble, item) {
       }
     } catch (e) {}
 
-    const cycleState = Number(bubble.dataset.bubbleTextState || '0')
+    const cycleState = Number(bubble.dataset.bubbleTextState || '1')
 
     if (cycleState === 0) {
       swapText(item.text1, '✦ клиент ✦', true)
@@ -497,6 +497,7 @@ function spawnBubble(item, fixedTarget, sourcePoint) {
 
       const textElement = bubble.querySelector('.bubble-text')
       textElement.innerHTML = buildBubbleTextHtml(item.text1, '✦ клиент ✦')
+      bubble.dataset.bubbleTextState = '1'
 
       attachBehavior(bubble, item)
     }
