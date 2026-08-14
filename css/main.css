@@ -1125,7 +1125,7 @@ section.loading.hide {
     display: flex;
   }
   .controls-wrapper.visible {
-    pointer-events: auto !important;
+    pointer-events: none !important;
     bottom: 15%;
   }
   .dots {
