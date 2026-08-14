@@ -1041,6 +1041,9 @@ section.loading.hide {
     padding: 6px 18px;
     gap: 10px;
   }
+  .click-svg-wrapper {
+    top: calc(50% - 33px) !important;
+  }
 }
 
 @media (max-width: 500px) {
@@ -1170,5 +1173,8 @@ section.loading.hide {
   .hepl__top{
     gap: 2px;
     padding: 6px;
+  }
+  .click-svg-wrapper {
+    top: 50% !important;
   }
 }

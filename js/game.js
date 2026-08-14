@@ -1342,7 +1342,14 @@ function showPlatformRow() {
   const baseTop = platform.offsetTop
   const width = platform.offsetWidth
   const containerWidth = bubblesContainer.clientWidth
-  const maxBottleSpread = window.innerWidth <= 1024 ? 730 : 890
+  let maxBottleSpread = 890
+
+  if (window.innerWidth <= 768) {
+    maxBottleSpread = 620
+  } else if (window.innerWidth <= 1024) {
+    maxBottleSpread = 730
+  }
+
   const maxStep = Math.min(maxBottleSpread / 4, (containerWidth - width) / 4)
   const availableLeft = baseLeft
   const availableRight = containerWidth - width - baseLeft
