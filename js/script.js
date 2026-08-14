@@ -898,10 +898,17 @@ async function initThreeForSlide(slideElement, modelConfig, slideIndex) {
   // чтобы сохранить aspect-ratio, одновременно покрывая контейнер.
   // Ensure slide is absolutely positioned at top/left so slides overlay horizontally
   slideElement.style.position = 'absolute';
-  slideElement.style.top = '0';
+  slideElement.style.top = '50%';
   slideElement.style.left = '50%';
+  // slideElement.style.left = 'width: max(50%, calc(92% - 3.89vh));';
   slideElement.style.width = slideElement.style.width || '100%';
-  slideElement.style.height = slideElement.style.height || '100vh';
+  if (window.innerWidth <= 768)  {
+    slideElement.style.height = slideElement.style.height || '1100px';
+  } else if (window.innerWidth <= 1024) {
+    slideElement.style.height = slideElement.style.height || '1600px';
+  } else {
+    slideElement.style.height = slideElement.style.height || '100vh, 1080px)';
+  }
   slideElement.style.overflow = 'hidden';
   canvas.style.cssText = '';
   canvas.style.position = 'absolute';
@@ -1324,36 +1331,56 @@ async function buildCarousel() {
   slidesArray.forEach((slide, idx) =>
     slide.addEventListener('click', () => syncChangeSlide(idx)),
   );
-  prevBtn.addEventListener('click', prevSlide);
-  nextBtn.addEventListener('click', nextSlide);
 
-  if (window.matchMedia('(max-width: 768px)').matches) {
-    let touchStartX = 0;
-    let touchStartY = 0;
-    const swipeThreshold = 60;
+  const carouselViewport = document.getElementById('carousel');
+  const navigateCarousel = (direction) => {
+    if (isTransitioning) return;
+    if (direction === 'next') nextSlide();
+    else prevSlide();
+  };
 
-    carouselTrack.addEventListener('touchstart', (e) => {
-      if (!e.changedTouches || !e.changedTouches.length) return;
-      const touch = e.changedTouches[0];
-      touchStartX = touch.screenX;
-      touchStartY = touch.screenY;
-    }, { passive: true });
+  prevBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigateCarousel('prev');
+  });
 
-    carouselTrack.addEventListener('touchend', (e) => {
-      if (!e.changedTouches || !e.changedTouches.length || isTransitioning) return;
-      const touch = e.changedTouches[0];
-      const touchEndX = touch.screenX;
-      const touchEndY = touch.screenY;
-      const deltaX = touchEndX - touchStartX;
-      const deltaY = touchEndY - touchStartY;
+  nextBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigateCarousel('next');
+  });
 
-      if (Math.abs(deltaX) < swipeThreshold || Math.abs(deltaX) < Math.abs(deltaY)) {
-        return;
-      }
+  let touchStartX = 0;
+  let touchStartY = 0;
+  const swipeThreshold = 60;
 
-      if (deltaX < 0) nextSlide();
-      else prevSlide();
-    }, { passive: true });
+  const handleCarouselTouchStart = (e) => {
+    if (!e.changedTouches || !e.changedTouches.length) return;
+    const touch = e.changedTouches[0];
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+  };
+
+  const handleCarouselTouchEnd = (e) => {
+    if (!e.changedTouches || !e.changedTouches.length || isTransitioning) return;
+    const touch = e.changedTouches[0];
+    const touchEndX = touch.clientX;
+    const touchEndY = touch.clientY;
+    const deltaX = touchEndX - touchStartX;
+    const deltaY = touchEndY - touchStartY;
+
+    if (Math.abs(deltaX) < swipeThreshold || Math.abs(deltaX) < Math.abs(deltaY)) {
+      return;
+    }
+
+    if (deltaX < 0) navigateCarousel('next');
+    else navigateCarousel('prev');
+  };
+
+  if (carouselViewport) {
+    carouselViewport.addEventListener('touchstart', handleCarouselTouchStart, { passive: true });
+    carouselViewport.addEventListener('touchend', handleCarouselTouchEnd, { passive: true });
   }
 
   window.addEventListener('resize', () => {

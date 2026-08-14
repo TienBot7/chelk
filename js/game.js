@@ -97,7 +97,6 @@ let initialColoredSpawned = false
 let isMerging = false
 let mixedDone = false
 const MAX_LIQUID_LEVEL = 7
-// Fill percentages: maximum visual fill must not exceed 94%
 const FILL_MAX_PERCENT = 94
 const FILL_HALF_PERCENT = Math.round(FILL_MAX_PERCENT * 0.66)
 
@@ -144,12 +143,10 @@ function playCheklSound() {
     audio.currentTime = 0
     audio.play().catch(() => {})
   } catch (e) {
-    // ignore playback errors
   }
 }
 
 function updatePlatformLiquid(scoreValue) {
-  // evenly distribute progress across 7 parts: min 0% -> max 94%
   const PARTS = 7
   const maxIndex = PARTS - 1
   const level = Math.max(0, Math.min(maxIndex, Math.round(scoreValue)))
@@ -380,8 +377,8 @@ function addLiquidParticle() {
   const rect = canvas.getBoundingClientRect()
   const glassContainer = platform?.querySelector('.device .glass-container')
   const glassRect = glassContainer ? glassContainer.getBoundingClientRect() : null
-  const offsetX = glassRect ? glassRect.width / 2.3 : rect.width / 2 //5 - смещение влево
-  const offsetY = glassRect ? glassRect.height / 4.0 : rect.height / 2 //5 - смещение вверх
+  const offsetX = glassRect ? glassRect.width / 2.6 : rect.width / 2 //5 - смещение влево 2.6 (2.3)
+  const offsetY = glassRect ? glassRect.height / 4.3 : rect.height / 2 //5 - смещение вверх 4.6 (4.0)
   const count = Math.round(randomNumBetween(5, 8)) //число новых частиц за вызов
   for (let i = 0; i < count; i++) {
     const radius = randomNumBetween(8, 9) //размер частиц
@@ -699,11 +696,9 @@ function clearLottieScrollListener() {
   if (scrollArea && lottieScrollHandler) {
     try { scrollArea.removeEventListener('scroll', lottieScrollHandler) } catch (e) {}
   }
-  // also remove frame listener from lottie if it was set
   if (lottieAnimation && lottieScrollHandler) {
     try { lottieAnimation.removeEventListener('enterFrame', lottieScrollHandler) } catch (e) {}
   }
-  // Remove click and scroll handlers
   if (lottieContainerEl && lottieAnimation && lottieAnimation._clickHandler) {
     try { lottieContainerEl.removeEventListener('click', lottieAnimation._clickHandler) } catch (e) {}
   }
@@ -730,7 +725,6 @@ function playLottieAnimation(path) {
     return
   }
   
-  // Keep overlay hidden until the Lottie is ready and the delay has passed
   overlay.classList.remove('show')
   overlay.style.removeProperty('display')
   overlay.style.visibility = 'hidden'
@@ -774,8 +768,6 @@ function playLottieAnimation(path) {
         const totalFrames = lottieAnimation.totalFrames || 1
         const frame = Math.max(0, Math.min(totalFrames - 1, Math.floor(lottieAnimation.currentFrame || 0)))
         displayedFrame = frame
-        // adjust playback speed when past threshold frame for smoother slow-motion effect,
-        // but keep the last 8 frames at normal speed.
         if (!isScrubbing) {
           try {
             const lastNormalFrameStart = Math.max(0, totalFrames - 8)
@@ -785,7 +777,6 @@ function playLottieAnimation(path) {
           } catch (e) {}
         }
 
-        // adjust overlay position when a specific frame is reached
         if (window.innerWidth <= 500) {
           if (frame === 39) {
             if (selectedColorVariant === '#C4142D') {
@@ -843,7 +834,6 @@ function playLottieAnimation(path) {
         }
       }
 
-      // update on each frame during autoplay
       lottieScrollHandler = updateFrame
       lottieAnimation.addEventListener('enterFrame', lottieScrollHandler)
 
@@ -879,22 +869,18 @@ function playLottieAnimation(path) {
       lottieAnimation.addEventListener('DOMLoaded', revealLottieOverlay)
       lottieAnimation.addEventListener('loaded_images', revealLottieOverlay)
 
-      // Track autoplay state and add interactive controls
       let isAutoPlaying = false
 
-      // Click handler: toggle play/pause
       const handleLottieClick = (e) => {
         if (!lottieAnimation) return
         e.preventDefault()
         e.stopPropagation()
         if (isAutoPlaying) {
-          // Pause autoplay
           isAutoPlaying = false
           lottieAnimation.pause()
           return
         }
 
-        // If we were scrubbing, stop the scrub animation and mark not scrubbing
         try {
           if (lottieScrubRafId !== null) {
             cancelAnimationFrame(lottieScrubRafId)
@@ -903,15 +889,12 @@ function playLottieAnimation(path) {
         } catch (e) {}
         isScrubbing = false
 
-        // Reattach enterFrame handler so normal frame updates resume
         try {
           if (lottieAnimation && lottieScrollHandler) lottieAnimation.addEventListener('enterFrame', lottieScrollHandler)
         } catch (e) {}
 
-        // Start playing from the currently displayed frame
         isAutoPlaying = true
         try {
-          // Use goToAndPlay when available to ensure playback begins at the expected frame
           if (typeof lottieAnimation.goToAndPlay === 'function') {
             lottieAnimation.goToAndPlay(displayedFrame, true)
           } else {
@@ -924,7 +907,6 @@ function playLottieAnimation(path) {
         try { updateFrame() } catch (e) {}
       }
 
-      // Scroll handler: scrub smoothly and predictably toward the requested frame
       let lastScrollTop = 0
       let lottieScrubTargetFrame = 0
       let lottieScrubRafId = null
@@ -966,7 +948,6 @@ function playLottieAnimation(path) {
           lottieAnimation.pause()
         }
 
-        // mark that we're scrubbing manually and temporarily detach the enterFrame handler
         isScrubbing = true
         try { if (lottieAnimation && lottieScrollHandler) lottieAnimation.removeEventListener('enterFrame', lottieScrollHandler) } catch (e) {}
 
@@ -983,11 +964,9 @@ function playLottieAnimation(path) {
         lottieScrubRafId = requestAnimationFrame(animateLottieToTargetFrame)
       }
 
-      // Attach event listeners
       lottieContainerEl.addEventListener('click', handleLottieClick)
       scrollArea.addEventListener('scroll', handleLottieScroll)
 
-      // Store handlers for cleanup
       lottieAnimation._clickHandler = handleLottieClick
       lottieAnimation._scrollHandler = handleLottieScroll
 
@@ -997,7 +976,6 @@ function playLottieAnimation(path) {
         }
       }, 2600)
 
-      // Start autoplay after reveal
       const autoplayWatcher = setInterval(() => {
         if (overlay.classList.contains('show') && lottieAnimation && !isAutoPlaying) {
           isAutoPlaying = true
@@ -1226,7 +1204,6 @@ function centerPlatform() {
   const maxX = Math.max(minX, rect.width - edgeMargin - initialPlatformWidth)
   let initialX = initialPlatformX - rect.left - initialPlatformWidth / 2
   initialX = Math.max(minX, Math.min(maxX, initialX))
-  // only update if platform is not being moved by the game
   if (!gameActive && !platformRowShown) {
     platform.style.left = initialX + 'px'
   }
@@ -1247,10 +1224,9 @@ updateColumns()
 function spawnDrop(forceColor = false) {
   if (!gameActive) return
   const sessionId = gameSessionId
-  // find available columns
   const available = []
   for (let i = 0; i < columnsCount; i++) if (!columnsOccupied[i]) available.push(i)
-  if (available.length === 0) return // no free column, skip spawn
+  if (available.length === 0) return
 
   const col = available[Math.floor(Math.random() * available.length)]
   columnsOccupied[col] = true
@@ -1286,24 +1262,20 @@ function spawnDrop(forceColor = false) {
   )
 
   anim.onfinish = () => {
-    // ignore completed bubbles from an older game session
     if (sessionId !== gameSessionId) {
       if (bubble.parentNode) bubble.parentNode.removeChild(bubble)
       columnsOccupied[col] = false
       return
     }
 
-    // ignore completed bubbles after game ended/reset
     if (!gameActive) {
       if (bubble.parentNode) bubble.parentNode.removeChild(bubble)
       columnsOccupied[col] = false
       return
     }
 
-    // if bubble reached bottom without being caught
     const wasCaught = bubble.dataset.caught === '1'
     if (!wasCaught) {
-      // miss: if it was a colored bubble, reduce progress but never below zero
       if (bubble.dataset.color === selectedColorVariant) {
         setScoreValue(score - 1)
       }
@@ -1319,13 +1291,12 @@ function computeLeftForColumn(colIndex) {
   return Math.round(offset + colIndex * (bubbleSize + GAP))
 }
 
-// game state
 let gameActive = false
 let gameSessionId = 0
 let allowStart = true
 let platformRowShown = false
-const TARGET_SCORE = 7 // score needed to win/lose
-const SPAWN_INTERVAL = 1500 // ms (reduced frequency)
+const TARGET_SCORE = 7
+const SPAWN_INTERVAL = 1500
 let spawnIntervalId = null
 let spawnTimeoutIds = []
 
@@ -1371,7 +1342,7 @@ function showPlatformRow() {
   const baseTop = platform.offsetTop
   const width = platform.offsetWidth
   const containerWidth = bubblesContainer.clientWidth
-  const maxBottleSpread = 971
+  const maxBottleSpread = window.innerWidth <= 1024 ? 730 : 890
   const maxStep = Math.min(maxBottleSpread / 4, (containerWidth - width) / 4)
   const availableLeft = baseLeft
   const availableRight = containerWidth - width - baseLeft
@@ -1623,8 +1594,6 @@ function resetAppState() {
   stopLiquidEffect()
 }
 
-// platform and collision logic
-// center platform on page load
 centerPlatform()
 
 platform.addEventListener('click', (event) => {
@@ -1638,7 +1607,6 @@ platform.addEventListener('click', (event) => {
     showPlatformRow()
     return
   }
-  // hide help panel when user starts the game and clear inline styles
   try {
     const helpEl = document.querySelector('.help')
     if (helpEl) {
@@ -1655,12 +1623,9 @@ const deviceRotator = platform.querySelector('.device-rotator')
 if (deviceRotator) {
   deviceRotator.addEventListener('click', (event) => {
     if (!platformRowShown) return
-    // allow the row click handler to process bottle state changes
-    // and play sound only once from the container click listener.
   })
 }
 
-// single score counter
 let score = 0
 const scoreEl = document.getElementById('score')
 function setScoreValue(newScore) {
@@ -1689,7 +1654,6 @@ bubblesContainer.addEventListener('mousemove', (e) => {
   updatePlatformPosition(e.clientX)
 })
 
-// touch support
 bubblesContainer.addEventListener(
   'touchmove',
   (e) => {
@@ -1704,7 +1668,6 @@ function checkCollisions() {
     return
   }
 
-  // Use rotated geometry of .glass-container for collision detection.
   const rotator = document.querySelector('.device-rotator')
   const glass = rotator ? rotator.querySelector('.glass-container') : platform.querySelector('.glass-container')
   if (!glass) {
@@ -1712,7 +1675,6 @@ function checkCollisions() {
     return
   }
 
-  // get transform angle of rotator
   const rotStyle = rotator ? getComputedStyle(rotator).transform : 'none'
   const angle = (() => {
     if (!rotStyle || rotStyle === 'none') return 0
@@ -1738,7 +1700,6 @@ function checkCollisions() {
     const by = br.top + br.height / 2
     const radius = Math.max(br.width, br.height) / 2
 
-    // sample points around bubble perimeter (8 samples)
     const samples = 8
     let hit = false
     const cos = Math.cos(-angle)
@@ -1751,7 +1712,6 @@ function checkCollisions() {
       const sx = bx + Math.cos(theta) * radius
       const sy = by + Math.sin(theta) * radius
 
-      // rotate sample into glass's unrotated coordinate space
       const rx = cos * (sx - gCenterX) - sin * (sy - gCenterY) + gCenterX
       const ry = sin * (sx - gCenterX) + cos * (sy - gCenterY) + gCenterY
 
@@ -1814,7 +1774,6 @@ function endGame(preservePosition = false) {
   spawnTimeoutIds.forEach(clearTimeout)
   spawnTimeoutIds = []
 
-  // Track if platform was clicked before overlay appears
   let platformClickedEarly = false
   const earlyClickHandler = () => {
     platformClickedEarly = true
@@ -1831,36 +1790,25 @@ function endGame(preservePosition = false) {
     testDivs.forEach((testDiv) => {
       testDiv.style.opacity = '1'
     })
-    platform.offsetHeight // force layout before transition
+    platform.offsetHeight
     platform.classList.add('end-vertical')
   }
 
-  // remove remaining bubbles
   const all = Array.from(bubblesContainer.querySelectorAll('.bubble, .bubble2'))
   for (const b of all) if (b.parentNode) b.parentNode.removeChild(b)
 
-  // After the platform finished turning/centering, show a temporary click SVG above the bottle
   try {
     setTimeout(() => {
       try {
         if (!platform) return;
-        // Skip overlay if platform was clicked before it appeared
         if (platformClickedEarly) return;
-        // Remove early click listener
         if (platform && platform.removeEventListener) {
           try { platform.removeEventListener('click', earlyClickHandler) } catch (e) {}
         }
         const rect = platform.getBoundingClientRect();
         const wrapper = document.createElement('div');
         wrapper.className = 'click-svg-wrapper';
-        // position absolutely in the center of the viewport
-        wrapper.style.position = 'fixed';
-        wrapper.style.left = '50%';
-        wrapper.style.top = 'calc(50% - 30px)';
-        wrapper.style.pointerEvents = 'none';
-        wrapper.style.zIndex = 2200;
 
-        // inline SVG (click.svg) — keep it small and centered
         wrapper.innerHTML = `
           <svg width="73" height="73" viewBox="0 0 73 73" fill="none" xmlns="http://www.w3.org/2000/svg">
             <!-- Pulsating dashed outline -->
@@ -1875,10 +1823,8 @@ function endGame(preservePosition = false) {
 
         document.body.appendChild(wrapper);
 
-        // trigger fade-in
         requestAnimationFrame(() => wrapper.classList.add('visible'));
 
-        // play click sound (use global audioManager if available, otherwise fallback to preloadedAudio)
         try {
           if (window.audioManager && typeof window.audioManager.play === 'function') {
             window.audioManager.play('chelk', { loop: false, volume: 0.9, forceImmediate: true });
@@ -1887,15 +1833,12 @@ function endGame(preservePosition = false) {
           }
         } catch (e) {}
 
-        // do not auto-hide — remove overlay when platform is clicked
         try {
           if (platform && platform.addEventListener) {
             const removeOverlay = () => {
               try { wrapper.classList.remove('visible'); } catch (e) {}
               setTimeout(() => { try { if (wrapper.parentNode) wrapper.parentNode.removeChild(wrapper); } catch (e) {} }, 400);
             };
-            // listen for a single click on the platform to remove overlay
-            // remove early click listener first to avoid double-fire
             try { platform.removeEventListener('click', earlyClickHandler) } catch (e) {}
             platform.addEventListener('click', removeOverlay, { once: true });
           }

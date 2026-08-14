@@ -943,10 +943,8 @@ if (mixBtn) {
     if (!isFilling) {
       start = syncStartFromSelection()
 
-      // Bring analogSection to top of the viewport and to the front
       try {
         if (analogSection) {
-          // Ensure the section is visible and above other elements
           analogSection.style.display = 'block'
           analogSection.style.visibility = 'visible'
           analogSection.scrollIntoView({ behavior: 'smooth', block: 'start' })

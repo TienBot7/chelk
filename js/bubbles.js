@@ -512,7 +512,7 @@ function triggerBubbleSpawn({ triggeredBy, sourcePoint } = {}) {
   spawnLocked = true
   if (spawnBtn) spawnBtn.disabled = true
 
-  const headMobileMode = triggeredBy === 'head' && window.innerWidth <= 500
+  const headMobileMode = triggeredBy === 'head' && window.innerWidth > 390 && window.innerWidth <= 500
   if (triggeredBy === 'head' && !sourcePoint) {
     sourcePoint = {
       sx: 0.5,
@@ -691,26 +691,26 @@ function spawnThreeWithStagger(done, forcedGroup, sourcePoint, options = {}) {
   const stagger = 220 // ms between spawns
   // fixed relative target positions for the three bubbles (fractions of available area)
   const defaultFixedTargets = [
-    { fx: 0.955, fy: 0.41 },
-    { fx: 0.13, fy: 0.66 },
+    { fx: 0.954, fy: 0.41 },
+    { fx: 0.13, fy: 0.68 },
     { fx: 0.76, fy: 0.14 },
   ]
   const fixedTargets1440 = [
     { fx: 0.985, fy: 0.44 },
-    { fx: 0.09, fy: 0.69 },
+    { fx: 0.09, fy: 0.70 },
     { fx: 0.79, fy: 0.15 },
   ]
   const fixedTargets1024 = [
-    { fx: 0.93, fy: 0.335 },
-    { fx: 0.08, fy: 0.60 },
+    { fx: 0.93, fy: 0.338 },
+    { fx: 0.032, fy: 0.455 },
   ]
   const fixedTargets768 = [
-    { fx: 0.88, fy: 0.46 },
-    { fx: 0.10, fy: 0.62 },
+    { fx: 0.955, fy: 0.325 },
+    { fx: 0.04, fy: 0.47 },
   ]
   const fixedTargets390 = [
-    { fx: 0.86, fy: 0.50 },
-    { fx: 0.12, fy: 0.64 },
+    { fx: 0.91, fy: 0.29 },
+    { fx: 0.06, fy: 0.48 },
   ]
   const fixedTargets = options.fixedTargets || (() => {
     const width = window.innerWidth

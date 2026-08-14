@@ -5,12 +5,19 @@ import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js'
 
 const isAndroidDevice = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent)
 const isMobileDevice = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+const MAX_HEAD_CANVAS_HEIGHT = 1080
+
+function getHeadCanvasSize() {
+  const width = window.innerWidth
+  const height = Math.min(window.innerHeight, MAX_HEAD_CANVAS_HEIGHT)
+  return { width, height }
+}
 
 // --- ИНИЦИАЛИЗАЦИЯ ---
 const canvas = document.getElementById('canvas')
 if (canvas) {
   canvas.style.width = '100%'
-  canvas.style.height = '100%'
+  canvas.style.height = `${Math.min(window.innerHeight, MAX_HEAD_CANVAS_HEIGHT)}px`
   canvas.style.display = 'block'
 }
 const renderer = new WebGLRenderer({
@@ -20,17 +27,19 @@ const renderer = new WebGLRenderer({
   preserveDrawingBuffer: false,
   powerPreference: isAndroidDevice ? 'low-power' : 'high-performance',
 })
-renderer.setSize(window.innerWidth, window.innerHeight)
+const headCanvasSize = getHeadCanvasSize()
+renderer.setSize(headCanvasSize.width, headCanvasSize.height)
 renderer.setPixelRatio(isMobileDevice ? 1 : Math.min(window.devicePixelRatio || 1, 2))
 renderer.setClearColor(0x121315, 1)
 renderer.shadowMap.enabled = false
 
 if (renderer.domElement) {
-  renderer.domElement.style.position = 'absolute'
-  renderer.domElement.style.top = '0'
+  renderer.domElement.style.position = 'fixed'
+  renderer.domElement.style.bottom = '0'
   renderer.domElement.style.left = '0'
   renderer.domElement.style.width = '100%'
-  renderer.domElement.style.height = '100%'
+  renderer.domElement.style.height = `${Math.min(window.innerHeight, MAX_HEAD_CANVAS_HEIGHT)}px`
+  renderer.domElement.style.maxHeight = `${MAX_HEAD_CANVAS_HEIGHT}px`
   renderer.domElement.style.display = 'block'
 }
 
@@ -40,15 +49,18 @@ renderer.domElement.addEventListener('webglcontextlost', (event) => {
 })
 renderer.domElement.addEventListener('webglcontextrestored', () => {
   console.info('WebGL context restored')
-  renderer.setSize(window.innerWidth, window.innerHeight)
+  const restoredSize = getHeadCanvasSize()
+  renderer.setSize(restoredSize.width, restoredSize.height)
   renderer.setPixelRatio(isMobileDevice ? 1 : Math.min(window.devicePixelRatio || 1, 2))
 })
 
 const scene = new Scene()
 scene.background = new Color(0x121315)
 
+const initialHeadCanvasSize = getHeadCanvasSize()
+
 // === ПРЕДУСТАНОВЛЕННЫЕ НАСТРОЙКИ КАМЕРЫ ===
-const camera = new PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000)
+const camera = new PerspectiveCamera(45, initialHeadCanvasSize.width / initialHeadCanvasSize.height, 0.1, 1000)
 camera.position.set(0.0, 0.8, 0.5)
 
 const controls = new OrbitControls(camera, renderer.domElement)
@@ -215,28 +227,34 @@ const loader = new GLTFLoader()
 
 function getHeadModelScaleFactor() {
   const width = window.innerWidth
-  if (width <= 390) return 0.72
-  if (width <= 768) return 0.76
-  if (width <= 1024) return 0.8
+  if (width <= 390) return 0.78
+  if (width <= 768) return 0.8
+  if (width <= 1024) return 1
   if (width <= 1440) return 1.1
-  return 1.18
+  return 1.22
 }
 
 function getHeadModelYOffset() {
-  return window.innerWidth <= 1024 ? 0.08 : -0.02
+  return window.innerWidth <= 1024 ? 0.04 : -0.02
 }
 
 function getHeadModelPosition() {
   const width = window.innerWidth
   
+  if (width <= 500) {
+    return new Vector3(0.005, getHeadModelYOffset() + 0, 0.01)
+  }
+  if (width <= 768) {
+    return new Vector3(0.005, getHeadModelYOffset() + 0.005, 0.01)
+  }
   if (width <= 1024) {
-    return new Vector3(-0.002, getHeadModelYOffset() + 0.02, 0.01)
+    return new Vector3(0.005, getHeadModelYOffset() - 0.065, 0.01)
   }
   else if (width <= 1440) {
     // return new Vector3(0.01, getHeadModelYOffset(), 0.01)
     return new Vector3(0.02, getHeadModelYOffset() - 0.06, 0.01)
   }
-  return new Vector3(-0.005, getHeadModelYOffset() - 0.11, 0.01)
+  return new Vector3(-0.001, getHeadModelYOffset() - 0.11, 0.01)
 }
 
 function applyHeadModelLayout(model = currentModel) {
@@ -508,9 +526,14 @@ function exportSceneToGLB(filename = 'exported_scene.glb') {
 // Settings UI removed
 
 window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight
+  const sized = getHeadCanvasSize()
+  const aspect = sized.width / sized.height
+  camera.aspect = aspect
   camera.updateProjectionMatrix()
-  renderer.setSize(window.innerWidth, window.innerHeight)
+  canvas.style.height = `${sized.height}px`
+  renderer.domElement.style.height = `${sized.height}px`
+  renderer.domElement.style.maxHeight = `${MAX_HEAD_CANVAS_HEIGHT}px`
+  renderer.setSize(sized.width, sized.height)
   renderer.setPixelRatio(isMobileDevice ? 1 : Math.min(window.devicePixelRatio || 1, 2))
   applyHeadModelLayout(currentModel)
 })

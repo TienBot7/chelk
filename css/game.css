@@ -95,7 +95,8 @@
   left: 0;
   pointer-events: auto;
   /* bottom: -6.48vh; */
-  bottom: -60px;
+  /* bottom: -80px; */
+  bottom: max(-90px, calc(-80px + (100vh - 1080px) * 0.1));
   /* bottom: calc((4.17vw + 4.17vh) * -1); */
   max-width: calc(100% - 300px);
   box-sizing: border-box;
@@ -105,9 +106,18 @@
 
 
 :root {
-  --glass-w: 5vmin;
-  --glass-h: 35vmin;
+  /* --glass-w: min(5vmin, 54px);
+  --glass-h: min(36vmin, 388.8px); */
+  /* --glass-w: 54px;
+  --glass-h: 388.8px; */
+  --glass-w: min(54px, calc(0.74vh + 46px));
+  --glass-h: min(388.8px, calc(10.7vh + 273.2px));
 }
+
+/* .platform.end-vertical {
+  --glass-w: max(30px, min(54px, calc((1080px - 100vh) * 0.02 + 30px)));
+  --glass-h: max(220px, min(388.8px, calc((1080px - 100vh) * 0.18 + 220px)));
+} */
 
 body {
   min-height: 100vh;
@@ -198,14 +208,14 @@ body {
 }
 
 .platform.end-vertical {
+  --glass-w: min(5.56vh, 60px);
+  --glass-h: min(40.74vh, 370px);
   left: 50% !important;
-  top: 45% !important;
+  top: 50% !important;
+  /* top: 50%; */
   bottom: auto;
   transform: translate(-50%, -50%);
-  transition:
-    left 1.3s ease-in-out,
-    top 1.3s ease-in-out,
-    transform 1.3s ease-in-out;
+  transition: 1.3s ease-in-out;
 }
 
 .platform.end-vertical .device-rotator {
@@ -294,7 +304,7 @@ body {
 
 .device .arrow {
   transform: rotate(-90deg);
-  animation: thermostat-arrow-sway-left 0.5s ease-in-out infinite alternate;
+  animation: thermostat-arrow-sway-left 0.7s ease-in-out infinite alternate;
   will-change: transform, opacity;
   opacity: 1;
   transition: opacity 0.4s ease;
@@ -302,7 +312,7 @@ body {
 
 .device .arrow.right {
   transform: rotate(90deg);
-  animation: thermostat-arrow-sway-right 0.5s ease-in-out infinite alternate;
+  animation: thermostat-arrow-sway-right 0.7s ease-in-out infinite alternate;
 }
 
 @keyframes thermostat-arrow-sway-left {
@@ -370,26 +380,24 @@ body {
 
 .device-rotator .test2{
   background-color: #121315;
-  width: 5.5vmin;
+  width: max(45px, 75px);
   height: 40px;
   position: absolute;
   top: -20px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 1;
-  /* display: none; */
   opacity: 0;
   transition: 0.8s ease-in-out;
 }
 
 .device-rotator .test3{
-  width: 5.5vmin;
+  width: min(75px, calc(7.59vh - 7px));
   position: absolute;
   top: -40px;
   z-index: 1;
   left: 50%;
   transform: translateX(-50%);
-  /* display: none; */
   opacity: 0;
   transition: 0.8s ease-in-out;
 }
@@ -665,7 +673,8 @@ body {
   left: 50%;
   transform: translateX(-50%) translateY(18px);
   /* bottom: 230px; */
-  bottom: 23dvh;
+  /* bottom: 23dvh; */
+  bottom: 248px;
   display: flex;
   justify-content: center;
   z-index: 20;
@@ -675,12 +684,14 @@ body {
   transition:
     opacity 0.6s cubic-bezier(0.25, 0.1, 0.25, 1),
     transform 0.6s cubic-bezier(0.25, 0.1, 0.25, 1);
+  z-index: -1;
 }
 .controls-panel.show {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
   pointer-events: auto;
   transition-delay: 0.14s;
+  z-index: 1;
 }
 .colbs-panel {
   display: flex;
@@ -697,11 +708,12 @@ body {
 }
 .message-panel {
   width: 100%;
-  /* max-width: 968px; */
+  max-width: 968px;
   /* max-width: 50.31vw; */
   /* margin: 0 auto 18px; */
   /* top: 120px; */
-  top: 14.4dvh;
+  /* top: 14.4dvh; */
+  top: 150px;
   display: flex;
   gap: 10px;
   text-align: center;
@@ -712,6 +724,7 @@ body {
   left: 50%;
   transform: translateX(-50%);
   justify-content: center;
+  z-index: 1;
 }
 .message-panel.show {
   opacity: 1;
@@ -723,13 +736,13 @@ body {
   background: #1E1E21;
   border: 1px solid #4B4B4B;
   border-radius: 93px;
-  padding: 19px 30px 18px 30px;
+  padding: 19px 35px 18px 35px;
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: flex-start;
   text-align: left;
-  gap: 22px;
+  gap: 15px;
   max-width: 550px;
   position: relative;
 }
@@ -746,6 +759,7 @@ body {
   position: absolute;
   top: -13px;
   left: 33px;
+  font-size: 12px;
 }
 .colb-card {
   display: flex;
@@ -757,21 +771,26 @@ body {
   border-radius: 32px;
 }
 .glass-range {
-  width: calc(5.67vw + 5.67vh);
-  height: calc(1.60vw + 1.60vh);
+  /* width: calc(5.67vw + 5.67vh); */
+  width: 170px;
+  /* height: calc(1.60vw + 1.60vh); */
+  height: 48px;
   background: rgba(255, 255, 255, 0.08);
   border-radius: 30px;
   border: 1px solid rgba(197, 197, 197, 0.4);
   display: flex;
   align-items: center;
-  padding: 0 calc(0.53vw + 0.53vh);
-  gap: calc(0.40vw + 0.40vh);
+  /* padding: 0 calc(0.53vw + 0.53vh); */
+  padding: 0 16px;
+  /* gap: calc(0.40vw + 0.40vh); */
+  gap: 12px;
   position: relative;
   backdrop-filter: blur(4px);
 }
 .range-title {
   color: #f0f0f0;
-  font-size: calc(0.43vw + 0.43vh);
+  /* font-size: calc(0.43vw + 0.43vh); */
+  font-size: 13px;
   font-weight: 600;
   font-family: monospace;
   letter-spacing: 0.5px;
@@ -788,7 +807,8 @@ body {
 .range-line {
   position: absolute;
   width: 3px;
-  height: calc(0.93vw + 0.93vh);
+  /* height: calc(0.93vw + 0.93vh); */
+  height: 28px;
   background: #ffcf9a;
   border-radius: 4px;
   transition: left 0.1s ease;
@@ -811,8 +831,8 @@ body {
 
 .mix-button-wrapper {
   position: fixed;
-  /* bottom: 50px; */
-  bottom: 4.7dvh;
+  bottom: 50px;
+  /* bottom: 4.7dvh; */
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -975,10 +995,12 @@ body {
 }
 #lottieSection p {
   margin: 0;
-  margin-bottom: 100px;
+  /* margin-bottom: 100px; */
+  /* margin-bottom: calc(18.52vh - 100px); */
+  margin-bottom: min(100px, calc(18.52vh - 100px));
   padding: 0 24px;
-  /* font-size: 64px; */
-  font-size: calc(2.13vw + 2.13vh);
+  font-size: 64px;
+  /* font-size: calc(2.13vw + 2.13vh); */
   text-align: center;
   color: #fff;
   line-height: 110%;
@@ -990,17 +1012,26 @@ body {
 .lottie-pattern {
   /* height: 680px; */
   /* width: 39.50dvw; */
-  width: calc(21.13vw + 21.13vh);
+  /* width: calc(21.13vw + 21.13vh); */
+  /* width: 639px; */
+  /* width: calc(61.11vh - 21px); */
+  width: min(639px, calc(61.11vh - 21px));
   display: block;
   position: absolute;
   left: 50%;
   top: 37%;
   transform: translate(-50%, -50%);
   pointer-events: none;
+  /* margin-top: 4px; */
+  /* margin-top: calc(-3.52vh + 42px); */
+  margin-top: max(4px, calc(-3.52vh + 42px));
+  margin-left: -20px;
 }
 .lottie-actions{
   position: absolute;
-  bottom: 50px;
+  /* bottom: 50px; */
+  /* bottom: calc(5.56vh - 10px); */
+  bottom: min(50px, calc(5.56vh - 10px));
   display: flex;
   gap: 18px;
 }
@@ -1052,8 +1083,10 @@ body {
   transform: translateX(-50%) translateY(14px);
   /* bottom: 130px; */
   /* bottom: 4dvh; */
-  bottom: 13.5dvh;
-  font-size: calc(0.50vw + 0.50vh);
+  /* bottom: 13.5dvh; */
+  bottom: 146px;
+  /* font-size: calc(0.50vw + 0.50vh); */
+  font-size: 16px;
   font-weight: 500;
   color: rgba(255, 255, 240, 0.9);
   letter-spacing: 5%;
@@ -1119,15 +1152,19 @@ body {
   opacity: 65%;
   left: 50%;
   transform: translateX(-50%);
-  top: 118px;
+  /* top: 118px; */
+  /* top: min(150px, calc(5.19vh + 62px)); */
+  top: min(120px, calc(5.56vh + 60px));
   transition: opacity 0.4s ease;
   letter-spacing: -3%;
+  width: 100%;
 }
 .points-wrapper {
   position: absolute;
   left: 50%;
   transform: translateX(-50%) translateY(0);
-  bottom: 34px;
+  bottom: min(50px, calc(5.56vh - 10px));;
+  /* bottom: 34px; */
   /* bottom: 4.06vh; */
   /* bottom: calc(2.60vw + 2.60vh); */
   width: 289px;
@@ -1137,7 +1174,8 @@ body {
   opacity: 1;
 }
 .points-wrapper.expanded {
-  bottom: 16.3dvh;
+  /* bottom: 16.3dvh; */
+  bottom: 178px;
   transform: translateX(-50%) translateY(-10px);
 }
 .points-wrapper.fade-out-ui {
@@ -1176,18 +1214,72 @@ body {
   cursor: default;
 }
 
+.colb-container{
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: all 1s ease;
+}
+
 @media (max-width: 1440px) {
   #lottieContainer svg{
     height: 100% !important;
   }
   #lottieSection p {
-    font-size: calc(2.60vw + 2.60vh);
+    margin-bottom: 115px;
   }
-  .lottie-pattern{
+  /* .lottie-pattern{
     width: calc(25.49vw + 25.49vh);
-  }
+  } */
   .point-desc {
     font-size: calc(0.61vw + 0.61vh);
+  }
+  .lottie-pattern{
+    margin-top: 0;
+    width: 630px;
+  }
+  .lottie-actions{
+    bottom: 50px;
+  }
+  .points-wrapper {
+    bottom: 30px;
+  }
+  .platform{
+    bottom: -100px;
+  }
+  .platform.end-vertical {
+    --glass-w: 5vh;
+    --glass-h: 36vh;
+    top: calc(50% - 6.5vh) !important;
+  }
+  .device-rotator .test {
+    width: 60px;
+  }
+  .device-rotator .test3 {
+    /* width: 60px; */
+    width: 5.6vh;
+    height: 40px;
+    top: 10px;
+  }
+  .device-rotator .test3 svg {
+    position: absolute;
+    left: 0;
+  }
+  .message-panel {
+    /* top: 128px; */
+    top: 12.5vh;
+  }
+  .point-desc{
+    bottom: 14.2vh;
+  }
+  .mix-button-wrapper {
+    bottom: 5vh;
+  }
+  .points-wrapper.expanded{
+    bottom: 17.5vh;
+  }
+  .controls-panel {
+    bottom: 24.3vh;
   }
 }
 
@@ -1198,7 +1290,7 @@ body {
   .platform{
     /* bottom: calc(2.93vw - 2.93vh); */
     /* bottom: -5.3vw; */
-    bottom: -6vw;
+    bottom: -115px;
   }
   .glass-range{
     width: calc(6vw + 6vh);
@@ -1207,16 +1299,30 @@ body {
     gap: calc(0.4vw + 0.4vh);
   }
   .message-panel{
-    flex-direction: column;
-    gap: 25px;
-    align-items: center;
-    padding: 0 20px;
+    top: 180px;
   }
   .message-item{
     max-width: unset;
   }
   .point-desc {
     font-size: calc(0.63vw + 0.63vh);
+  }
+  #lottieSection p{
+    margin-bottom: 50px;
+  }
+  .lottie-pattern{
+    margin-top: 20px;
+  }
+  .device-rotator .test2 {
+    top: -17px;
+  }
+  .platform.end-vertical {
+    --glass-w: 5vh;
+    --glass-h: 36vh;
+    top: calc(50% - 85px) !important;
+  }
+  .colb-container:has(.platform.end-vertical) {
+    /* height: 890px; */
   }
 }
 
@@ -1246,7 +1352,8 @@ body {
     padding: 0 20px;
   }
   .platform{
-    bottom: calc((2.40vw + 2.40vh) * -1);
+    /* bottom: calc((2.40vw + 2.40vh) * -1); */
+    bottom: -99px;
   }
   .range-line-track{
     display: none;
@@ -1257,13 +1364,31 @@ body {
     justify-content: center;
   }
   .platform.end-vertical{
-    top: 55% !important;
+    /* top: 55% !important; */
+    --glass-w: 70px;
+    --glass-h: 470px;
+  }
+  .device-rotator .test2 {
+    top: 30px;
+  }
+  .device-rotator .test3 {
+    top: 56px;
   }
   .points-wrapper{
     bottom: calc((1vw + 1vh));
   }
   .point-desc {
     font-size: calc(0.84vw + 0.84vh);
+  }
+  #lottieSection p{
+    margin-bottom: 40px;
+  }
+  .lottie-pattern{
+    margin-top: 26px;
+  }
+  :root {
+      --glass-w: 45px;
+      --glass-h: 320px;
   }
 }
 
@@ -1275,6 +1400,25 @@ body {
     display: none;
   }
   #lottieSection p{
-    margin-bottom: 30px;
+    margin-bottom: 0;
+    font-size: 24px;
+  }
+  .lottie-pattern{
+    width: 380px;
+    margin-left: 0px;
+    margin-top: 8px;
+  }
+  .game-text{
+    font-size: 14px;
+  }
+  .platform {
+    bottom: -50px;
+  }
+  :root {
+    --glass-w: 30px;
+    --glass-h: 200px;
+  }
+  .device-rotator .test3 {
+    top: 60px;
   }
 }
