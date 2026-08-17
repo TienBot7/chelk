@@ -1380,7 +1380,8 @@ body {
     gap: 10px;
   }
   .range-title {
-    font-size: 10px;
+    /* font-size: 10px; */
+    font-size: 1.1vw;
   }
   .theme-btn {
     padding: 4px 16px;
@@ -1392,7 +1393,8 @@ body {
   }
   .controls-panel {
     padding: 0 20px;
-    bottom: 28.3vh;
+    bottom: 29vh;
+    gap: 3.52vw;
   }
   .platform{
     /* bottom: calc((2.40vw + 2.40vh) * -1); */
@@ -1405,6 +1407,9 @@ body {
     /* padding: 0; */
     display: flex;
     justify-content: center;
+    width: 15.10vw;
+    height: 4.5vw;
+    padding: 0px 1.5vw;
   }
   .platform.end-vertical{
     top: calc(50% - 25px) !important;
@@ -1450,6 +1455,13 @@ body {
     flex-direction: column;
     max-width: 479px;
     gap: 25px;
+  }
+  .colbs-panel{
+    gap: 3.8vw;
+  }
+  .range-line{
+    height: 3vw;
+    width: 0.3vw;
   }
 }
 

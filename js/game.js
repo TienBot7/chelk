@@ -276,8 +276,8 @@ function ensureLiquidGooeyFilter() {
 function getLiquidEffectColor() {
   const mainText = document.getElementById('mainObject')?.textContent?.trim() || window.mainObject || ''
   if (mainText === 'Хорека') return '#E43B51'
-  if (mainText === 'Косметика') return '#F448F3'
-  if (mainText === 'Одежда') return '#5FF3FD'
+  if (mainText === 'Косметика') return '#7D267D'
+  if (mainText === 'Одежда') return '#317D84'
   return selectedColorVariant
 }
 
@@ -377,14 +377,26 @@ function addLiquidParticle() {
   const rect = canvas.getBoundingClientRect()
   const glassContainer = platform?.querySelector('.device .glass-container')
   const glassRect = glassContainer ? glassContainer.getBoundingClientRect() : null
-  const offsetX = glassRect ? glassRect.width / 2.6 : rect.width / 2 //5 - смещение влево 2.6 (2.3)
-  const offsetY = glassRect ? glassRect.height / 4.3 : rect.height / 2 //5 - смещение вверх 4.6 (4.0)
+  const pourPoint = platform?.querySelector('.device-rotator .test2')
+  const pourRect = pourPoint ? pourPoint.getBoundingClientRect() : null
+
+  let originX = rect.width / 2
+  let originY = rect.height / 2
+
+  if (pourRect) {
+    originX = pourRect.left + pourRect.width / 2 - rect.left
+    originY = pourRect.top + pourRect.height / 2 - rect.top
+  } else if (glassRect) {
+    originX = glassRect.left + glassRect.width / 2 - rect.left
+    originY = glassRect.top + glassRect.height / 2 - rect.top
+  }
+
   const count = Math.round(randomNumBetween(5, 8)) //число новых частиц за вызов
   for (let i = 0; i < count; i++) {
     const radius = randomNumBetween(8, 9) //размер частиц
     liquidEffectState.particles.push({
-      x: rect.width / 2 + offsetX + randomNumBetween(-20, 20),
-      y: rect.height / 2 + offsetY + randomNumBetween(-15, 15),
+      x: originX + randomNumBetween(-20, 20),
+      y: originY + randomNumBetween(-15, 15),
       r: radius,
       vx: randomNumBetween(1.0, 2.0),
       vy: randomNumBetween(-1.0, 0.4),

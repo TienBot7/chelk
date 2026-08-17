@@ -59,6 +59,7 @@ const personAnimationState = {
   person1: { key: 'initial', x: 0, y: 0 },
   person2: { key: 'initial', x: 0, y: 0 },
   person3: { key: 'initial', x: 0, y: 0 },
+  person4: { key: 'initial', x: 0, y: 0 },
 }
 
 let anim1 = { frame: 1, total: 3, interval: null }
@@ -128,6 +129,13 @@ const personCoordinateSettings = {
     purple: { x: 0.64, y: 0.1 },
     green: { x: 0.26, y: 0.1 },
     exit: { x: 1.2, y: 0.1 },
+  },
+  person4: {
+    initial: { x: 1.6, y: 0 },
+    red: { x: 0.8, y: 0 },
+    purple: { x: 0.6, y: 0 },
+    green: { x: 0.3, y: 0 },
+    exit: { x: -2, y: 0 },
   },
 }
 const cloudSettingsByChoice = {
@@ -448,8 +456,31 @@ function getImageContentRect() {
   const scale = Math.max(containerWidth / naturalWidth, containerHeight / naturalHeight)
   const renderedWidth = naturalWidth * scale
   const renderedHeight = naturalHeight * scale
-  const offsetX = (containerWidth - renderedWidth) / 2
-  const offsetY = (containerHeight - renderedHeight) / 2
+  // Respect CSS `object-position` so elements positioned relative to the
+  // visible image area follow the same shift when shopImage is aligned
+  // left/center/right or using percentage offsets.
+  let objectPosition = '50% 50%'
+  try {
+    objectPosition = getComputedStyle(shopImage).objectPosition || shopImage.style.objectPosition || objectPosition
+  } catch (e) {}
+
+  const parts = String(objectPosition).trim().split(/\s+/)
+  const posX = parts[0] || '50%'
+  const posY = parts[1] || '50%'
+
+  const parsePos = (p, axisSize, renderedSize) => {
+    if (typeof p === 'string' && p.endsWith('%')) {
+      return (parseFloat(p) / 100) * (axisSize - renderedSize)
+    }
+    if (p === 'left' || p === 'top') return 0
+    if (p === 'center') return (axisSize - renderedSize) / 2
+    if (p === 'right' || p === 'bottom') return axisSize - renderedSize
+    if (typeof p === 'string' && p.endsWith('px')) return parseFloat(p)
+    return (axisSize - renderedSize) / 2
+  }
+
+  const offsetX = parsePos(posX, containerWidth, renderedWidth)
+  const offsetY = parsePos(posY, containerHeight, renderedHeight)
 
   return {
     left: rect.left - sectionRect.left + offsetX,
@@ -711,7 +742,8 @@ function animatePerson4() {
   const settings = person4SettingsByChoice[choice] || person4SettingsByChoice.red
   person4.style.opacity = '1'
   person4.style.transition = 'none'
-  person4.style.left = '100%'
+  // place initial (offscreen) position using the shared coordinate system
+  positionPerson(person4, 'initial', { duration: 0 })
   person4.style.top = '0'
   formScreen.style.left = '100%'
   formScreen.style.right = '0px'
@@ -719,12 +751,11 @@ function animatePerson4() {
   startFormScreenFollow()
 
   scheduleTimeout(() => {
-    person4.style.transition = `left ${settings.enterDuration}ms cubic-bezier(0.25, 0.1, 0.25, 1)`
-    person4.style.left = choice === 'green' ? '30%' : choice === 'purple' ? '60%' : '80%'
+    const targetKey = choice === 'green' ? 'green' : choice === 'purple' ? 'purple' : 'red'
+    positionPerson(person4, targetKey, { duration: settings.enterDuration, easing: 'cubic-bezier(0.25, 0.1, 0.25, 1)' })
 
     scheduleTimeout(() => {
-      person4.style.transition = `left ${settings.exitDuration}ms cubic-bezier(0.4, 0.0, 1, 1)`
-      person4.style.left = '-200%'
+      positionPerson(person4, 'exit', { duration: settings.exitDuration, easing: 'cubic-bezier(0.4, 0.0, 1, 1)' })
 
       scheduleTimeout(() => {
         stopFormScreenFollow()
@@ -889,6 +920,51 @@ function setShopImageByChoice(selectedChoice) {
   } else {
     shopImage.src = './img/shop/red.webp'
   }
+  try { positionShopImageByChoice(selectedChoice) } catch (e) {}
+}
+
+function positionShopImageByChoice(selectedChoice) {
+  // Apply alignment only for narrow viewports
+  if (window.innerWidth > 1024) {
+    // reset to default for large viewports
+    shopImage.style.objectPosition = 'center center'
+    shopImage.style.width = ''
+    shopImage.style.left = ''
+    return
+  }
+
+  if (window.innerWidth <= 500) {
+    // For very small screens, widen the image and shift it so it
+    // protrudes beyond the viewport edge by the requested amount.
+    if (selectedChoice === 'red') {
+      // Хорека -> выступить на 40px за правый край
+      shopImage.style.width = 'calc(100% + 100px)'
+      shopImage.style.objectPosition = 'right top'
+      shopImage.style.left = '0'
+    } else if (selectedChoice === 'green') {
+      // Одежда -> выступить на 40px за левый край
+      shopImage.style.width = 'calc(100% + 140px)'
+      shopImage.style.objectPosition = 'left top'
+      shopImage.style.left = '-140px'
+    } else if (selectedChoice === 'purple') {
+      // Косметика -> сдвинуть на 110px влево
+      shopImage.style.width = 'calc(100% + 140px)'
+      shopImage.style.objectPosition = 'center top'
+      shopImage.style.left = '-140px'
+    }
+    return
+  }
+
+  // Default narrow viewport behaviour (<=1024 && >500)
+  shopImage.style.width = ''
+  shopImage.style.left = ''
+  if (selectedChoice === 'red') {
+    shopImage.style.objectPosition = 'right top'
+  } else if (selectedChoice === 'green') {
+    shopImage.style.objectPosition = 'left top'
+  } else {
+    shopImage.style.objectPosition = 'center center'
+  }
 }
 
 function startFilling(selectedChoice) {
@@ -931,6 +1007,7 @@ window.addEventListener('resize', () => {
   if (tShirtsCreated) positionTShirts()
   if (tubesCreated) positionTubes()
   if (cloudsCreated) positionClouds()
+  try { if (choice) positionShopImageByChoice(choice) } catch (e) {}
 })
 
 resize()

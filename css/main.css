@@ -988,6 +988,12 @@ section.loading.hide {
   /* .letter {
     font-size: calc(10.55vw + 10.55vh);
   } */
+  .word-slide[data-word-idx="0"] .letter{
+    font-size: 29.3vw;
+  }
+  .word-slide[data-word-idx="2"] .letter{
+    font-size: 29.3vw;
+  }
   .svg-background {
     /* width: calc(27.28vw + 27.28vh); */
     top: calc(50% - 30px);
@@ -1021,6 +1027,12 @@ section.loading.hide {
   .letter {
     /* font-size: calc(9vw + 9vh); */
     font-size: 200px;
+  }
+  .word-slide[data-word-idx="0"] .letter{
+    font-size: 26.04vw;
+  }
+  .word-slide[data-word-idx="2"] .letter{
+    font-size: 26.04vw;
   }
   .word-slide {
     white-space: normal;
