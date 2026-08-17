@@ -856,20 +856,38 @@
     };
   </script>
   <script type="module">
-    import('./js/script.js').then(script => {
-      if (script && script.initTextSlides) script.initTextSlides();
-      if (script && script.initKeyboardControls) script.initKeyboardControls();
-      if (script && script.buildCarousel) {
-        const buildPromise = script.buildCarousel();
-        if (window.preloader && typeof window.preloader.addWaitTask === 'function') {
-          window.preloader.addWaitTask(buildPromise);
+    const startHeavyPageScripts = () => {
+      import('./js/script.js').then(script => {
+        if (script && script.initTextSlides) script.initTextSlides();
+        if (script && script.initKeyboardControls) script.initKeyboardControls();
+        if (script && script.buildCarousel) {
+          const buildPromise = script.buildCarousel();
+          if (window.preloader && typeof window.preloader.addWaitTask === 'function') {
+            window.preloader.addWaitTask(buildPromise);
+          }
+          window.carouselBuildPromise = buildPromise;
         }
-        window.carouselBuildPromise = buildPromise;
+      });
+    };
+
+    const scheduleHeavyStartup = () => {
+      const idleCallback = window.requestIdleCallback || window.setTimeout;
+      const delay = window.innerWidth <= 768 ? 1200 : 250;
+      if (window.requestIdleCallback) {
+        window.requestIdleCallback(() => startHeavyPageScripts(), { timeout: 2500 });
+      } else {
+        window.setTimeout(startHeavyPageScripts, delay);
       }
-    });
+    };
+
     import('./js/preloader.js').then(({ runPreloader }) => {
       runPreloader({ onComplete: () => { } });
     });
+
+    window.addEventListener('load', scheduleHeavyStartup, { once: true });
+    if (document.readyState === 'complete') {
+      scheduleHeavyStartup();
+    }
 
     document.addEventListener('DOMContentLoaded', () => {
       const form = document.getElementById('requestForm');

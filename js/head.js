@@ -311,8 +311,16 @@ function loadModelFromURL(url, name = '') {
   )
 }
 
-// Отключена загрузка через UI, но сразу подгружаем встроенную модель models/head.glb
-loadModelFromURL('./models/head.glb', 'head.glb')
+// On mobile, delay the heavy 3D model startup until the page has settled so the first render is not blocked.
+if (isMobileDevice) {
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      loadModelFromURL('./models/head.glb', 'head.glb')
+    }, 1200)
+  }, { once: true })
+} else {
+  loadModelFromURL('./models/head.glb', 'head.glb')
+}
 
 function findHeadMeshes(model) {
   headMeshes = []
