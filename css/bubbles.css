@@ -201,6 +201,9 @@
 }
 
 @media (max-width: 500px) {
+  /* .bubble{
+    width: 39vw;
+  } */
   .bubble-text{
     font-size: calc(1.13vw + 1.13vh);
   }

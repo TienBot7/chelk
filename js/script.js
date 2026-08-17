@@ -1326,6 +1326,10 @@ async function buildCarousel() {
     }
   }
   
+  if (window.preloader && typeof window.preloader.markCarouselModelsReady === 'function') {
+    window.preloader.markCarouselModelsReady();
+  }
+
   for (let i = 0; i < 3; i++) {
     const dot = document.createElement('button');
     dot.classList.add('dot');

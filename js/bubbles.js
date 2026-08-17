@@ -409,10 +409,19 @@ function spawnBubble(item, fixedTarget, sourcePoint) {
 
     let targetLeft = startLeft,
       targetTop = startTop
-    if (fixedTarget && typeof fixedTarget.fx === 'number' && typeof fixedTarget.fy === 'number') {
-      // fixedTarget coordinates are fractions (0..1) of available area
-      targetLeft = Math.round(fixedTarget.fx * maxLeft)
-      targetTop = Math.round(fixedTarget.fy * maxTop)
+    if (fixedTarget && (typeof fixedTarget.fx === 'number' || fixedTarget.edge)) {
+      const hasFy = typeof fixedTarget.fy === 'number'
+      const hasFx = typeof fixedTarget.fx === 'number'
+
+      if (fixedTarget.edge === 'left') {
+        targetLeft = 0
+      } else if (fixedTarget.edge === 'right') {
+        targetLeft = maxLeft
+      } else if (hasFx) {
+        targetLeft = Math.round(fixedTarget.fx * maxLeft)
+      }
+
+      targetTop = hasFy ? Math.round(fixedTarget.fy * maxTop) : startTop
       placedRects.push({ left: targetLeft, top: targetTop, right: targetLeft + bRect.width, bottom: targetTop + bRect.height })
     } else {
       let placed = false
@@ -682,8 +691,8 @@ function pickTwoMobileHeadItems(chosenGroup) {
 }
 
 const headMobileFixedTargets = [
-  { fx: 0.18, fy: 0.35 },
-  { fx: 0.78, fy: 0.27 },
+  { edge: 'left', fy: 0.35 },
+  { edge: 'right', fy: 0.27 },
 ]
 
 function spawnThreeWithStagger(done, forcedGroup, sourcePoint, options = {}) {
@@ -709,13 +718,13 @@ function spawnThreeWithStagger(done, forcedGroup, sourcePoint, options = {}) {
     { fx: 0.955, fy: 0.325 },
     { fx: 0.04, fy: 0.47 },
   ]
-  const fixedTargets390 = [
-    { fx: 0.91, fy: 0.29 },
-    { fx: 0.06, fy: 0.48 },
+  const fixedTargets500 = [
+    { edge: 'left', fy: 0.29 },
+    { edge: 'right', fy: 0.48 },
   ]
   const fixedTargets = options.fixedTargets || (() => {
     const width = window.innerWidth
-    if (width <= 390) return fixedTargets390
+    if (width <= 500) return fixedTargets500
     if (width <= 768) return fixedTargets768
     if (width <= 1024) return fixedTargets1024
     if (width <= 1440) return fixedTargets1440

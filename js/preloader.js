@@ -100,13 +100,19 @@ export function runPreloader({ onComplete }) {
 
   function markRequiredAssetsLoaded() {
     preloaderState.requiredAssetsLoaded = true;
-    preloaderState.modelLoaded = true;
     if (!preloaderState.modelTotal) preloaderState.modelTotal = preloaderState.modelProgress || 1;
     updatePreloaderProgress();
     tryFinishPreloader();
   }
 
   function markModelLoaded() {
+    preloaderState.modelLoaded = true;
+    if (!preloaderState.modelTotal) preloaderState.modelTotal = preloaderState.modelProgress || 1;
+    updatePreloaderProgress();
+    tryFinishPreloader();
+  }
+
+  function markCarouselModelsReady() {
     preloaderState.modelLoaded = true;
     preloaderState.requiredAssetsLoaded = true;
     if (!preloaderState.modelTotal) preloaderState.modelTotal = preloaderState.modelProgress || 1;
@@ -148,6 +154,7 @@ export function runPreloader({ onComplete }) {
     const queued = Array.isArray(window.preloader._queue) ? window.preloader._queue.slice() : [];
     window.preloader.reportModelProgress = reportModelProgress;
     window.preloader.markModelLoaded = markModelLoaded;
+    window.preloader.markCarouselModelsReady = markCarouselModelsReady;
     window.preloader.markRequiredAssetsLoaded = markRequiredAssetsLoaded;
     window.preloader.markWindowLoaded = markWindowLoaded;
     window.preloader.addWaitTask = addWaitTask;
