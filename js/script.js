@@ -655,6 +655,12 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
       z: wrapper.rotation.z,
     };
 
+    try {
+      if (window.preloader && typeof window.preloader.markModelLoaded === 'function') {
+        window.preloader.markModelLoaded();
+      }
+    } catch (e) {}
+
       // compute bounding sphere radius (base, unscaled) and store on instance for camera-edge limits
       let baseSphereRadius = 0;
       try {

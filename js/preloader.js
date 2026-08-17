@@ -67,7 +67,7 @@ export function runPreloader({ onComplete }) {
   }
 
   function setLoadingPercent(p) {
-    const percent = Math.min(99, Math.max(0, Math.round(p)));
+    const percent = Math.min(99, Math.max(1, Math.round(p)));
     if (percent > targetPercent) {
       targetPercent = percent;
     }
@@ -76,7 +76,16 @@ export function runPreloader({ onComplete }) {
   function getCombinedProgress() {
     const windowFraction = preloaderState.windowLoaded ? 1 : 0;
     const requiredAssetsFraction = preloaderState.requiredAssetsLoaded ? 1 : 0;
-    return (windowFraction + requiredAssetsFraction) / 2;
+
+    let modelFraction = 0;
+    if (preloaderState.modelTotal > 0) {
+      modelFraction = Math.min(1, preloaderState.modelProgress / preloaderState.modelTotal);
+    } else if (preloaderState.modelLoaded) {
+      modelFraction = 1;
+    }
+
+    // Real progress is weighted toward the actual model load, not a binary 0/1 switch.
+    return (windowFraction * 0.25) + (requiredAssetsFraction * 0.2) + (modelFraction * 0.55);
   }
 
   function updatePreloaderProgress() {
@@ -99,8 +108,10 @@ export function runPreloader({ onComplete }) {
 
   function markModelLoaded() {
     preloaderState.modelLoaded = true;
+    preloaderState.requiredAssetsLoaded = true;
     if (!preloaderState.modelTotal) preloaderState.modelTotal = preloaderState.modelProgress || 1;
     updatePreloaderProgress();
+    tryFinishPreloader();
   }
 
   function addWaitTask(task) {
@@ -127,7 +138,7 @@ export function runPreloader({ onComplete }) {
 
   function tryFinishPreloader() {
     if (finished) return;
-    if (preloaderState.requiredAssetsLoaded && areWaitTasksComplete()) {
+    if (preloaderState.windowLoaded && preloaderState.modelLoaded && preloaderState.requiredAssetsLoaded && areWaitTasksComplete()) {
       setTimeout(finishPreloader, 300);
     }
   }
@@ -151,10 +162,8 @@ export function runPreloader({ onComplete }) {
     }
     // Start preloading the critical assets for the first screen.
     try {
-      // Mark assets as loaded immediately since requiredInitialAssets is empty
-      // This allows page to render instantly without waiting for models/audio
-      markRequiredAssetsLoaded();
-
+      // Do not release the preloader before the 3D model is actually ready.
+      // The head/carousel models report completion via markModelLoaded() after GLTF load success.
       const preloadHeadModelTask = Promise.resolve(null); // Head model will be preloaded separately
       if (typeof window !== 'undefined') {
         window.preloader.preloadHeadModel = () => preloadHeadModelTask;
@@ -636,11 +645,17 @@ export function runPreloader({ onComplete }) {
 
   // Ждем полной загрузки window, затем запускаем анимацию прогресса
   function startPreloader() {
+    displayedPercent = 1;
+    targetPercent = 1;
+    renderPercent(1);
     animateProgress();
     setTimeout(() => {
       if (!finished) {
+        // Fallback only after the timeout, so the loader never gets stuck forever.
         preloaderState.modelLoaded = true;
-        finishPreloader();
+        preloaderState.requiredAssetsLoaded = true;
+        updatePreloaderProgress();
+        tryFinishPreloader();
       }
     }, MAX_WAIT_MS);
   }
