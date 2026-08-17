@@ -115,7 +115,7 @@
     backface-visibility: hidden;
     background-color: rgb(255 255 255 / 1%);
     border: 1px solid hsl(0deg 0% 100% / 10%);
-    border-radius: 1.3888888889vw;
+    border-radius: 34px;
     text-align: left;
     pointer-events: none;
     cursor: pointer;

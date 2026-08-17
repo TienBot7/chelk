@@ -299,7 +299,12 @@ function resetLiquidCanvasSize() {
   if (!liquidEffectState.canvas || !liquidEffectState.ctx) return
   const width = window.innerWidth || document.documentElement.clientWidth
   const height = window.innerHeight || document.documentElement.clientHeight
-  const ratio = window.devicePixelRatio || 1
+  const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection
+  const saveData = conn && conn.saveData
+  const lowConcurrency = navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2
+  const isSmall = width <= 768
+  const constrained = !!saveData || lowConcurrency || isSmall
+  const ratio = constrained ? 1 : Math.min(window.devicePixelRatio || 1, 2)
   const canvas = liquidEffectState.canvas
   canvas.width = Math.round(width * ratio)
   canvas.height = Math.round(height * ratio)
@@ -368,6 +373,18 @@ function createLiquidCanvas(color) {
   liquidEffectState.color = color
   liquidEffectState.particles = []
   resetLiquidCanvasSize()
+  // Safari has limited support for applying SVG filters via CSS to HTML elements.
+  // If running in Safari, avoid using the gooey SVG filter so particles remain visible.
+  const isSafari = typeof navigator !== 'undefined' && /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
+  if (isSafari) {
+    canvas.style.filter = 'none'
+    canvas.style.webkitFilter = 'none'
+    console.warn('[chelk] running on Safari - disabling SVG gooey filter for canvas fallback')
+  } else {
+    canvas.style.filter = 'url(#chelkLiquidGooeyFilter)'
+    canvas.style.webkitFilter = 'url(#chelkLiquidGooeyFilter)'
+  }
+
   return canvas
 }
 
@@ -391,16 +408,17 @@ function addLiquidParticle() {
     originY = glassRect.top + glassRect.height / 2 - rect.top
   }
 
-  const count = Math.round(randomNumBetween(5, 8)) //число новых частиц за вызов
+  const small = (window.innerWidth || document.documentElement.clientWidth) <= 768
+  const count = small ? Math.round(randomNumBetween(2, 4)) : Math.round(randomNumBetween(5, 8))
   for (let i = 0; i < count; i++) {
-    const radius = randomNumBetween(8, 9) //размер частиц
+    const radius = small ? randomNumBetween(5, 7) : randomNumBetween(8, 9)
     liquidEffectState.particles.push({
       x: originX + randomNumBetween(-20, 20),
       y: originY + randomNumBetween(-15, 15),
       r: radius,
-      vx: randomNumBetween(1.0, 2.0),
-      vy: randomNumBetween(-1.0, 0.4),
-      alpha: randomNumBetween(0.88, 1), //непрозрачность
+      vx: randomNumBetween(0.7, 1.6),
+      vy: randomNumBetween(-0.7, 0.4),
+      alpha: randomNumBetween(0.8, 1), //непрозрачность
     })
   }
 }
@@ -432,7 +450,13 @@ function updateLiquidParticles() {
   }
 
   ctx.globalAlpha = 1
-  liquidEffectState.rafId = requestAnimationFrame(updateLiquidParticles)
+  // throttle rendering on small/constrained screens
+  const small = (window.innerWidth || document.documentElement.clientWidth) <= 768
+  if (small) {
+    setTimeout(() => { liquidEffectState.rafId = requestAnimationFrame(updateLiquidParticles) }, 1000 / 30)
+  } else {
+    liquidEffectState.rafId = requestAnimationFrame(updateLiquidParticles)
+  }
 }
 
 function showLiquidEffectOverBottle(showImmediately = true) {
@@ -442,7 +466,9 @@ function showLiquidEffectOverBottle(showImmediately = true) {
   const canvas = createLiquidCanvas(effectColor)
   if (!canvas) return null
   resetLiquidCanvasSize()
-  liquidEffectState.intervalId = setInterval(addLiquidParticle, 50)
+  const small = (window.innerWidth || document.documentElement.clientWidth) <= 768
+  const spawnDelay = small ? 120 : 50
+  liquidEffectState.intervalId = setInterval(addLiquidParticle, spawnDelay)
   updateLiquidParticles()
   if (showImmediately) {
     requestAnimationFrame(() => {

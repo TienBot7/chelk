@@ -110,6 +110,16 @@ section#main-section {
   transition: none;
   overflow-x: hidden;
   overflow-y: scroll;
+  /* hide scrollbar across browsers but keep scrolling */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+/* WebKit browsers */
+section#main-section::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 section#main-section.visible {
@@ -137,6 +147,7 @@ canvas {
   src: url('../fonts/Comforter/Comforter-Regular.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
+    font-display: swap;
 }
 
 @font-face {
@@ -144,6 +155,7 @@ canvas {
   src: url('../fonts/Аvеnіr_Nехt_W1G/Avenir_Next_W1G_Medium.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
+  font-display: swap;
 }
 
 @font-face {
@@ -151,6 +163,7 @@ canvas {
   src: url('../fonts/Аvеnіr_Nехt_W1G/Avenir_Next_W1G_UltraLight.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
+  font-display: swap;
 }
 
 @font-face {
@@ -158,6 +171,7 @@ canvas {
   src: url('../fonts/Аvеnіr_Nехt_W1G/Avenir_Next_W1G_Regular.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
+  font-display: swap;
 }
 
 * {
