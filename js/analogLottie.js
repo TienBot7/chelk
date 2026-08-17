@@ -560,8 +560,40 @@ function positionPerson(person, positionKey, options = {}) {
   const state = personAnimationState[person.id]
   const duration = options.duration ?? 0
   const easing = options.easing ?? 'cubic-bezier(0.25, 0.1, 0.25, 1)'
+  const isBottomAnchored = person.id === 'person4'
 
   person.style.opacity = '1'
+
+  if (isBottomAnchored) {
+    if (duration > 0) {
+      const sectionRect = analogSection.getBoundingClientRect()
+      const currentRect = person.getBoundingClientRect()
+      const startX = currentRect.left - sectionRect.left
+
+      person.style.transition = 'none'
+      person.style.top = 'auto'
+      person.style.bottom = '0px'
+      person.style.left = `${startX}px`
+
+      requestAnimationFrame(() => {
+        person.style.transition = `left ${duration}ms ${easing}, bottom ${duration}ms ${easing}`
+        person.style.left = `${targetX}px`
+        person.style.bottom = '0px'
+      })
+    } else {
+      person.style.transition = 'none'
+      person.style.top = 'auto'
+      person.style.bottom = '0px'
+      person.style.left = `${targetX}px`
+    }
+
+    if (state) {
+      state.key = positionKey
+      state.x = targetX
+      state.y = targetY
+    }
+    return
+  }
 
   if (duration > 0) {
     const sectionRect = analogSection.getBoundingClientRect()
@@ -569,15 +601,23 @@ function positionPerson(person, positionKey, options = {}) {
     const startX = currentRect.left - sectionRect.left
     const startY = currentRect.top - sectionRect.top
 
-    person.style.transition = 'none'
-    person.style.left = `${startX}px`
-    person.style.top = `${startY}px`
-
-    requestAnimationFrame(() => {
-      person.style.transition = `left ${duration}ms ${easing}, top ${duration}ms ${easing}`
+    // When the element is hidden or not yet painted, don't animate from a stale
+    // measurement; jump directly to the target coordinate to avoid it floating in space.
+    if (!currentRect.width && !currentRect.height) {
+      person.style.transition = 'none'
       person.style.left = `${targetX}px`
       person.style.top = `${targetY}px`
-    })
+    } else {
+      person.style.transition = 'none'
+      person.style.left = `${startX}px`
+      person.style.top = `${startY}px`
+
+      requestAnimationFrame(() => {
+        person.style.transition = `left ${duration}ms ${easing}, top ${duration}ms ${easing}`
+        person.style.left = `${targetX}px`
+        person.style.top = `${targetY}px`
+      })
+    }
   } else {
     person.style.transition = 'none'
     person.style.left = `${targetX}px`
@@ -596,6 +636,9 @@ function updatePersonLayout() {
   positionPerson(person1, personAnimationState.person1.key, { duration: 650, easing: 'cubic-bezier(0.25, 0.1, 0.25, 1)' })
   positionPerson(person2, personAnimationState.person2.key, { duration: 650, easing: 'cubic-bezier(0.25, 0.1, 0.25, 1)' })
   positionPerson(person3, personAnimationState.person3.key, { duration: 650, easing: 'cubic-bezier(0.25, 0.1, 0.25, 1)' })
+  if (person4 && person4.isConnected) {
+    positionPerson(person4, personAnimationState.person4.key, { duration: 650, easing: 'cubic-bezier(0.25, 0.1, 0.25, 1)' })
+  }
 }
 
 function hideCans() {
@@ -742,9 +785,11 @@ function animatePerson4() {
   const settings = person4SettingsByChoice[choice] || person4SettingsByChoice.red
   person4.style.opacity = '1'
   person4.style.transition = 'none'
+  personAnimationState.person4.key = 'initial'
+  person4.style.top = 'auto'
+  person4.style.bottom = '0px'
   // place initial (offscreen) position using the shared coordinate system
   positionPerson(person4, 'initial', { duration: 0 })
-  person4.style.top = '0'
   formScreen.style.left = '100%'
   formScreen.style.right = '0px'
   startPersonAnimation(person4, anim4)

@@ -402,10 +402,10 @@ function addLiquidParticle() {
 
   if (pourRect) {
     originX = pourRect.left + pourRect.width / 2 - rect.left
-    originY = pourRect.top + pourRect.height / 2 - rect.top - 12
+    originY = pourRect.top + pourRect.height / 2 - rect.top - 6
   } else if (glassRect) {
     originX = glassRect.left + glassRect.width / 2 - rect.left
-    originY = glassRect.top + glassRect.height / 2 - rect.top - 12
+    originY = glassRect.top + glassRect.height / 2 - rect.top - 6
   }
 
   const count = Math.round(randomNumBetween(5, 8)) //число новых частиц за вызов
