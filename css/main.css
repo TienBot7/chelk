@@ -147,7 +147,6 @@ canvas {
   src: url('../fonts/Comforter/Comforter-Regular.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
-    font-display: swap;
 }
 
 @font-face {
@@ -155,7 +154,6 @@ canvas {
   src: url('../fonts/Аvеnіr_Nехt_W1G/Avenir_Next_W1G_Medium.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
-  font-display: swap;
 }
 
 @font-face {
@@ -163,7 +161,6 @@ canvas {
   src: url('../fonts/Аvеnіr_Nехt_W1G/Avenir_Next_W1G_UltraLight.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
-  font-display: swap;
 }
 
 @font-face {
@@ -171,7 +168,6 @@ canvas {
   src: url('../fonts/Аvеnіr_Nехt_W1G/Avenir_Next_W1G_Regular.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
-  font-display: swap;
 }
 
 * {

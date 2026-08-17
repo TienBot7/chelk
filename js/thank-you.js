@@ -483,7 +483,7 @@ const revealVfxCanvas = (tryCount = 0) => {
   applyThankYouVfxScale()
 }
 
-async function loadVfxModule(timeoutMs = 5000, attempts = 4) {
+async function loadVfxModule(timeoutMs = 3000, attempts = 3) {
   for (let i = 0; i < attempts; i++) {
     try {
       const importPromise = import('@vfx-js/core')
@@ -535,7 +535,7 @@ const animateCounter = () => {
   }
 }
 
-const initThankYouPage = async () => {
+const initThankYouPage = () => {
   const loader = document.querySelector('.loading')
   const header = document.querySelector('header')
   const main = document.querySelector('main')
@@ -545,50 +545,25 @@ const initThankYouPage = async () => {
 
   if (!loader) return
 
-  // Ensure VFX initialization is started so it can warm up while hiding
-  try { initializeVfx().catch(() => {}) } catch (e) {}
+  const onTransitionEnd = (event) => {
+    if (event.propertyName !== 'opacity') return
+    loader.removeEventListener('transitionend', onTransitionEnd)
+    clearTimeout(fallback)
+    loader.remove()
+  }
 
-  // Promise that resolves when a canvas (vfx-js-canvas or plain canvas) appears
-  const waitForCanvas = new Promise((resolve) => {
-    if (document.querySelector('vfx-js-canvas') || document.querySelector('canvas')) return resolve(true)
-    let attempts = 0
-    const iv = setInterval(() => {
-      if (document.querySelector('vfx-js-canvas') || document.querySelector('canvas')) {
-        clearInterval(iv)
-        return resolve(true)
-      }
-      attempts++
-      // safety bail after ~5s
-      if (attempts > 50) {
-        clearInterval(iv)
-        return resolve(false)
-      }
-    }, 100)
-  })
-
-  // Prepare hide transition promise
-  const hidePromise = new Promise((resolve) => {
-    const onTransitionEnd = (event) => {
-      if (event.propertyName !== 'opacity') return
-      loader.removeEventListener('transitionend', onTransitionEnd)
-      resolve()
-    }
-    loader.addEventListener('transitionend', onTransitionEnd)
-    // start hide
-    requestAnimationFrame(() => loader.classList.add('hide'))
-  })
+  const fallback = setTimeout(() => {
+    loader.removeEventListener('transitionend', onTransitionEnd)
+    loader.remove()
+  }, 1200)
 
   if (counterFrame) cancelAnimationFrame(counterFrame)
   updateDigits(99)
 
-  // Wait for either canvas readiness or a sensible timeout, then wait for hide transition
-  const canvasReady = await Promise.race([waitForCanvas, new Promise((r) => setTimeout(() => r(false), 2500))])
-  try {
-    await hidePromise
-  } catch (e) {}
-
-  // If canvas wasn't ready within timeout, remove loader anyway to avoid blocking UI
-  if (loader && loader.parentNode) loader.remove()
+  loader.addEventListener('transitionend', onTransitionEnd)
+  requestAnimationFrame(() => {
+    loader.classList.add('hide')
+  })
 }
 
 updateDigits(0)

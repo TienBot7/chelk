@@ -313,19 +313,6 @@ function scheduleInterval(fn, delay) {
   return id
 }
 
-function isLowPowerOrMobile() {
-  try {
-    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection
-    const saveData = conn && conn.saveData
-    const lowConcurrency = navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2
-    const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const smallScreen = window.innerWidth <= 768
-    return !!saveData || !!prefersReduced || lowConcurrency || smallScreen
-  } catch (e) {
-    return window.innerWidth <= 768
-  }
-}
-
 function pauseTimers() {
   for (const [id, timer] of activeTimeouts) {
     if (timer.handle) {
@@ -883,8 +870,6 @@ function drawLiquid() {
 }
 
 function animate() {
-  const constrained = isLowPowerOrMobile()
-
   if (!isPaused) {
     if (isFilling && fillLevel < targetFill) {
       fillLevel += (targetFill - fillLevel) * 0.01 //скорость поднятия экрана с жидкостью
@@ -911,13 +896,7 @@ function animate() {
   }
 
   drawLiquid()
-  // Throttle frame updates on low-power/mobile devices to save CPU/GPU
-  if (isLowPowerOrMobile()) {
-    // aim for ~30fps on constrained devices
-    setTimeout(() => { animationFrameId = requestAnimationFrame(animate) }, 1000 / 30)
-  } else {
-    animationFrameId = requestAnimationFrame(animate)
-  }
+  animationFrameId = requestAnimationFrame(animate)
 }
 
 function fadeOutLiquid() {
@@ -959,19 +938,23 @@ function positionShopImageByChoice(selectedChoice) {
     // protrudes beyond the viewport edge by the requested amount.
     if (selectedChoice === 'red') {
       // Хорека -> выступить на 40px за правый край
-      shopImage.style.width = 'calc(100% + 100px)'
+      shopImage.style.width = 'calc(100% + 40px)'
       shopImage.style.objectPosition = 'right top'
       shopImage.style.left = '0'
     } else if (selectedChoice === 'green') {
       // Одежда -> выступить на 40px за левый край
-      shopImage.style.width = 'calc(100% + 140px)'
+      shopImage.style.width = 'calc(100% + 40px)'
       shopImage.style.objectPosition = 'left top'
-      shopImage.style.left = '-140px'
+      shopImage.style.left = '-40px'
     } else if (selectedChoice === 'purple') {
       // Косметика -> сдвинуть на 110px влево
-      shopImage.style.width = 'calc(100% + 140px)'
+      shopImage.style.width = 'calc(100% + 110px)'
       shopImage.style.objectPosition = 'center top'
-      shopImage.style.left = '-140px'
+      shopImage.style.left = '-110px'
+    } else {
+      shopImage.style.width = 'calc(100% + 40px)'
+      shopImage.style.objectPosition = 'center top'
+      shopImage.style.left = '0'
     }
     return
   }
@@ -1007,8 +990,7 @@ function startFilling(selectedChoice) {
     }
   }, 75)
 
-  // spawn vertical lines less frequently on constrained devices
-  scheduleInterval(() => spawnVerticalLine(), isLowPowerOrMobile() ? 220 : 85)
+  scheduleInterval(() => spawnVerticalLine(), 85)
 }
 
 analogSection.addEventListener('click', () => {
