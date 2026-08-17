@@ -863,14 +863,21 @@
         if (script && script.buildCarousel) {
           const buildPromise = script.buildCarousel();
           window.carouselBuildPromise = buildPromise;
+          // On mobile treat carousel build as a critical task so models are ready
+          try {
+            if (window.innerWidth <= 768 && window.preloader && typeof window.preloader.addWaitTask === 'function') {
+              window.preloader.addWaitTask(buildPromise);
+            }
+          } catch (e) {}
         }
       });
     };
 
     const scheduleHeavyStartup = () => {
-      const idleCallback = window.requestIdleCallback || window.setTimeout;
-      const delay = window.innerWidth <= 768 ? 1200 : 250;
-      if (window.requestIdleCallback) {
+      // Start heavy scripts sooner on mobile devices to ensure carousel models begin loading
+      // and are considered by the preloader (we add the build promise as a waitTask on mobile).
+      const delay = 250;
+      if (window.requestIdleCallback && window.innerWidth > 768) {
         window.requestIdleCallback(() => startHeavyPageScripts(), { timeout: 2500 });
       } else {
         window.setTimeout(startHeavyPageScripts, delay);

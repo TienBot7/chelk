@@ -144,8 +144,16 @@ export function runPreloader({ onComplete }) {
 
   function tryFinishPreloader() {
     if (finished) return;
-    const canFinish = preloaderState.windowLoaded && preloaderState.requiredAssetsLoaded;
-    if (canFinish) {
+    const canFinishBase = preloaderState.windowLoaded && preloaderState.requiredAssetsLoaded;
+    const isMobile = (typeof window !== 'undefined') && (window.innerWidth <= 768);
+    if (!canFinishBase) return;
+    if (isMobile) {
+      // On mobile require any registered waitTasks (e.g., carousel build) to complete
+      if (areWaitTasksComplete()) {
+        setTimeout(finishPreloader, 300);
+      }
+    } else {
+      // Desktop: don't block on optional heavy tasks
       setTimeout(finishPreloader, 300);
     }
   }

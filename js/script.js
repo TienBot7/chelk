@@ -16,6 +16,11 @@ const MODELS_CONFIG = [
   { name: 'Косметика', scale: BASE_SCALE, activeScale: BASE_SCALE * 1.05, file: 'cosmetic-black.glb', rotation: { x: 0, y: -0.78, z: 0 } },
 ];
 
+// Diagnostic collector to help debug mobile loading issues
+if (typeof window !== 'undefined') {
+  window.__carouselDiagnostics__ = window.__carouselDiagnostics__ || { loads: [], errors: [] };
+}
+
 function preloadCarouselModelFiles() {
   // Модели теперь загружаются в фоне через preloader.js
   // Эта функция оставлена для совместимости, но не блокирует загрузку
@@ -577,17 +582,50 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
   const modelPath = `./models/${modelConfig.file}`;
   
   console.log(`🔄 Загрузка модели "${modelConfig.name}" из ${modelPath}`);
+  try {
+    if (typeof window !== 'undefined' && window.__carouselDiagnostics__) {
+      window.__carouselDiagnostics__.loads.push({ slideIndex, modelPath, ts: Date.now(), event: 'start' });
+    }
+  } catch (e) {}
   
   async function loadGltfWithRetry(path, retries = 1) {
-    try {
-      return await loader.loadAsync(path);
-    } catch (err) {
-      if (retries > 0) {
-        console.warn(`[slide ${slideIndex}] retry loading model ${path}, remaining attempts=${retries}`);
-        await new Promise((r) => setTimeout(r, 120 * (2 - retries)));
-        return loadGltfWithRetry(path, retries - 1);
+    const timeoutMs = 12000;
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        const gltf = await new Promise((resolve, reject) => {
+          let timedOut = false;
+          const timer = setTimeout(() => {
+            timedOut = true;
+            reject(new Error('GLTF load timeout'));
+          }, timeoutMs);
+
+          loader.load(
+            path,
+            (gltf) => {
+              if (timedOut) return; clearTimeout(timer); resolve(gltf);
+            },
+            (xhr) => {
+              try {
+                if (xhr && xhr.total && window.preloader && typeof window.preloader.reportModelProgress === 'function') {
+                  window.preloader.reportModelProgress(xhr.loaded, xhr.total);
+                }
+              } catch (e) {}
+            },
+            (err) => {
+              if (timedOut) return; clearTimeout(timer); reject(err);
+            },
+          );
+        });
+        return gltf;
+      } catch (err) {
+        console.warn(`[slide ${slideIndex}] attempt ${attempt + 1} failed loading ${path}:`, err.message || err);
+        if (attempt < retries) {
+          const backoff = 300 * (attempt + 1);
+          await new Promise((r) => setTimeout(r, backoff));
+          continue;
+        }
+        throw err;
       }
-      throw err;
     }
   }
 
@@ -596,6 +634,11 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
     const model = gltf.scene;
     
     console.log(`[slide ${slideIndex}] GLTF loaded:`, modelConfig.file, gltf);
+    try {
+      if (typeof window !== 'undefined' && window.__carouselDiagnostics__) {
+        window.__carouselDiagnostics__.loads.push({ slideIndex, modelPath, ts: Date.now(), event: 'loaded' });
+      }
+    } catch (e) {}
     try {
       const childrenCount = model.children ? model.children.length : 0;
       console.log(`[slide ${slideIndex}] model children count:`, childrenCount);
@@ -698,6 +741,22 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
 
     inst.scene.add(wrapper);
     inst.modelGroup = wrapper;
+    // Ensure renderer has proper size after model insertion
+    try {
+      if (inst && typeof inst.updateRendererSizeToCanvas === 'function') {
+        inst.updateRendererSizeToCanvas();
+      } else if (inst && inst.renderer && inst.slideElement) {
+        const canvas = inst.renderer.domElement;
+        const w = Math.max(1, Math.floor(inst.slideElement.clientWidth || 1));
+        const h = Math.max(1, Math.floor(inst.slideElement.clientHeight || 1));
+        const usedDpr = getPreferredDPR();
+        inst.renderer.setPixelRatio(usedDpr);
+        inst.renderer.setSize(w, h, false);
+        if (inst.camera) { inst.camera.aspect = w / h; inst.camera.updateProjectionMatrix(); }
+      }
+    } catch (e) {
+      console.warn('[slide load] failed to resize renderer after model add:', e);
+    }
     // ensure renderer uses current canvas size after model added
     try {
       if (inst.updateRendererSizeToCanvas) inst.updateRendererSizeToCanvas();
@@ -866,6 +925,11 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
     console.log(`✅ Модель "${modelConfig.name}" успешно загружена с улучшенным освещением`);
   } catch (err) {
     console.error(`❌ Ошибка загрузки модели "${modelConfig.name}":`, err);
+    try {
+      if (typeof window !== 'undefined' && window.__carouselDiagnostics__) {
+        window.__carouselDiagnostics__.errors.push({ slideIndex, modelPath, ts: Date.now(), error: String(err && (err.message || err)) });
+      }
+    } catch (e) {}
     // Создаем простую фигуру-заглушку
     const geometry = new SphereGeometry(0.5, 32, 32);
     const material = new MeshStandardMaterial({ color: 0x666666, metalness: 0.7, roughness: 0.3 });
@@ -873,6 +937,7 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
     fallbackMesh.scale.set(0.8, 0.8, 0.8);
     inst.scene.add(fallbackMesh);
     inst.modelGroup = fallbackMesh;
+    try { if (inst) inst._loadFailed = true; } catch (e) {}
   }
 }
 
@@ -1295,7 +1360,7 @@ async function buildCarousel() {
   for (let i = 0; i < slidesArray.length; i++) {
     // Initialize slide; if size/layout problems occur, retry a few times
     let attempts = 0;
-    const MAX_ATTEMPTS = 4;
+    const MAX_ATTEMPTS = (window.innerWidth <= 768) ? 6 : 4;
     let inst = null;
     while (attempts < MAX_ATTEMPTS) {
       try {
