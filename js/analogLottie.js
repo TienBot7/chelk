@@ -111,7 +111,7 @@ const tShirtsPositions = [
 ]
 const personCoordinateSettings = {
   person1: {
-    initial: { x: -0.35, y: 0.1 },
+    initial: { x: -1.35, y: 0.1 },
     red: { x: 0.52, y: 0.1 },
     purple: { x: 0.3, y: 0.1 },
     exit: { x: 1.2, y: 0.1 },
@@ -945,6 +945,7 @@ if (mixBtn) {
 
       try {
         if (analogSection) {
+          analogSection.style.right = '0%'
           analogSection.style.display = 'block'
           analogSection.style.visibility = 'visible'
           analogSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
