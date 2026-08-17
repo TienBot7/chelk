@@ -862,9 +862,6 @@
         if (script && script.initKeyboardControls) script.initKeyboardControls();
         if (script && script.buildCarousel) {
           const buildPromise = script.buildCarousel();
-          if (window.preloader && typeof window.preloader.addWaitTask === 'function') {
-            window.preloader.addWaitTask(buildPromise);
-          }
           window.carouselBuildPromise = buildPromise;
         }
       });

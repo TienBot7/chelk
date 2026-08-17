@@ -215,9 +215,14 @@ function attachBehavior(bubble, item) {
   const inner = bubble.querySelector('.bubble-inner')
   const textElement = bubble.querySelector('.bubble-text')
   const gameSection = document.querySelector('.game')
+  const isTouchDevice = !!(
+    (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) ||
+    ('ontouchstart' in window) ||
+    (navigator && navigator.maxTouchPoints > 0)
+  )
   let timeoutId = null
   let swapTimeout = null
-  bubble.dataset.bubbleTextState = bubble.dataset.bubbleTextState || '1'
+  bubble.dataset.bubbleTextState = bubble.dataset.bubbleTextState || '0'
 
   function isGameActive() {
     if (!gameSection) return false
@@ -245,50 +250,54 @@ function attachBehavior(bubble, item) {
     }, delay)
   }
 
-  startRandomShake()
+  if (!isTouchDevice) {
+    startRandomShake()
+  }
   updateCursor()
 
-  inner.addEventListener('mouseenter', () => {
-    updateCursor()
-    if (isGameActive()) {
-      hideBubbleText()
-      return
-    }
-    if (timeoutId) clearTimeout(timeoutId)
-    inner.classList.remove('shake')
-
-    bubble.style.animation = 'none'
-    bubble.style.webkitAnimation = 'none'
-    bubble.style.animationPlayState = 'paused'
-    bubble.style.webkitAnimationPlayState = 'paused'
-    bubble.style.transform = 'translate3d(0, 0, 0)'
-    bubble.style.webkitTransform = 'translate3d(0, 0, 0)'
-    // allow CSS :hover to control opacity (show text)
-    textElement.style.opacity = ''
-  })
-
-  inner.addEventListener('mouseleave', () => {
-    if (isGameActive()) {
+  if (!isTouchDevice) {
+    inner.addEventListener('mouseenter', () => {
       updateCursor()
-      hideBubbleText()
-      return
-    }
-    bubble.style.animation = 'none'
-    bubble.style.webkitAnimation = 'none'
-    bubble.style.animationPlayState = 'paused'
-    bubble.style.webkitAnimationPlayState = 'paused'
-    bubble.style.transform = 'translate3d(0, 0, 0)'
-    bubble.style.webkitTransform = 'translate3d(0, 0, 0)'
-    startRandomShake()
+      if (isGameActive()) {
+        hideBubbleText()
+        return
+      }
+      if (timeoutId) clearTimeout(timeoutId)
+      inner.classList.remove('shake')
 
-    // hide text on mouseleave immediately and cancel pending swaps
-    if (swapTimeout) {
-      clearTimeout(swapTimeout)
-      swapTimeout = null
-    }
-    textElement.style.transition = 'opacity 0.18s ease'
-    textElement.style.opacity = '0'
-  })
+      bubble.style.animation = 'none'
+      bubble.style.webkitAnimation = 'none'
+      bubble.style.animationPlayState = 'paused'
+      bubble.style.webkitAnimationPlayState = 'paused'
+      bubble.style.transform = 'translate3d(0, 0, 0)'
+      bubble.style.webkitTransform = 'translate3d(0, 0, 0)'
+      // allow CSS :hover to control opacity (show text)
+      textElement.style.opacity = ''
+    })
+
+    inner.addEventListener('mouseleave', () => {
+      if (isGameActive()) {
+        updateCursor()
+        hideBubbleText()
+        return
+      }
+      bubble.style.animation = 'none'
+      bubble.style.webkitAnimation = 'none'
+      bubble.style.animationPlayState = 'paused'
+      bubble.style.webkitAnimationPlayState = 'paused'
+      bubble.style.transform = 'translate3d(0, 0, 0)'
+      bubble.style.webkitTransform = 'translate3d(0, 0, 0)'
+      startRandomShake()
+
+      // hide text on mouseleave immediately and cancel pending swaps
+      if (swapTimeout) {
+        clearTimeout(swapTimeout)
+        swapTimeout = null
+      }
+      textElement.style.transition = 'opacity 0.18s ease'
+      textElement.style.opacity = '0'
+    })
+  }
 
   function swapText(newHtml, label, forceVisible = false) {
     if (isGameActive()) {
@@ -323,7 +332,6 @@ function attachBehavior(bubble, item) {
       hideBubbleText()
       return
     }
-    // On click set the global flags, enable page scrolling, and allow head fade on scroll.
     try {
       if (typeof window !== 'undefined') {
         window.bubbleClick = true
@@ -347,7 +355,7 @@ function attachBehavior(bubble, item) {
       }
     } catch (e) {}
 
-    const cycleState = Number(bubble.dataset.bubbleTextState || '1')
+    const cycleState = Number(bubble.dataset.bubbleTextState || '0')
 
     if (cycleState === 0) {
       swapText(item.text1, '✦ клиент ✦', true)
@@ -505,8 +513,9 @@ function spawnBubble(item, fixedTarget, sourcePoint) {
       bubble.classList.remove('spawning')
 
       const textElement = bubble.querySelector('.bubble-text')
-      textElement.innerHTML = buildBubbleTextHtml(item.text1, '✦ клиент ✦')
-      bubble.dataset.bubbleTextState = '1'
+      textElement.innerHTML = ''
+      textElement.style.opacity = '0'
+      bubble.dataset.bubbleTextState = '0'
 
       attachBehavior(bubble, item)
     }

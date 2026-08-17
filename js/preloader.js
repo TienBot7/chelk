@@ -144,7 +144,8 @@ export function runPreloader({ onComplete }) {
 
   function tryFinishPreloader() {
     if (finished) return;
-    if (preloaderState.windowLoaded && preloaderState.modelLoaded && preloaderState.requiredAssetsLoaded && areWaitTasksComplete()) {
+    const canFinish = preloaderState.windowLoaded && preloaderState.requiredAssetsLoaded;
+    if (canFinish) {
       setTimeout(finishPreloader, 300);
     }
   }
