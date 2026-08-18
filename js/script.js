@@ -37,6 +37,7 @@ let threeInstances = [];
 let currentSlideIndex = 1;
 let currentWordIndex = 1;
 let isTransitioning = false;
+let sliderModelsReady = false;
 let carouselTrack = document.getElementById('carouselTrack');
 let textOverlay = document.getElementById('textOverlay');
 let prevBtn = document.getElementById('prevBtn');
@@ -1348,6 +1349,8 @@ function setupDragAndDrop() {
 }
 
 async function buildCarousel() {
+  sliderModelsReady = false;
+  window.__sliderModelsReady__ = false;
   carouselTrack.innerHTML = '';
   for (let i = 0; i < MODELS_CONFIG.length; i++) {
     const slideDiv = document.createElement('div');
@@ -1394,6 +1397,8 @@ async function buildCarousel() {
   if (window.preloader && typeof window.preloader.markCarouselModelsReady === 'function') {
     window.preloader.markCarouselModelsReady();
   }
+  sliderModelsReady = true;
+  window.__sliderModelsReady__ = true;
 
   for (let i = 0; i < 3; i++) {
     const dot = document.createElement('button');

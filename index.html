@@ -874,9 +874,8 @@
     };
 
     const scheduleHeavyStartup = () => {
-      // Start heavy scripts sooner on mobile devices to ensure carousel models begin loading
-      // and are considered by the preloader (we add the build promise as a waitTask on mobile).
-      const delay = 250;
+      // Start heavy scripts as soon as the DOM is ready so the mobile carousel does not wait for full page load.
+      const delay = 150;
       if (window.requestIdleCallback && window.innerWidth > 768) {
         window.requestIdleCallback(() => startHeavyPageScripts(), { timeout: 2500 });
       } else {
@@ -888,8 +887,9 @@
       runPreloader({ onComplete: () => { } });
     });
 
-    window.addEventListener('load', scheduleHeavyStartup, { once: true });
-    if (document.readyState === 'complete') {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', scheduleHeavyStartup, { once: true });
+    } else {
       scheduleHeavyStartup();
     }
 

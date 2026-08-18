@@ -148,12 +148,12 @@ export function runPreloader({ onComplete }) {
     const isMobile = (typeof window !== 'undefined') && (window.innerWidth <= 768);
     if (!canFinishBase) return;
     if (isMobile) {
-      // On mobile require any registered waitTasks (e.g., carousel build) to complete
-      if (areWaitTasksComplete()) {
+      const sliderReady = typeof window !== 'undefined' && window.__sliderModelsReady__ === true;
+      // On mobile the slider is a hard gate: it must not appear before all 3 slider models are loaded.
+      if (sliderReady && areWaitTasksComplete()) {
         setTimeout(finishPreloader, 300);
       }
     } else {
-      // Desktop: don't block on optional heavy tasks
       setTimeout(finishPreloader, 300);
     }
   }
@@ -667,9 +667,10 @@ export function runPreloader({ onComplete }) {
     animateProgress();
     setTimeout(() => {
       if (!finished) {
-        // Fallback only after the timeout, so the loader never gets stuck forever.
+        // Safety net only: do not release the loader before the three slider models are ready.
         preloaderState.modelLoaded = true;
         preloaderState.requiredAssetsLoaded = true;
+        preloaderState.windowLoaded = true;
         updatePreloaderProgress();
         tryFinishPreloader();
       }
