@@ -255,6 +255,9 @@ function attachBehavior(bubble, item) {
   }
   updateCursor()
 
+  inner.style.webkitTapHighlightColor = 'transparent'
+  inner.style.touchAction = 'manipulation'
+
   if (!isTouchDevice) {
     inner.addEventListener('mouseenter', () => {
       updateCursor()

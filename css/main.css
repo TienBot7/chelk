@@ -189,12 +189,30 @@ body {
   overflow: hidden;
 }
 
-button{
+button,
+a,
+[role='button'],
+.sound-btn,
+.choise-button,
+.help,
+.platform,
+.platform-copy,
+.mix-btn,
+.header__button,
+.scroll-card__button,
+.thank-you__button,
+.nav-arrow,
+.form__submit-btn {
   background-color: transparent;
   border: unset;
   cursor: pointer !important;
   padding: 0;
   outline: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
 }
 
 .container{
@@ -764,6 +782,7 @@ section.loading.hide {
   visibility: visible !important;
   pointer-events: auto !important;
   transform: translateX(-50%) translateY(0);
+  -webkit-tap-highlight-color: transparent;
 }
 
 .choise-button__brackets {

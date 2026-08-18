@@ -24,6 +24,11 @@
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
 }
 
 .bubble.spawning {
@@ -44,6 +49,11 @@
   transition: none;
   transform: none;
   -webkit-transform: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
 }
 
 .bubble-inner:before,
