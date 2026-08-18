@@ -239,6 +239,17 @@ function attachBehavior(bubble, item) {
     textElement.style.opacity = '0'
   }
 
+  function showBubbleTextByMode() {
+    const isAlternate = Number(bubble.dataset.bubbleTextState || '0') === 1
+    const label = isAlternate ? '✦ агентство ✦' : '✦ клиент ✦'
+    const html = isAlternate ? item.text2 : item.text1
+
+    textElement.style.transition = 'opacity 0.18s ease'
+    textElement.innerHTML = buildBubbleTextHtml(html, label)
+    void textElement.offsetWidth
+    textElement.style.opacity = '1'
+  }
+
   function startRandomShake() {
     const delay = 2000 + Math.random() * 5000
     timeoutId = setTimeout(() => {
@@ -274,8 +285,13 @@ function attachBehavior(bubble, item) {
       bubble.style.webkitAnimationPlayState = 'paused'
       bubble.style.transform = 'translate3d(0, 0, 0)'
       bubble.style.webkitTransform = 'translate3d(0, 0, 0)'
-      // allow CSS :hover to control opacity (show text)
-      textElement.style.opacity = ''
+
+      // Hover is always text1. Click can temporarily toggle text2, but a new hover must reset to text1.
+      textElement.style.transition = 'opacity 0.18s ease'
+      textElement.innerHTML = buildBubbleTextHtml(item.text1, '✦ клиент ✦')
+      void textElement.offsetWidth
+      textElement.style.opacity = '1'
+      bubble.dataset.bubbleTextState = '0'
     })
 
     inner.addEventListener('mouseleave', () => {
@@ -292,7 +308,6 @@ function attachBehavior(bubble, item) {
       bubble.style.webkitTransform = 'translate3d(0, 0, 0)'
       startRandomShake()
 
-      // hide text on mouseleave immediately and cancel pending swaps
       if (swapTimeout) {
         clearTimeout(swapTimeout)
         swapTimeout = null
@@ -358,16 +373,41 @@ function attachBehavior(bubble, item) {
       }
     } catch (e) {}
 
+    if (isTouchDevice) {
+      Array.from(document.querySelectorAll('.bubble')).forEach((otherBubble) => {
+        if (otherBubble === bubble) return
+        const otherText = otherBubble.querySelector('.bubble-text')
+        if (otherText) {
+          otherText.innerHTML = ''
+          otherText.style.opacity = '0'
+        }
+        otherBubble.dataset.bubbleTextState = '0'
+      })
+    }
+
     const cycleState = Number(bubble.dataset.bubbleTextState || '0')
 
+    if (isTouchDevice) {
+      if (cycleState === 0) {
+        swapText(item.text1, '✦ клиент ✦', true)
+        bubble.dataset.bubbleTextState = '1'
+      } else if (cycleState === 1) {
+        swapText(item.text2, '✦ агентство ✦', true)
+        bubble.dataset.bubbleTextState = '2'
+      } else {
+        textElement.innerHTML = ''
+        textElement.style.transition = 'opacity 0.18s ease'
+        textElement.style.opacity = '0'
+        bubble.dataset.bubbleTextState = '0'
+      }
+      return
+    }
+
     if (cycleState === 0) {
-      swapText(item.text1, '✦ клиент ✦', true)
-      bubble.dataset.bubbleTextState = '1'
-    } else if (cycleState === 1) {
       swapText(item.text2, '✦ агентство ✦', true)
-      bubble.dataset.bubbleTextState = '2'
+      bubble.dataset.bubbleTextState = '1'
     } else {
-      hideBubbleText()
+      swapText(item.text1, '✦ клиент ✦', true)
       bubble.dataset.bubbleTextState = '0'
     }
   })
