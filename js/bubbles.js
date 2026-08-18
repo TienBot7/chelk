@@ -269,6 +269,15 @@ function attachBehavior(bubble, item) {
   inner.style.webkitTapHighlightColor = 'transparent'
   inner.style.touchAction = 'manipulation'
 
+  inner.addEventListener('pointerdown', (event) => {
+    event.stopPropagation()
+    event.preventDefault()
+  }, { passive: false })
+
+  inner.addEventListener('pointerup', (event) => {
+    event.stopPropagation()
+  }, { passive: true })
+
   if (!isTouchDevice) {
     inner.addEventListener('mouseenter', () => {
       updateCursor()
