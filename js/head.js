@@ -310,7 +310,8 @@ function ensureHeadImageFallback() {
   }
 
   const variant = getHeadImageVariantName()
-  headImageFallback.src = `./img/head/${variant}.png`
+  // Use modern WebP images for head fallbacks to reduce size on mobile
+  headImageFallback.src = `./img/head/${variant}.webp`
   headImageFallback.style.display = 'block'
   if (canvas) {
     canvas.style.display = 'none'

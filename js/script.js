@@ -183,11 +183,17 @@ function onWheelScale(e) {
   const mag = Math.abs(normDelta) * 0.02;
   inst._wheelMagnitude = clamp(mag, 0.02, 12);
   // integrate into a velocity accumulator so sparse/stepped events become smooth
-  try {
-    inst._wheelVelocity = (inst._wheelVelocity || 0) + dir * Math.max(0.02, inst._wheelMagnitude) * 0.06;
-    inst._wheelVelocity = clamp(inst._wheelVelocity, -8, 8);
-  } catch (e) {}
-  return;
+    try {
+      const add = dir * Math.max(0.02, inst._wheelMagnitude) * 0.06;
+      // If velocity is effectively zero, set an initial velocity in the intended direction
+      if (!inst._wheelVelocity || Math.abs(inst._wheelVelocity) < 0.02) {
+        inst._wheelVelocity = add * 2.5; // stronger initial bias to avoid brief opposite shrink
+      } else {
+        inst._wheelVelocity = (inst._wheelVelocity || 0) + add;
+      }
+      inst._wheelVelocity = clamp(inst._wheelVelocity, -8, 8);
+    } catch (e) {}
+    return;
 
   // If scrolling out (delta<0) and camera is closer than base distance, move camera back first
   try {
@@ -588,7 +594,56 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
   const inst = threeInstances[slideIndex];
   if (!inst) return;
   
-  if (inst.modelGroup) inst.scene.remove(inst.modelGroup);
+  if (inst.modelGroup) {
+    try { if (inst.scene && inst.scene.remove) inst.scene.remove(inst.modelGroup); } catch (e) {}
+    // also remove any DOM fallback image if present
+    try { if (inst.mockImage && inst.mockImage.parentNode) inst.mockImage.parentNode.removeChild(inst.mockImage); } catch (e) {}
+  }
+
+  // Mobile fallback: if screen is <=500px, use lightweight image from img/goods
+  try {
+    if (typeof window !== 'undefined' && window.innerWidth <= 500) {
+      const slideEl = inst.slideElement;
+      if (slideEl) {
+        // create image fallback
+        const imgEl = document.createElement('img');
+        const imgFile = (modelConfig && modelConfig.file) ? modelConfig.file.replace(/\.glb$/i, '.webp') : 'placeholder.webp';
+        imgEl.src = `./img/goods/${imgFile}`;
+        imgEl.alt = modelConfig && modelConfig.name ? modelConfig.name : '';
+        imgEl.className = 'model-fallback-image';
+        imgEl.style.position = 'absolute';
+        imgEl.style.left = '50%';
+        imgEl.style.top = '50%';
+        imgEl.style.transform = 'translate(-50%, -50%)';
+        imgEl.style.width = '85%';
+        imgEl.style.height = '100%';
+        imgEl.style.objectFit = 'contain';
+        imgEl.style.pointerEvents = 'none';
+        imgEl.style.transition = 'transform 160ms ease-out, opacity 200ms ease-out';
+        imgEl.style.transformOrigin = 'center center';
+        imgEl.style.willChange = 'transform, opacity';
+        slideEl.appendChild(imgEl);
+
+        // create a lightweight mock modelGroup to keep animation code working
+        const mock = {
+          isMockImage: true,
+          position: { x: 0, y: 0, z: 0 },
+          rotation: { x: (modelConfig.rotation && modelConfig.rotation.x) || 0, y: (modelConfig.rotation && modelConfig.rotation.y) || 0, z: 0 },
+          scale: { x: (modelConfig.scale || 1), y: (modelConfig.scale || 1), z: (modelConfig.scale || 1), set(x,y,z){ this.x = x; this.y = y; this.z = z; } },
+          userData: { baseRotation: { y: (modelConfig.rotation && modelConfig.rotation.y) || 0 } },
+          traverse: function() {},
+          updateWorldMatrix: function() {},
+        };
+        // attach image for external sync
+        inst.mockImage = imgEl;
+        inst.modelGroup = mock;
+
+        // initial transform sync
+        try { imgEl.style.transform = `translate(-50%, calc(-50% + ${mock.position.y * 100}px)) rotateY(${(mock.rotation.y || 0) * 57.2958}deg) scale(${mock.scale.x})`; } catch (e) {}
+      }
+      return;
+    }
+  } catch (e) {}
   
   const loader = new GLTFLoader();
   const modelPath = `./models/${modelConfig.file}`;
@@ -1180,24 +1235,40 @@ async function initThreeForSlide(slideElement, modelConfig, slideIndex) {
         const change = vel * SCALE_RATE * dt * CENTER_SCROLL_MULTIPLIER;
         const next = clamp(cur + change, MIN_MODEL_SCALE, MAX_MODEL_SCALE);
         try {
-          // prevent camera intersection when scaling in
-          const baseRadius = instance.baseBoundingRadius || 0.5;
-          const currentScale = instance.modelGroup.scale.x || 1;
-          const modelEdge = baseRadius * currentScale;
-          const padding = Math.max(0.03, modelEdge * 0.02);
-          const minAllowed = modelEdge + padding;
-          const camDist = instance.camera.position.distanceTo(instance.controls.target);
-          if (vel > 0 && camDist <= minAllowed + 1e-6) {
-            try {
-              const tgt = instance.controls.target;
-              const cam = instance.camera;
-              const dirBack = new Vector3().subVectors(cam.position, tgt).normalize();
-              const adj = dirBack.multiplyScalar(minAllowed);
-              cam.position.copy(new Vector3().addVectors(tgt, adj));
-              instance.controls.update();
-            } catch (e) {}
-          }
+          // prevent camera intersection when scaling in (skip for mock images to avoid heavy repositioning)
+          try {
+            if (!(instance.modelGroup && instance.modelGroup.isMockImage)) {
+              const baseRadius = instance.baseBoundingRadius || 0.5;
+              const currentScale = instance.modelGroup.scale.x || 1;
+              const modelEdge = baseRadius * currentScale;
+              const padding = Math.max(0.03, modelEdge * 0.02);
+              const minAllowed = modelEdge + padding;
+              const camDist = instance.camera.position.distanceTo(instance.controls.target);
+              if (vel > 0 && camDist <= minAllowed + 1e-6) {
+                try {
+                  const tgt = instance.controls.target;
+                  const cam = instance.camera;
+                  const dirBack = new Vector3().subVectors(cam.position, tgt).normalize();
+                  const adj = dirBack.multiplyScalar(minAllowed);
+                  cam.position.copy(new Vector3().addVectors(tgt, adj));
+                  instance.controls.update();
+                } catch (e) {}
+              }
+            }
+          } catch (e) {}
           instance.modelGroup.scale.set(next, next, next);
+          // If this instance uses a mock image, sync its CSS transform immediately
+          try {
+            if (instance.modelGroup && instance.modelGroup.isMockImage && instance.mockImage) {
+              const img = instance.mockImage;
+              const posY = (instance.modelGroup.position && instance.modelGroup.position.y) ? instance.modelGroup.position.y : 0;
+              const rotY = (instance.modelGroup.rotation && instance.modelGroup.rotation.y) ? instance.modelGroup.rotation.y : 0;
+              const scaleVal = next;
+              const ty = Math.round(posY * 100);
+              const ry = rotY * 57.2958;
+              img.style.transform = `translate(-50%, calc(-50% + ${ty}px)) rotateY(${ry}deg) scale(${scaleVal})`;
+            }
+          } catch (e) {}
         } catch (e) {
           instance.modelGroup.scale.set(next, next, next);
         }
@@ -1281,6 +1352,19 @@ function updateSlidePositions() {
     } catch (e) {
       // ignore resize errors
     }
+
+    // If this instance uses a mock image instead of a 3D model, sync CSS transform
+    try {
+      if (instance.modelGroup && instance.modelGroup.isMockImage && instance.mockImage) {
+        const img = instance.mockImage;
+        const posY = (instance.modelGroup.position && instance.modelGroup.position.y) ? instance.modelGroup.position.y : 0;
+        const rotY = (instance.modelGroup.rotation && instance.modelGroup.rotation.y) ? instance.modelGroup.rotation.y : 0;
+        const scale = (instance.modelGroup.scale && instance.modelGroup.scale.x) ? instance.modelGroup.scale.x : 1;
+        const ty = Math.round(posY * 100);
+        const ry = rotY * 57.2958; // rad -> deg
+        img.style.transform = `translate(-50%, calc(-50% + ${ty}px)) rotateY(${ry}deg) scale(${scale})`;
+      }
+    } catch (e) {}
 
     if (inst && inst.modelGroup && inst.modelConfig) {
       updateModelScale(inst, idx === currentSlideIndex, inst.modelConfig);

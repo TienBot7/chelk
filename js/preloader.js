@@ -681,13 +681,21 @@ export function runPreloader({ onComplete }) {
   // Фоновая загрузка моделей и аудиофайлов после показа страницы
   function startBackgroundAssetLoading() {
     // Загружаем модели в фоне после того, как страница видна
-    const carouselModels = [
+    let carouselModels = [
       './models/t-shirt-black.glb',
-      './models/soda_black.glb', 
+      './models/soda_black.glb',
       './models/cosmetic-black.glb',
       './models/head.glb'
     ];
-    
+
+    // On very small screens we use an image fallback for the head instead
+    // of the heavy 3D model. Avoid preloading head.glb for widths <= 500px.
+    try {
+      if (typeof window !== 'undefined' && window.innerWidth <= 500) {
+        carouselModels = carouselModels.filter((u) => !/head\.glb$/.test(u));
+      }
+    } catch (e) {}
+
     carouselModels.forEach((url) => {
       // Используем requestIdleCallback для загрузки только когда браузер свободен
       if (typeof requestIdleCallback !== 'undefined') {
