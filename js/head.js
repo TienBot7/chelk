@@ -341,7 +341,7 @@ function updateHeadFallbackTransform() {
   const shiftX = (targetModelRotationY || 0) * 18
   const shiftY = (targetModelRotationX || 0) * -10
 
-  headImageFallback.style.transform = `translate(${shiftX}px, ${shiftY}px) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`
+  headImageFallback.style.transform = `translate(${shiftX}px, ${shiftY}px) rotateX(${tiltX}deg)`
   headImageFallback.style.transformOrigin = 'center bottom'
 }
 

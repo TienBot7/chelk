@@ -639,7 +639,7 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
         inst.modelGroup = mock;
 
         // initial transform sync
-        try { imgEl.style.transform = `translate(-50%, calc(-50% + ${mock.position.y * 100}px)) rotateY(${(mock.rotation.y || 0) * 57.2958}deg) scale(${mock.scale.x})`; } catch (e) {}
+        try { imgEl.style.transform = `translate(-50%, calc(-50% + ${mock.position.y * 100}px)) scale(${mock.scale.x})`; } catch (e) {}
       }
       return;
     }
@@ -1266,7 +1266,7 @@ async function initThreeForSlide(slideElement, modelConfig, slideIndex) {
               const scaleVal = next;
               const ty = Math.round(posY * 100);
               const ry = rotY * 57.2958;
-              img.style.transform = `translate(-50%, calc(-50% + ${ty}px)) rotateY(${ry}deg) scale(${scaleVal})`;
+              img.style.transform = `translate(-50%, calc(-50% + ${ty}px)) scale(${scaleVal})`;
             }
           } catch (e) {}
         } catch (e) {
@@ -1362,7 +1362,7 @@ function updateSlidePositions() {
         const scale = (instance.modelGroup.scale && instance.modelGroup.scale.x) ? instance.modelGroup.scale.x : 1;
         const ty = Math.round(posY * 100);
         const ry = rotY * 57.2958; // rad -> deg
-        img.style.transform = `translate(-50%, calc(-50% + ${ty}px)) rotateY(${ry}deg) scale(${scale})`;
+        img.style.transform = `translate(-50%, calc(-50% + ${ty}px)) scale(${scale})`;
       }
     } catch (e) {}
 
