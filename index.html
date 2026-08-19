@@ -883,8 +883,64 @@
       }
     };
 
+    function fallbackRunPreloaderInline() {
+      try {
+        const loadingSection = document.querySelector('section.loading');
+        const tens = document.getElementById('tens');
+        const units = document.getElementById('units');
+        if (loadingSection) {
+          loadingSection.classList.remove('hide');
+          loadingSection.style.display = '';
+        }
+        let value = 1;
+        const interval = setInterval(() => {
+          try {
+            value = Math.min(99, value + Math.ceil(Math.random() * 3));
+            const percent = Math.max(1, Math.round(value));
+            const tensV = Math.floor(percent / 10);
+            const unitsV = percent % 10;
+            if (tens && tens.textContent !== String(tensV)) tens.textContent = String(tensV);
+            if (units && units.textContent !== String(unitsV)) units.textContent = String(unitsV);
+            if (value >= 95) {
+              clearInterval(interval);
+            }
+          } catch (e) {
+            console.warn('fallback progress update failed', e);
+          }
+        }, 300);
+        window.__fallbackPreloaderInterval__ = interval;
+      } catch (e) {
+        console.warn('fallbackRunPreloaderInline failed', e);
+      }
+    }
+
+    // Try loading the module preloader; on failure, show a minimal inline fallback so users see a loader.
     import('./js/preloader.js').then(({ runPreloader }) => {
-      runPreloader({ onComplete: () => { } });
+      try {
+        runPreloader({ onComplete: () => { } });
+      } catch (e) {
+        console.error('runPreloader threw', e);
+        fallbackRunPreloaderInline();
+      }
+    }).catch((err) => {
+      console.error('preloader import failed', err);
+      fallbackRunPreloaderInline();
+    });
+
+    // Ensure early runtime errors do not leave users with a blank screen — show loader when errors occur.
+    window.addEventListener && window.addEventListener('error', (ev) => {
+      try {
+        console.error('Runtime error', ev && ev.error ? ev.error : ev);
+        const loadingSection = document.querySelector && document.querySelector('section.loading');
+        if (loadingSection) loadingSection.classList.remove('hide');
+      } catch (e) {}
+    });
+    window.addEventListener && window.addEventListener('unhandledrejection', (ev) => {
+      try {
+        console.error('Unhandled rejection', ev && ev.reason ? ev.reason : ev);
+        const loadingSection = document.querySelector && document.querySelector('section.loading');
+        if (loadingSection) loadingSection.classList.remove('hide');
+      } catch (e) {}
     });
 
     if (document.readyState === 'loading') {

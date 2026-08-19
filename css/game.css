@@ -1497,4 +1497,7 @@ body {
   .platform.end-vertical{
     top: 50% !important;
   }
+  .controls-panel{
+    display: none;
+  }
 }
