@@ -214,6 +214,9 @@
   /* .bubble{
     width: 39vw;
   } */
+   .bubbles-container {
+    z-index: 1;
+   }
   .bubble-text{
     font-size: calc(1.13vw + 1.13vh);
   }

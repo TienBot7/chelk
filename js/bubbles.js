@@ -376,10 +376,9 @@ function attachBehavior(bubble, item) {
       const headSection = bubble.closest('section.head') || bubble.closest('.head')
       if (headSection && typeof window !== 'undefined') {
         window.headBubbleClicks = (window.headBubbleClicks || 0) + 1
-        // Disabled: do not open the help / scroll hint on the 3rd click — keeps UX consistent
-        // if (window.headBubbleClicks === 3) {
-        //   headSection.classList.add('scroll-hint-visible')
-        // }
+        if (window.headBubbleClicks >= 3) {
+          headSection.classList.add('scroll-hint-visible')
+        }
       }
     } catch (e) {}
 

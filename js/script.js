@@ -1749,7 +1749,6 @@ function initHelpTextTransition() {
 
   if (headSection.classList.contains('visible')) {
     switchHelpText();
-    showHelpPrompt({ duration: 0 });
   }
 
   const observer = new MutationObserver((mutations) => {
@@ -1757,7 +1756,6 @@ function initHelpTextTransition() {
       if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
         if (headSection.classList.contains('visible')) {
           switchHelpText();
-          showHelpPrompt({ duration: 0 });
         } else {
           hideHelpPrompt({ duration: 0 });
         }

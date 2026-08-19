@@ -5,11 +5,14 @@ import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js'
 
 const isAndroidDevice = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent)
 const isMobileDevice = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+const useHeadImageFallback = () => window.innerWidth <= 500
 const isLowPowerHeadRender = isMobileDevice && window.innerWidth <= 768
 const MAX_HEAD_CANVAS_HEIGHT = 1080
 const HEAD_RENDER_INTERVAL = isLowPowerHeadRender ? 33 : 16
 let lastPointerSample = { x: 0, y: 0 }
 let pointerRaycastCooldownUntil = 0
+let headImageFallback = null
+const mobileHeadFallbackEnabled = useHeadImageFallback()
 
 function getHeadCanvasSize() {
   const width = window.innerWidth
@@ -24,117 +27,142 @@ if (canvas) {
   canvas.style.height = `${Math.min(window.innerHeight, MAX_HEAD_CANVAS_HEIGHT)}px`
   canvas.style.display = 'block'
 }
-const renderer = new WebGLRenderer({
+const renderer = mobileHeadFallbackEnabled ? null : new WebGLRenderer({
   canvas,
   antialias: !isAndroidDevice,
   alpha: true,
   preserveDrawingBuffer: false,
   powerPreference: isAndroidDevice ? 'low-power' : 'high-performance',
 })
-const headCanvasSize = getHeadCanvasSize()
-renderer.setSize(headCanvasSize.width, headCanvasSize.height)
-renderer.setPixelRatio(isMobileDevice ? 1 : Math.min(window.devicePixelRatio || 1, 2))
-renderer.setClearColor(0x121315, 1)
-renderer.shadowMap.enabled = false
+if (renderer) {
+  const headCanvasSize = getHeadCanvasSize()
+  renderer.setSize(headCanvasSize.width, headCanvasSize.height)
+  renderer.setPixelRatio(isMobileDevice ? 1 : Math.min(window.devicePixelRatio || 1, 2))
+  renderer.setClearColor(0x121315, 1)
+  renderer.shadowMap.enabled = false
 
-if (renderer.domElement) {
-  renderer.domElement.style.position = 'fixed'
-  renderer.domElement.style.bottom = '0'
-  renderer.domElement.style.left = '0'
-  renderer.domElement.style.width = '100%'
-  renderer.domElement.style.height = `${Math.min(window.innerHeight, MAX_HEAD_CANVAS_HEIGHT)}px`
-  renderer.domElement.style.maxHeight = `${MAX_HEAD_CANVAS_HEIGHT}px`
-  renderer.domElement.style.display = 'block'
+  if (renderer.domElement) {
+    renderer.domElement.style.position = 'fixed'
+    renderer.domElement.style.bottom = '0'
+    renderer.domElement.style.left = '0'
+    renderer.domElement.style.width = '100%'
+    renderer.domElement.style.height = `${Math.min(window.innerHeight, MAX_HEAD_CANVAS_HEIGHT)}px`
+    renderer.domElement.style.maxHeight = `${MAX_HEAD_CANVAS_HEIGHT}px`
+    renderer.domElement.style.display = 'block'
+  }
+
+  renderer.domElement.addEventListener('webglcontextlost', (event) => {
+    console.warn('WebGL context lost:', event)
+    event.preventDefault()
+  })
+  renderer.domElement.addEventListener('webglcontextrestored', () => {
+    console.info('WebGL context restored')
+    const restoredSize = getHeadCanvasSize()
+    renderer.setSize(restoredSize.width, restoredSize.height)
+    renderer.setPixelRatio(isMobileDevice ? 1 : Math.min(window.devicePixelRatio || 1, 2))
+  })
 }
 
-renderer.domElement.addEventListener('webglcontextlost', (event) => {
-  console.warn('WebGL context lost:', event)
-  event.preventDefault()
-})
-renderer.domElement.addEventListener('webglcontextrestored', () => {
-  console.info('WebGL context restored')
-  const restoredSize = getHeadCanvasSize()
-  renderer.setSize(restoredSize.width, restoredSize.height)
-  renderer.setPixelRatio(isMobileDevice ? 1 : Math.min(window.devicePixelRatio || 1, 2))
-})
-
-const scene = new Scene()
-scene.background = new Color(0x121315)
+const scene = mobileHeadFallbackEnabled ? null : new Scene()
+if (scene) {
+  scene.background = new Color(0x121315)
+}
 
 const initialHeadCanvasSize = getHeadCanvasSize()
 
 // === ПРЕДУСТАНОВЛЕННЫЕ НАСТРОЙКИ КАМЕРЫ ===
-const camera = new PerspectiveCamera(45, initialHeadCanvasSize.width / initialHeadCanvasSize.height, 0.1, 1000)
-camera.position.set(0.0, 0.8, 0.5)
+const camera = mobileHeadFallbackEnabled ? null : new PerspectiveCamera(45, initialHeadCanvasSize.width / initialHeadCanvasSize.height, 0.1, 1000)
+if (camera) {
+  camera.position.set(0.0, 0.8, 0.5)
+}
 
-const controls = new OrbitControls(camera, renderer.domElement)
-controls.enableDamping = true
-controls.dampingFactor = 0.05
-controls.rotateSpeed = 1.5
-controls.zoomSpeed = 1.3
-controls.panSpeed = 0.9
-controls.target.set(0.0, 0.6, -0.1)
-// Запрещаем вращение камеры пользователем — модель не будет вращаться от управления камерой
-controls.enableRotate = false
-// Запрещаем изменение масштаба камеры (скролл/пинч) — модель не будет увеличиваться/уменьшаться
-controls.enableZoom = false
+const controls = mobileHeadFallbackEnabled ? null : new OrbitControls(camera, renderer.domElement)
+if (controls) {
+  controls.enableDamping = true
+  controls.dampingFactor = 0.05
+  controls.rotateSpeed = 1.5
+  controls.zoomSpeed = 1.3
+  controls.panSpeed = 0.9
+  controls.target.set(0.0, 0.6, -0.1)
+  // Запрещаем вращение камеры пользователем — модель не будет вращаться от управления камерой
+  controls.enableRotate = false
+  // Запрещаем изменение масштаба камеры (скролл/пинч) — модель не будет увеличиваться/уменьшаться
+  controls.enableZoom = false
+}
 
 // === ОСВЕЩЕНИЕ (предустановленные параметры) ===
-
 // Окружающий свет
-const ambientLight = new AmbientLight(0xffffff, 0.35)
-scene.add(ambientLight)
+const ambientLight = mobileHeadFallbackEnabled ? null : new AmbientLight(0xffffff, 0.35)
+if (ambientLight && scene) {
+  scene.add(ambientLight)
+}
 
 // Контровой левый
-const rimLeftLight = new PointLight(0xc4142d, 0.7)
-rimLeftLight.position.set(-2.4, 1.2, -7.0)
-rimLeftLight.distance = 20
-rimLeftLight.decay = 1.0
-scene.add(rimLeftLight)
+const rimLeftLight = mobileHeadFallbackEnabled ? null : new PointLight(0xc4142d, 0.7)
+if (rimLeftLight) {
+  rimLeftLight.position.set(-2.4, 1.2, -7.0)
+  rimLeftLight.distance = 20
+  rimLeftLight.decay = 1.0
+  scene.add(rimLeftLight)
+}
 
 // Контровой правый
-const rimRightLight = new PointLight(0xc4142d, 2.1)
-rimRightLight.position.set(2.8, -1.0, -6.0)
-rimRightLight.distance = 20
-rimRightLight.decay = 1.0
-scene.add(rimRightLight)
+const rimRightLight = mobileHeadFallbackEnabled ? null : new PointLight(0xc4142d, 2.1)
+if (rimRightLight) {
+  rimRightLight.position.set(2.8, -1.0, -6.0)
+  rimRightLight.distance = 20
+  rimRightLight.decay = 1.0
+  scene.add(rimRightLight)
+}
 
 // Передний свет (фиксированный белый)
-const frontLight = new PointLight(0xffffff, 2.5)
-frontLight.position.set(1.4, 1.7, 3.0)
-frontLight.distance = 10
-frontLight.decay = 1.0
-scene.add(frontLight)
+const frontLight = mobileHeadFallbackEnabled ? null : new PointLight(0xffffff, 2.5)
+if (frontLight) {
+  frontLight.position.set(1.4, 1.7, 3.0)
+  frontLight.distance = 10
+  frontLight.decay = 1.0
+  scene.add(frontLight)
+}
 
 // Fill light (фиксированный голубой)
-const fillLight = new PointLight(0x87a9fe, 0.45)
-fillLight.position.set(1.2, 1.0, 2.0)
-fillLight.distance = 12
-fillLight.decay = 1.0
-scene.add(fillLight)
+const fillLight = mobileHeadFallbackEnabled ? null : new PointLight(0x87a9fe, 0.45)
+if (fillLight) {
+  fillLight.position.set(1.2, 1.0, 2.0)
+  fillLight.distance = 12
+  fillLight.decay = 1.0
+  scene.add(fillLight)
+}
 
 // Группа для экспорта
-const exportGroup = new Group()
-scene.add(exportGroup)
-exportGroup.add(ambientLight)
-exportGroup.add(rimLeftLight)
-exportGroup.add(rimRightLight)
-exportGroup.add(frontLight)
-exportGroup.add(fillLight)
+const exportGroup = mobileHeadFallbackEnabled ? null : new Group()
+if (exportGroup && scene) {
+  scene.add(exportGroup)
+  exportGroup.add(ambientLight)
+  exportGroup.add(rimLeftLight)
+  exportGroup.add(rimRightLight)
+  exportGroup.add(frontLight)
+  exportGroup.add(fillLight)
+}
 
-const headHighlightLight = new PointLight(0xFFAA66, 0.0)
-headHighlightLight.position.set(0, 0.7, 0.5)
-headHighlightLight.distance = 3.0
-headHighlightLight.decay = 1.2
-scene.add(headHighlightLight)
+const headHighlightLight = mobileHeadFallbackEnabled ? null : new PointLight(0xFFAA66, 0.0)
+if (headHighlightLight) {
+  headHighlightLight.position.set(0, 0.7, 0.5)
+  headHighlightLight.distance = 3.0
+  headHighlightLight.decay = 1.2
+  scene.add(headHighlightLight)
+}
 
-const headGlowLight = new PointLight(0xFF8855, 0.0)
-headGlowLight.distance = 2.5
-headGlowLight.decay = 1.5
-scene.add(headGlowLight)
+const headGlowLight = mobileHeadFallbackEnabled ? null : new PointLight(0xFF8855, 0.0)
+if (headGlowLight) {
+  headGlowLight.distance = 2.5
+  headGlowLight.decay = 1.5
+  scene.add(headGlowLight)
+}
 
-exportGroup.add(headHighlightLight)
-exportGroup.add(headGlowLight)
+if (exportGroup) {
+  exportGroup.add(headHighlightLight)
+  exportGroup.add(headGlowLight)
+}
 
 let currentModel = null
 let raycaster = new Raycaster()
@@ -159,8 +187,8 @@ const followLerp = 0.04 // сглаживание поворота (уменьш
 
 // === УПРАВЛЕНИЕ ЦВЕТОМ ===
 function updateLightColor(color) {
-  rimLeftLight.color.set(color)
-  rimRightLight.color.set(color)
+  if (rimLeftLight) rimLeftLight.color.set(color)
+  if (rimRightLight) rimRightLight.color.set(color)
 }
 
 // Map `mainObject` names to rim colors and apply when selection changes
@@ -212,6 +240,9 @@ window.addEventListener('mainObjectChange', (e) => {
     applyColorForMainObject(name);
     applyFormStylesForMainObject(name);
   } catch (err) {}
+  if (useHeadImageFallback()) {
+    ensureHeadImageFallback()
+  }
 });
 
 // Initial sync: if there's an element `#mainObject` present, set color accordingly
@@ -225,6 +256,80 @@ try {
 } catch (e) {}
 
 // Color preset UI removed — color controlled programmatically
+
+function getHeadImageVariantName() {
+  const selectedText = (document.getElementById('mainObject')?.textContent || window.mainObject || '').trim()
+  if (/хорека/i.test(selectedText)) return 'red'
+  if (/одежда/i.test(selectedText)) return 'green'
+  if (/косметика/i.test(selectedText)) return 'purple'
+  return 'red'
+}
+
+function ensureHeadImageFallback() {
+  if (!useHeadImageFallback()) return
+  const container = document.querySelector('.viewer-container') || document.body
+  if (!container) return
+
+  if (!headImageFallback) {
+    headImageFallback = document.createElement('img')
+    headImageFallback.id = 'head-image-fallback'
+    headImageFallback.alt = 'Head preview'
+    headImageFallback.style.position = 'absolute'
+    headImageFallback.style.left = '0'
+    headImageFallback.style.right = '0'
+    headImageFallback.style.bottom = '0'
+    headImageFallback.style.top = 'auto'
+    headImageFallback.style.width = '100%'
+    headImageFallback.style.height = '100%'
+    headImageFallback.style.objectFit = 'contain'
+    headImageFallback.style.objectPosition = 'center bottom'
+    headImageFallback.style.pointerEvents = 'auto'
+    headImageFallback.style.display = 'block'
+    headImageFallback.style.userSelect = 'none'
+    headImageFallback.style.cursor = 'pointer'
+    headImageFallback.style.transition = 'transform 140ms ease-out, filter 140ms ease-out'
+    headImageFallback.style.zIndex = '0'
+    headImageFallback.style.webkitTapHighlightColor = 'transparent'
+    headImageFallback.style.outline = 'none'
+    headImageFallback.style.boxShadow = 'none'
+    headImageFallback.style.webkitUserSelect = 'none'
+    headImageFallback.style.userSelect = 'none'
+    headImageFallback.addEventListener('pointerdown', (event) => {
+      event.preventDefault()
+      event.stopPropagation()
+      if (typeof window.triggerBubbleSpawn === 'function') {
+        const rect = headImageFallback.getBoundingClientRect()
+        const point = {
+          sx: (event.clientX - rect.left) / Math.max(rect.width, 1),
+          sy: (event.clientY - rect.top) / Math.max(rect.height, 1),
+        }
+        window.triggerBubbleSpawn({ triggeredBy: 'head', sourcePoint: point })
+      }
+    }, { passive: false })
+    container.appendChild(headImageFallback)
+  }
+
+  const variant = getHeadImageVariantName()
+  headImageFallback.src = `./img/head/${variant}.png`
+  headImageFallback.style.display = 'block'
+  if (canvas) {
+    canvas.style.display = 'none'
+    canvas.style.opacity = '0'
+    canvas.style.pointerEvents = 'none'
+  }
+}
+
+function updateHeadFallbackTransform() {
+  if (!headImageFallback || !useHeadImageFallback()) return
+
+  const tiltX = (targetModelRotationX || 0) * -14
+  const tiltY = (targetModelRotationY || 0) * 18
+  const shiftX = (targetModelRotationY || 0) * 18
+  const shiftY = (targetModelRotationX || 0) * -10
+
+  headImageFallback.style.transform = `translate(${shiftX}px, ${shiftY}px) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`
+  headImageFallback.style.transformOrigin = 'center bottom'
+}
 
 // === ЗАГРУЗКА МОДЕЛИ ===
 const loader = new GLTFLoader()
@@ -316,7 +421,9 @@ function loadModelFromURL(url, name = '') {
 }
 
 // On mobile, delay the heavy 3D model startup until the page has settled so the first render is not blocked.
-if (isMobileDevice) {
+if (useHeadImageFallback()) {
+  ensureHeadImageFallback()
+} else if (isMobileDevice) {
   window.addEventListener('load', () => {
     setTimeout(() => {
       loadModelFromURL('./models/head.glb', 'head.glb')
@@ -359,6 +466,7 @@ function findHeadMeshes(model) {
 }
 
 function updateHeadlightIntensity(deltaTime) {
+  if (!headHighlightLight || !headGlowLight || !rimLeftLight) return
   const lerpSpeed = 8.0
   currentHighlightIntensity += (targetHighlightIntensity - currentHighlightIntensity) * Math.min(1.0, lerpSpeed * deltaTime)
   currentGlowIntensity += (targetGlowIntensity - currentGlowIntensity) * Math.min(1.0, lerpSpeed * deltaTime)
@@ -370,10 +478,20 @@ function updateHeadlightIntensity(deltaTime) {
 }
 
 function checkHeadHover(clientX, clientY) {
+  if (useHeadImageFallback()) {
+    return true
+  }
+
   if (!currentModel) {
     targetHighlightIntensity = 0
     targetGlowIntensity = 0
     return
+  }
+
+  if (!renderer || !renderer.domElement) {
+    targetHighlightIntensity = 0
+    targetGlowIntensity = 0
+    return false
   }
 
   const rect = renderer.domElement.getBoundingClientRect()
@@ -454,6 +572,12 @@ function playHeadClickSound() {
 
 window.addEventListener('pointermove', (e) => {
   try {
+    if (useHeadImageFallback()) {
+      updateTargetFromPointer(e.clientX, e.clientY)
+      updateHeadFallbackTransform()
+      return
+    }
+
     const now = performance.now()
     const dx = Math.abs(e.clientX - lastPointerSample.x)
     const dy = Math.abs(e.clientY - lastPointerSample.y)
@@ -471,6 +595,20 @@ window.addEventListener('pointerdown', (e) => {
   try {
     const headSection = document.querySelector('section.head') || document.querySelector('.head')
     if (!headSection || !headSection.classList.contains('visible')) return
+
+    if (useHeadImageFallback()) {
+      if (typeof window.triggerBubbleSpawn === 'function') {
+        const rect = headImageFallback?.getBoundingClientRect?.() || null
+        const sourcePoint = rect ? {
+          sx: (e.clientX - rect.left) / Math.max(rect.width, 1),
+          sy: (e.clientY - rect.top) / Math.max(rect.height, 1),
+        } : undefined
+        playHeadClickSound()
+        window.triggerBubbleSpawn({ triggeredBy: 'head', sourcePoint })
+      }
+      return
+    }
+
     if (checkHeadHover(e.clientX, e.clientY) && typeof window.triggerBubbleSpawn === 'function') {
       playHeadClickSound()
       window.triggerBubbleSpawn({ triggeredBy: 'head' })
@@ -546,6 +684,13 @@ function exportSceneToGLB(filename = 'exported_scene.glb') {
 // Settings UI removed
 
 window.addEventListener('resize', () => {
+  if (useHeadImageFallback()) {
+    ensureHeadImageFallback()
+    return
+  }
+
+  if (!renderer || !camera) return
+
   const sized = getHeadCanvasSize()
   const aspect = sized.width / sized.height
   camera.aspect = aspect
@@ -789,6 +934,11 @@ function animate() {
   const now = performance.now()
   const delta = Math.min(0.033, (now - lastFrameTime) / 1000)
   lastFrameTime = now
+
+  if (useHeadImageFallback()) {
+    updateHeadFallbackTransform()
+    return
+  }
 
   if (isLowPowerHeadRender && delta * 1000 < HEAD_RENDER_INTERVAL) {
     return
