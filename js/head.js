@@ -294,7 +294,10 @@ function ensureHeadImageFallback() {
     headImageFallback.style.boxShadow = 'none'
     headImageFallback.style.webkitUserSelect = 'none'
     headImageFallback.style.userSelect = 'none'
+    // Track if we're in the middle of a scroll to avoid playing click sound on scroll
+    let isScrollingHead = false
     headImageFallback.addEventListener('pointerdown', (event) => {
+      isScrollingHead = false
       event.preventDefault()
       event.stopPropagation()
       if (typeof window.triggerBubbleSpawn === 'function') {
@@ -303,9 +306,19 @@ function ensureHeadImageFallback() {
           sx: (event.clientX - rect.left) / Math.max(rect.width, 1),
           sy: (event.clientY - rect.top) / Math.max(rect.height, 1),
         }
+        playHeadClickSound()
         window.triggerBubbleSpawn({ triggeredBy: 'head', sourcePoint: point })
       }
     }, { passive: false })
+    headImageFallback.addEventListener('pointermove', (event) => {
+      isScrollingHead = Math.abs(event.clientY - (headImageFallback._lastY || event.clientY)) > 5
+      headImageFallback._lastY = event.clientY
+    }, { passive: true })
+    headImageFallback.addEventListener('pointerup', (event) => {
+      if (isScrollingHead) {
+        isScrollingHead = false
+      }
+    }, { passive: true })
     container.appendChild(headImageFallback)
   }
 
@@ -598,15 +611,7 @@ window.addEventListener('pointerdown', (e) => {
     if (!headSection || !headSection.classList.contains('visible')) return
 
     if (useHeadImageFallback()) {
-      if (typeof window.triggerBubbleSpawn === 'function') {
-        const rect = headImageFallback?.getBoundingClientRect?.() || null
-        const sourcePoint = rect ? {
-          sx: (e.clientX - rect.left) / Math.max(rect.width, 1),
-          sy: (e.clientY - rect.top) / Math.max(rect.height, 1),
-        } : undefined
-        playHeadClickSound()
-        window.triggerBubbleSpawn({ triggeredBy: 'head', sourcePoint })
-      }
+      // The image element has its own pointerdown handler, so skip here
       return
     }
 

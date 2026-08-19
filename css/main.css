@@ -1,5 +1,5 @@
 .main-section__top{
-  height: 100vh;
+  height: 100dvh;
   color: white;
   opacity: 1 !important;
   display: flex;
@@ -34,10 +34,9 @@
 }
 
 .main-section__bottom{
-  height: 100vh;
+  height: 100dvh;
   position: relative;
   width: 100vw;
-  height: 100vh;
   display: block;
   opacity: 1 !important;
   pointer-events: auto !important;
