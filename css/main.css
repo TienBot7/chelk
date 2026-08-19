@@ -111,11 +111,13 @@ section#main-section {
   opacity: 0;
   transition: none;
   overflow-x: hidden;
-  overflow-y: hidden;
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  overflow-y: scroll;
+  /* hide scrollbar across browsers but keep scrolling */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 
+/* WebKit browsers */
 section#main-section::-webkit-scrollbar {
   display: none;
   width: 0;
