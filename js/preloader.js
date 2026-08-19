@@ -388,8 +388,9 @@ export function runPreloader({ onComplete }) {
           // Плавно показать все элементы
           const mainSection = document.getElementById('main-section');
           const introTop = document.querySelector('.main-section__top');
-          if (mainSection) {
-            mainSection.style.overflow = 'hidden';
+            if (mainSection) {
+            // Do not force-disable scrolling here; keep native scroll enabled.
+            try { mainSection.style.overflow = ''; } catch (e) {}
             if (introTop) {
               introTop.style.display = 'none';
             }

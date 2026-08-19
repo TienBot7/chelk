@@ -41,7 +41,9 @@
   display: block;
   opacity: 1 !important;
   pointer-events: auto !important;
-  overflow: hidden;
+  /* Allow page scrolling when interacting with bottom section */
+  overflow: visible;
+  -webkit-overflow-scrolling: touch;
 }
 
 .hidden-on-start {
@@ -1170,7 +1172,7 @@ section.loading.hide {
     display: flex;
   }
   .controls-wrapper.visible {
-    pointer-events: none !important;
+    pointer-events: auto !important;
     bottom: 15%;
   }
   .dots {

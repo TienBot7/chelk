@@ -992,6 +992,14 @@ async function initThreeForSlide(slideElement, modelConfig, slideIndex) {
   canvas.style.minHeight = '1px';
   canvas.style.display = 'block';
   canvas.style.background = 'transparent';
+  // On mobile, canvas intercepts touch and prevents page scrolling — disable pointer events by default.
+  try {
+    if (window && window.innerWidth <= 768) {
+      canvas.style.pointerEvents = 'none';
+    } else {
+      canvas.style.pointerEvents = 'auto';
+    }
+  } catch (e) {}
   slideElement.appendChild(canvas);
 
   const renderer = createModelRenderer(canvas);
