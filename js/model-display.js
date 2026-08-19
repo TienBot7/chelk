@@ -76,13 +76,23 @@ export function createModelRenderer(canvas) {
   try {
     const rend = createRendererWithRetries(canvas);
     if (!rend) {
-      console.error('WebGL context unavailable on this device/browser (model-display).');
-      // create a lightweight retry overlay that asks user to tap to enable 3D — helps on Android webviews that require gesture
+      console.warn('WebGL context unavailable on this device/browser (model-display), keeping a safe fallback renderer to avoid blank slides.');
+      const safeRenderer = {
+        domElement: canvas,
+        shadowMap: { enabled: false },
+        setPixelRatio: () => {},
+        setClearColor: () => {},
+        setSize: () => {},
+        render: () => {},
+        dispose: () => {},
+        toneMappingExposure: isLowPowerDevice ? 0.6 : 0.75,
+      };
+      // show a lightweight overlay so the user sees the slider is still alive instead of a blank white canvas
       try {
         if (canvas && canvas.parentNode) {
           const note = document.createElement('div');
           note.className = 'webgl-fallback-note retry-enable-3d';
-          note.innerHTML = '<div style="text-align:center;padding:12px;color:white;">3D disabled — нажмите, чтобы попытаться включить</div>';
+          note.innerHTML = '<div style="text-align:center;padding:12px;color:white;">3D loading…</div>';
           note.style.position = 'absolute';
           note.style.left = '0';
           note.style.right = '0';
@@ -91,7 +101,7 @@ export function createModelRenderer(canvas) {
           note.style.display = 'flex';
           note.style.alignItems = 'center';
           note.style.justifyContent = 'center';
-          note.style.background = 'rgba(0,0,0,0.45)';
+          note.style.background = 'rgba(0,0,0,0.18)';
           note.style.zIndex = '9999';
           note.style.cursor = 'pointer';
           canvas.parentNode.appendChild(note);
@@ -99,8 +109,7 @@ export function createModelRenderer(canvas) {
             try {
               const retryRend = createRendererWithRetries(canvas);
               if (retryRend) {
-                // remove note and return renderer
-                try { note.parentNode.removeChild(note); } catch (e) {}
+                if (note.parentNode) note.parentNode.removeChild(note);
                 renderer = retryRend;
                 const initialDpr = isLowPowerDevice ? 1 : Math.min(window.devicePixelRatio || 1, 2);
                 renderer.setPixelRatio(initialDpr);
@@ -116,12 +125,22 @@ export function createModelRenderer(canvas) {
           }, { once: true });
         }
       } catch (e) {}
-      throw new Error('WebGL unavailable');
+      renderer = safeRenderer;
+    } else {
+      renderer = rend;
     }
-    renderer = rend;
   } catch (e) {
-    console.error('Failed to create WebGLRenderer:', e);
-    throw e;
+    console.warn('Failed to create WebGLRenderer; using safe fallback renderer to avoid blank slides:', e);
+    renderer = {
+      domElement: canvas,
+      shadowMap: { enabled: false },
+      setPixelRatio: () => {},
+      setClearColor: () => {},
+      setSize: () => {},
+      render: () => {},
+      dispose: () => {},
+      toneMappingExposure: isLowPowerDevice ? 0.6 : 0.75,
+    };
   }
 
   const initialDpr = isLowPowerDevice ? 1 : Math.min(window.devicePixelRatio || 1, 2);

@@ -6,8 +6,14 @@ const BASE_SCALE = 0.55;
 const BACKGROUND_HEX = 0x121315;
 
 const isMobileDevice = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+const isAndroidDevice = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent);
+
 function getPreferredDPR() {
   return isMobileDevice ? 1 : Math.min(window.devicePixelRatio || 1, 2);
+}
+
+function shouldPrioritizeAndroidSlideLoad() {
+  return !!isAndroidDevice && window.innerWidth <= 768;
 }
 
 const MODELS_CONFIG = [
@@ -590,8 +596,9 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
   } catch (e) {}
   
   async function loadGltfWithRetry(path, retries = 1) {
-    const timeoutMs = 12000;
-    for (let attempt = 0; attempt <= retries; attempt++) {
+    const timeoutMs = shouldPrioritizeAndroidSlideLoad() ? 18000 : 12000;
+    const attemptLimit = shouldPrioritizeAndroidSlideLoad() ? 1 : retries;
+    for (let attempt = 0; attempt <= attemptLimit; attempt++) {
       try {
         const gltf = await new Promise((resolve, reject) => {
           let timedOut = false;
@@ -1367,8 +1374,17 @@ async function buildCarousel() {
     carouselTrack.appendChild(slideDiv);
   }
   slidesArray = document.querySelectorAll('.slide');
-  
-  for (let i = 0; i < slidesArray.length; i++) {
+
+  const loadOrder = shouldPrioritizeAndroidSlideLoad()
+    ? [1, 0, 2]
+    : Array.from({ length: slidesArray.length }, (_, idx) => idx);
+
+  for (let orderIndex = 0; orderIndex < loadOrder.length; orderIndex++) {
+    const i = loadOrder[orderIndex];
+    if (shouldPrioritizeAndroidSlideLoad() && orderIndex > 0) {
+      await new Promise((r) => setTimeout(r, 450 + orderIndex * 350));
+    }
+
     // Initialize slide; if size/layout problems occur, retry a few times
     let attempts = 0;
     const MAX_ATTEMPTS = (window.innerWidth <= 768) ? 6 : 4;

@@ -111,17 +111,16 @@ section#main-section {
   opacity: 0;
   transition: none;
   overflow-x: hidden;
-  overflow-y: scroll;
-  /* hide scrollbar across browsers but keep scrolling */
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
+  overflow-y: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-/* WebKit browsers */
 section#main-section::-webkit-scrollbar {
-  display: none;
-  width: 0;
-  height: 0;
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+  background: transparent !important;
 }
 
 section#main-section.visible {
