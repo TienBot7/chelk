@@ -1883,7 +1883,7 @@ function endGame(preservePosition = false) {
     const rect = platform.getBoundingClientRect()
     platform.style.left = rect.left + 'px'
     platform.style.top = rect.top + 'px'
-    const testDivs = platform.querySelectorAll('div.test, div.test2, div.test3')
+    const testDivs = platform.querySelectorAll('div.test2, div.test3')
     if (window && window.innerWidth <= 500) {
       // On very small screens hide these decorative parts when the platform rises
       testDivs.forEach((testDiv) => {
