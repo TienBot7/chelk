@@ -7,37 +7,118 @@ export function createModelRenderer(canvas) {
   );
   const isAndroidDevice = typeof navigator !== 'undefined' && /Android/i.test(userAgent);
   let renderer;
-  try {
-    const canGet = (canvas && (canvas.getContext && (canvas.getContext('webgl2') || canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))));
-    if (!canGet) {
-      console.error('WebGL context unavailable on this device/browser (model-display).');
+
+  // Helper: try to obtain a WebGL context from a canvas with given attributes
+  function tryGetContext(c, attrs) {
+    try {
+      if (!c || !c.getContext) return null;
+      return c.getContext('webgl2', attrs) || c.getContext('webgl', attrs) || c.getContext('experimental-webgl', attrs) || null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Attempt multiple strategies to create a WebGL context/renderer.
+  // This increases chance on flaky Android webviews: try various attributes, ephemeral canvas, and a small retry/backoff.
+  function createRendererWithRetries(targetCanvas) {
+    const maxAttempts = 3;
+    const backoff = [0, 200, 600];
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
       try {
-        const note = document.createElement('div');
-        note.className = 'webgl-fallback-note';
-        note.textContent = '3D not supported on this device — showing simplified content';
-        note.style.position = 'absolute';
-        note.style.left = '0';
-        note.style.right = '0';
-        note.style.top = '0';
-        note.style.bottom = '0';
-        note.style.display = 'flex';
-        note.style.alignItems = 'center';
-        note.style.justifyContent = 'center';
-        note.style.background = 'rgba(0,0,0,0.6)';
-        note.style.color = 'white';
-        note.style.zIndex = '9999';
-        if (canvas && canvas.parentNode) canvas.parentNode.appendChild(note);
+        const attrsList = [
+          { antialias: false, preserveDrawingBuffer: false, powerPreference: isAndroidDevice ? 'low-power' : 'default' },
+          { antialias: false, preserveDrawingBuffer: false, powerPreference: 'default' },
+          { antialias: false, preserveDrawingBuffer: false },
+        ];
+        for (let a = 0; a < attrsList.length; a++) {
+          // try provided canvas first
+          const attrs = attrsList[a];
+          const ctx = tryGetContext(targetCanvas, attrs);
+          if (ctx) {
+            return new WebGLRenderer({ canvas: targetCanvas, alpha: true, antialias: !isLowPowerDevice, preserveDrawingBuffer: false, powerPreference: attrs.powerPreference || 'default' });
+          }
+          // try ephemeral canvas as last resort
+          try {
+            const ep = document.createElement('canvas');
+            ep.width = Math.max(1, targetCanvas ? targetCanvas.clientWidth : 64);
+            ep.height = Math.max(1, targetCanvas ? targetCanvas.clientHeight : 64);
+            const epCtx = tryGetContext(ep, attrs);
+            if (epCtx) {
+              // assign ephemeral canvas to renderer but keep original canvas for sizing
+              const rend = new WebGLRenderer({ canvas: ep, alpha: true, antialias: !isLowPowerDevice, preserveDrawingBuffer: false, powerPreference: attrs.powerPreference || 'default' });
+              // move renderer.domElement into targetCanvas's parent in case caller expects a canvas there
+              if (targetCanvas && targetCanvas.parentNode && rend.domElement) {
+                rend.domElement.style.width = '100%';
+                rend.domElement.style.height = '100%';
+                rend.domElement.style.display = 'block';
+                // replace target canvas in DOM if it's present
+                try {
+                  targetCanvas.parentNode.replaceChild(rend.domElement, targetCanvas);
+                } catch (e) {}
+              }
+              return rend;
+            }
+          } catch (e) {}
+        }
+      } catch (e) {
+        // continue to next attempt
+      }
+      // small backoff
+      const wait = backoff[attempt] || 400;
+      const start = Date.now();
+      while (Date.now() - start < wait) {
+        // busy-wait minimal backoff — small and bounded to keep sync when called during init
+      }
+    }
+    return null;
+  }
+
+  try {
+    const rend = createRendererWithRetries(canvas);
+    if (!rend) {
+      console.error('WebGL context unavailable on this device/browser (model-display).');
+      // create a lightweight retry overlay that asks user to tap to enable 3D — helps on Android webviews that require gesture
+      try {
+        if (canvas && canvas.parentNode) {
+          const note = document.createElement('div');
+          note.className = 'webgl-fallback-note retry-enable-3d';
+          note.innerHTML = '<div style="text-align:center;padding:12px;color:white;">3D disabled — нажмите, чтобы попытаться включить</div>';
+          note.style.position = 'absolute';
+          note.style.left = '0';
+          note.style.right = '0';
+          note.style.top = '0';
+          note.style.bottom = '0';
+          note.style.display = 'flex';
+          note.style.alignItems = 'center';
+          note.style.justifyContent = 'center';
+          note.style.background = 'rgba(0,0,0,0.45)';
+          note.style.zIndex = '9999';
+          note.style.cursor = 'pointer';
+          canvas.parentNode.appendChild(note);
+          note.addEventListener('click', () => {
+            try {
+              const retryRend = createRendererWithRetries(canvas);
+              if (retryRend) {
+                // remove note and return renderer
+                try { note.parentNode.removeChild(note); } catch (e) {}
+                renderer = retryRend;
+                const initialDpr = isLowPowerDevice ? 1 : Math.min(window.devicePixelRatio || 1, 2);
+                renderer.setPixelRatio(initialDpr);
+                renderer.setClearColor(0x000000, 0);
+                renderer.toneMappingExposure = isLowPowerDevice ? 0.6 : 0.75;
+                renderer.shadowMap.enabled = !isLowPowerDevice;
+                renderer.shadowMap.type = 0;
+                renderer.sortObjects = !isLowPowerDevice;
+              }
+            } catch (e) {
+              console.warn('Retry create renderer failed', e);
+            }
+          }, { once: true });
+        }
       } catch (e) {}
       throw new Error('WebGL unavailable');
     }
-
-    renderer = new WebGLRenderer({
-      canvas,
-      alpha: true,
-      antialias: !isLowPowerDevice,
-      preserveDrawingBuffer: false,
-      powerPreference: isAndroidDevice ? 'low-power' : (isLowPowerDevice ? 'low-power' : 'high-performance'),
-    });
+    renderer = rend;
   } catch (e) {
     console.error('Failed to create WebGLRenderer:', e);
     throw e;
