@@ -1409,15 +1409,29 @@ function showPlatformRow() {
   platform.dataset.index = '2'
   platform.dataset.state = 'half'
 
+  // Support vertical layout on very small screens: stack 2 above, center, 2 below
+  const isVerticalLayout = window.innerWidth <= 500
+  let positionsLeft = []
+  let positionsTop = []
+  if (isVerticalLayout) {
+    const stepY = 50
+    positionsLeft = [baseLeft, baseLeft, baseLeft, baseLeft, baseLeft]
+    positionsTop = [baseTop - 2 * stepY, baseTop - stepY, baseTop, baseTop + stepY, baseTop + 2 * stepY]
+  } else {
+    positionsLeft = [baseLeft - 2 * step, baseLeft - step, baseLeft, baseLeft + step, baseLeft + 2 * step]
+    positionsTop = [baseTop, baseTop, baseTop, baseTop, baseTop]
+  }
+
   requestAnimationFrame(() => {
     clones.forEach((clone, index) => {
       const targetIndex = index < 2 ? index : index + 1
-      clone.style.setProperty('left', `${positions[targetIndex]}px`, 'important')
-      clone.style.setProperty('top', `${baseTop}px`, 'important')
+      clone.style.setProperty('left', `${positionsLeft[targetIndex]}px`, 'important')
+      clone.style.setProperty('top', `${positionsTop[targetIndex]}px`, 'important')
       clone.style.opacity = '1'
-        applyPlatformProgress(clone, FILL_HALF_PERCENT)
+      applyPlatformProgress(clone, FILL_HALF_PERCENT)
     })
     platform.style.setProperty('left', `${baseLeft}px`, 'important')
+    platform.style.setProperty('top', `${baseTop}px`, 'important')
     applyPlatformColor(platform, winColors[2])
     setBottleState(platform, 'half')
     updateBottleUnitsDisplay()
@@ -1476,9 +1490,24 @@ if (mixBtn) {
           const startProgressAfterRotation = () => {
             if (!device || pouringStarted) return
             pouringStarted = true
+            // On very small screens, reveal decorative parts inside the rotator
+            if (typeof window !== 'undefined' && window.innerWidth <= 500) {
+              const t2 = platform.querySelector('.device-rotator .test2')
+              const t3 = platform.querySelector('.device-rotator .test3')
+              if (t2) {
+                t2.style.display = ''
+                t2.style.opacity = '1'
+                t2.style.pointerEvents = 'auto'
+              }
+              if (t3) {
+                t3.style.display = ''
+                t3.style.opacity = '1'
+                t3.style.pointerEvents = 'auto'
+              }
+            }
             setTimeout(() => {
-            canvas = showLiquidEffectOverBottle(true)
-            animateDeviceProgress(device, 200, 4200)
+              canvas = showLiquidEffectOverBottle(true)
+              animateDeviceProgress(device, 200, 4200)
             }, 1000) //выливание жидкости из колбы
           }
 
@@ -1489,6 +1518,9 @@ if (mixBtn) {
           }
 
           rotator.addEventListener('transitionend', transitionEndHandler)
+          rotator.style.willChange = 'transform'
+          rotator.style.transformOrigin = 'center center'
+          rotator.style.transition = 'transform 1200ms cubic-bezier(0.22, 0.61, 0.36, 1)'
           rotator.style.transform = 'rotate(135deg)'
           requestAnimationFrame(startProgressAfterRotation)
         }, 1000) //поворот колбы
@@ -1546,7 +1578,20 @@ function resetGame(preservePosition = false) {
   platform.style.transition = ''
   platform.style.cursor = ''
   const rotator = platform.querySelector('.device-rotator')
-  if (rotator) rotator.style.cursor = ''
+  if (rotator) {
+    rotator.style.cursor = ''
+    rotator.style.transform = ''
+    rotator.style.transition = ''
+    rotator.style.willChange = ''
+    rotator.style.transformOrigin = ''
+  }
+  // restore any decorative parts that were hidden for small screens
+  const testDivs = platform.querySelectorAll('div.test, div.test2, div.test3')
+  testDivs.forEach((d) => {
+    d.style.display = ''
+    d.style.opacity = ''
+    d.style.pointerEvents = ''
+  })
   const thermostat = platform.querySelector('.thermostat')
   if (thermostat) {
     thermostat.style.transition = ''
@@ -1640,7 +1685,23 @@ platform.addEventListener('click', (event) => {
   if (!allowStart) {
     event.stopPropagation()
     playCheklSound()
-    showPlatformRow()
+    // On very small screens, rotate the bottle first, then spawn the row vertically
+    if (window.innerWidth <= 500) {
+      const rotatorEl = platform.querySelector('.device-rotator') || platform
+      const transitionEndHandler = () => {
+        try { rotatorEl.removeEventListener('transitionend', transitionEndHandler) } catch (e) {}
+        // after rotation, show platform row (which will handle vertical layout)
+        showPlatformRow()
+      }
+      rotatorEl.addEventListener('transitionend', transitionEndHandler)
+      // apply a smoother, slightly slower transition and rotate 90deg to the right
+      rotatorEl.style.willChange = 'transform'
+      rotatorEl.style.transformOrigin = 'center center'
+      rotatorEl.style.transition = 'transform 1200ms cubic-bezier(0.22, 0.61, 0.36, 1)'
+      rotatorEl.style.transform = 'rotate(90deg)'
+    } else {
+      showPlatformRow()
+    }
     return
   }
   try {
@@ -1822,10 +1883,21 @@ function endGame(preservePosition = false) {
     const rect = platform.getBoundingClientRect()
     platform.style.left = rect.left + 'px'
     platform.style.top = rect.top + 'px'
-    const testDivs = platform.querySelectorAll('div.test2, div.test3')
-    testDivs.forEach((testDiv) => {
-      testDiv.style.opacity = '1'
-    })
+    const testDivs = platform.querySelectorAll('div.test, div.test2, div.test3')
+    if (window && window.innerWidth <= 500) {
+      // On very small screens hide these decorative parts when the platform rises
+      testDivs.forEach((testDiv) => {
+        testDiv.style.display = 'none'
+        testDiv.style.opacity = '0'
+        testDiv.style.pointerEvents = 'none'
+      })
+    } else {
+      testDivs.forEach((testDiv) => {
+        testDiv.style.display = ''
+        testDiv.style.opacity = '1'
+        testDiv.style.pointerEvents = ''
+      })
+    }
     platform.offsetHeight
     platform.classList.add('end-vertical')
   }

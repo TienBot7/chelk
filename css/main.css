@@ -109,10 +109,11 @@
 
 html,
 body {
-  overflow-x: hidden;
-  overflow-y: auto;
+  /* overflow-x: hidden;
+  overflow-y: auto; */
   -ms-overflow-style: none;
   scrollbar-width: none;
+  overflow: hidden;
 }
 
 html::-webkit-scrollbar,
@@ -1231,6 +1232,6 @@ section.loading.hide {
     padding: 6px;
   }
   .click-svg-wrapper {
-    top: 50% !important;
+    top: calc(50% + 25px) !important;
   }
 }

@@ -1491,13 +1491,20 @@ body {
     --glass-w: 30px;
     --glass-h: 200px;
   }
+  .device-rotator{
+    pointer-events: auto;
+  }
   .device-rotator .test3 {
     top: 60px;
   }
   .platform.end-vertical{
-    top: 50% !important;
+    top: calc(50% + 25px) !important;
+    pointer-events: none !important;
   }
   .controls-panel{
     display: none;
+  }
+  .message-panel{
+    gap: 19px;
   }
 }
