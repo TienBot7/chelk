@@ -107,6 +107,23 @@
   opacity: 1;
 }
 
+html,
+body {
+  overflow-x: hidden;
+  overflow-y: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+section#main-section::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+  background: transparent !important;
+}
+
 section#main-section {
   opacity: 0;
   transition: none;
@@ -114,13 +131,6 @@ section#main-section {
   overflow-y: auto;
   -ms-overflow-style: none;
   scrollbar-width: none;
-}
-
-section#main-section::-webkit-scrollbar {
-  width: 0 !important;
-  height: 0 !important;
-  display: none !important;
-  background: transparent !important;
 }
 
 section#main-section.visible {

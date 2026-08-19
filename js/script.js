@@ -16,6 +16,10 @@ function shouldPrioritizeAndroidSlideLoad() {
   return !!isAndroidDevice && window.innerWidth <= 768;
 }
 
+function hasAnyRealModel() {
+  return Array.isArray(threeInstances) && threeInstances.some((inst) => inst && inst.modelGroup && inst.modelGroup !== null);
+}
+
 const MODELS_CONFIG = [
   { name: 'Одежда', scale: BASE_SCALE, activeScale: BASE_SCALE * 1.05, file: 't-shirt-black.glb', rotation: { x: -0.08, y: -0.48, z: 0 } },
   { name: 'Хорека', scale: BASE_SCALE, activeScale: BASE_SCALE * 1.05, file: 'soda_black.glb', rotation: { x: 0.38, y: 0.08, z: 0 } },
@@ -44,6 +48,7 @@ let currentSlideIndex = 1;
 let currentWordIndex = 1;
 let isTransitioning = false;
 let sliderModelsReady = false;
+let carouselBuildRetryCount = 0;
 let carouselTrack = document.getElementById('carouselTrack');
 let textOverlay = document.getElementById('textOverlay');
 let prevBtn = document.getElementById('prevBtn');
@@ -1366,7 +1371,11 @@ function setupDragAndDrop() {
 async function buildCarousel() {
   sliderModelsReady = false;
   window.__sliderModelsReady__ = false;
-  carouselTrack.innerHTML = '';
+  carouselBuildRetryCount = 0;
+  threeInstances = [];
+  if (carouselTrack) {
+    carouselTrack.innerHTML = '';
+  }
   for (let i = 0; i < MODELS_CONFIG.length; i++) {
     const slideDiv = document.createElement('div');
     slideDiv.className = 'slide';
@@ -1418,6 +1427,14 @@ async function buildCarousel() {
     }
   }
   
+  const hasRealModel = hasAnyRealModel();
+  if (!hasRealModel && shouldPrioritizeAndroidSlideLoad() && carouselBuildRetryCount < 1) {
+    carouselBuildRetryCount += 1;
+    console.warn('[buildCarousel] no real model group on Android after build; retrying once in 1200ms');
+    setTimeout(() => buildCarousel(), 1200);
+    return;
+  }
+
   if (window.preloader && typeof window.preloader.markCarouselModelsReady === 'function') {
     window.preloader.markCarouselModelsReady();
   }
