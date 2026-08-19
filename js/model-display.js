@@ -8,11 +8,9 @@ export function createModelRenderer(canvas) {
   const isAndroidDevice = typeof navigator !== 'undefined' && /Android/i.test(userAgent);
   let renderer;
   try {
-    // Basic feature-detect: ensure canvas can obtain a WebGL context before constructing renderer
     const canGet = (canvas && (canvas.getContext && (canvas.getContext('webgl2') || canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))));
     if (!canGet) {
       console.error('WebGL context unavailable on this device/browser (model-display).');
-      // Create a visible fallback indicator so the user is not left with a white canvas
       try {
         const note = document.createElement('div');
         note.className = 'webgl-fallback-note';
@@ -48,8 +46,10 @@ export function createModelRenderer(canvas) {
   const initialDpr = isLowPowerDevice ? 1 : Math.min(window.devicePixelRatio || 1, 2);
   renderer.setPixelRatio(initialDpr);
   renderer.setClearColor(0x000000, 0);
-  renderer.toneMappingExposure = 0.75;
+  renderer.toneMappingExposure = isLowPowerDevice ? 0.6 : 0.75;
   renderer.shadowMap.enabled = !isLowPowerDevice;
+  renderer.shadowMap.type = 0;
+  renderer.sortObjects = !isLowPowerDevice;
 
   if (renderer.domElement) {
     renderer.domElement.style.width = '100%';
@@ -69,26 +69,31 @@ export function createModelRenderer(canvas) {
 }
 
 export function setupLighting(scene) {
-  const ambientLight = new AmbientLight(0xffffff, 0);
+  const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+  const isLowPowerDevice = typeof window !== 'undefined' && (
+    window.innerWidth <= 500 || /Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent)
+  );
+
+  const ambientLight = new AmbientLight(0xffffff, isLowPowerDevice ? 1.1 : 0.8);
   scene.add(ambientLight);
 
-  const mainLight = new DirectionalLight(0xffffff, 4.8);
+  const mainLight = new DirectionalLight(0xffffff, isLowPowerDevice ? 1.8 : 4.8);
   mainLight.position.set(2, 4.8, 3);
   scene.add(mainLight);
 
-  const rightLight = new DirectionalLight(0xffffff, 1.6);
+  const rightLight = new DirectionalLight(0xffffff, isLowPowerDevice ? 0.8 : 1.6);
   rightLight.position.set(1.8, 2, 1.1);
   scene.add(rightLight);
 
-  const leftLight = new DirectionalLight(0xffffff, 1.5);
+  const leftLight = new DirectionalLight(0xffffff, isLowPowerDevice ? 0.7 : 1.5);
   leftLight.position.set(-8, 4.2, -5);
   scene.add(leftLight);
 
-  const backLight = new DirectionalLight(0xffffff, 3.2);
+  const backLight = new DirectionalLight(0xffffff, isLowPowerDevice ? 0.9 : 3.2);
   backLight.position.set(0.1, 1, -1);
   scene.add(backLight);
 
-  const fillLight = new PointLight(0xffffff, 3.2);
+  const fillLight = new PointLight(0xffffff, isLowPowerDevice ? 1.2 : 3.2);
   fillLight.position.set(3, -2, 3);
   scene.add(fillLight);
 
@@ -107,15 +112,25 @@ export function setupLighting(scene) {
 }
 
 export function enhanceMaterials(model) {
+  const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+  const isLowPowerDevice = typeof window !== 'undefined' && (
+    window.innerWidth <= 500 || /Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent)
+  );
+
   model.traverse((child) => {
     if (!child.isMesh) return;
-    if (!(child.material instanceof MeshStandardMaterial)) {
+
+    if (isLowPowerDevice && child.material && child.material instanceof MeshStandardMaterial) {
+      child.material.roughness = Math.min(child.material.roughness || 0.6, 1.0);
+      child.material.metalness = Math.min(child.material.metalness || 0.45, 0.2);
+      child.material.envMapIntensity = 0.3;
+    } else if (!(child.material instanceof MeshStandardMaterial)) {
       const oldMat = child.material;
       const newMat = new MeshStandardMaterial({
         color: oldMat.color,
         map: oldMat.map,
-        metalness: 0.45,
-        roughness: 0.6,
+        metalness: isLowPowerDevice ? 0.18 : 0.45,
+        roughness: isLowPowerDevice ? 0.9 : 0.6,
         transparent: !!oldMat.transparent,
         opacity: oldMat.opacity,
         side: oldMat.side,
@@ -131,7 +146,7 @@ export function enhanceMaterials(model) {
       // ignore
     }
 
-    child.castShadow = true;
-    child.receiveShadow = true;
+    child.castShadow = !isLowPowerDevice;
+    child.receiveShadow = !isLowPowerDevice;
   });
 }
