@@ -6,13 +6,44 @@ export function createModelRenderer(canvas) {
     window.innerWidth <= 500 || /Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent)
   );
   const isAndroidDevice = typeof navigator !== 'undefined' && /Android/i.test(userAgent);
-  const renderer = new WebGLRenderer({
-    canvas,
-    alpha: true,
-    antialias: !isLowPowerDevice,
-    preserveDrawingBuffer: false,
-    powerPreference: isAndroidDevice ? 'low-power' : (isLowPowerDevice ? 'low-power' : 'high-performance'),
-  });
+  let renderer;
+  try {
+    // Basic feature-detect: ensure canvas can obtain a WebGL context before constructing renderer
+    const canGet = (canvas && (canvas.getContext && (canvas.getContext('webgl2') || canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))));
+    if (!canGet) {
+      console.error('WebGL context unavailable on this device/browser (model-display).');
+      // Create a visible fallback indicator so the user is not left with a white canvas
+      try {
+        const note = document.createElement('div');
+        note.className = 'webgl-fallback-note';
+        note.textContent = '3D not supported on this device — showing simplified content';
+        note.style.position = 'absolute';
+        note.style.left = '0';
+        note.style.right = '0';
+        note.style.top = '0';
+        note.style.bottom = '0';
+        note.style.display = 'flex';
+        note.style.alignItems = 'center';
+        note.style.justifyContent = 'center';
+        note.style.background = 'rgba(0,0,0,0.6)';
+        note.style.color = 'white';
+        note.style.zIndex = '9999';
+        if (canvas && canvas.parentNode) canvas.parentNode.appendChild(note);
+      } catch (e) {}
+      throw new Error('WebGL unavailable');
+    }
+
+    renderer = new WebGLRenderer({
+      canvas,
+      alpha: true,
+      antialias: !isLowPowerDevice,
+      preserveDrawingBuffer: false,
+      powerPreference: isAndroidDevice ? 'low-power' : (isLowPowerDevice ? 'low-power' : 'high-performance'),
+    });
+  } catch (e) {
+    console.error('Failed to create WebGLRenderer:', e);
+    throw e;
+  }
 
   const initialDpr = isLowPowerDevice ? 1 : Math.min(window.devicePixelRatio || 1, 2);
   renderer.setPixelRatio(initialDpr);
