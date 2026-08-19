@@ -1559,16 +1559,17 @@ async function buildCarousel() {
   let touchStartX = 0;
   let touchStartY = 0;
   const swipeThreshold = 60;
+  const isSmallMobileCarousel = () => typeof window !== 'undefined' && window.innerWidth <= 500;
 
   const handleCarouselTouchStart = (e) => {
-    if (!e.changedTouches || !e.changedTouches.length) return;
+    if (!isSmallMobileCarousel() || !e.changedTouches || !e.changedTouches.length) return;
     const touch = e.changedTouches[0];
     touchStartX = touch.clientX;
     touchStartY = touch.clientY;
   };
 
   const handleCarouselTouchEnd = (e) => {
-    if (!e.changedTouches || !e.changedTouches.length || isTransitioning) return;
+    if (!isSmallMobileCarousel() || !e.changedTouches || !e.changedTouches.length || isTransitioning) return;
     const touch = e.changedTouches[0];
     const touchEndX = touch.clientX;
     const touchEndY = touch.clientY;
@@ -1583,7 +1584,7 @@ async function buildCarousel() {
     else navigateCarousel('prev');
   };
 
-  if (carouselViewport) {
+  if (carouselViewport && isSmallMobileCarousel()) {
     carouselViewport.addEventListener('touchstart', handleCarouselTouchStart, { passive: true });
     carouselViewport.addEventListener('touchend', handleCarouselTouchEnd, { passive: true });
   }

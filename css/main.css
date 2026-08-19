@@ -1182,7 +1182,7 @@ section.loading.hide {
     display: flex;
   }
   .controls-wrapper.visible {
-    pointer-events: auto !important;
+    pointer-events: none !important;
     bottom: 15%;
   }
   .dots {
@@ -1198,6 +1198,7 @@ section.loading.hide {
     left: 50%;
     transform: translateX(-50%);
     bottom: -59px;
+    pointer-events: auto !important;
   }
   .dot {
     width: 27px;
@@ -1206,13 +1207,24 @@ section.loading.hide {
     border-radius: 2px;
     box-shadow: none;
     cursor: pointer;
+    position: relative;
+    display: block;
+    flex-shrink: 0;
+    padding: 0;
+  }
+  .dot::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 44px;
+    height: 28px;
+    border-radius: 999px;
+    pointer-events: auto;
   }
   .dot.active {
     background: #ffffff;
-    width: 27px;
-    height: 4px;
-    border-radius: 2px;
-    box-shadow: none;
   }
   .help{
     right: 10px;
