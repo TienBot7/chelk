@@ -18,8 +18,9 @@
   const stage = document.getElementById('animationStage')
   let linesElement = null
 
-  const ANIMATION_DURATION = 3000
-  const NEW_LAYER_DELAY = 500
+  const isMobileDevice = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+  const ANIMATION_DURATION = isMobileDevice ? 2200 : 3000
+  const NEW_LAYER_DELAY = isMobileDevice ? 700 : 500
 
   function isLinesVisible() {
     return !!(linesElement && linesElement.classList.contains('visible'))

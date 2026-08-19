@@ -5,7 +5,11 @@ import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js'
 
 const isAndroidDevice = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent)
 const isMobileDevice = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+const isLowPowerHeadRender = isMobileDevice && window.innerWidth <= 768
 const MAX_HEAD_CANVAS_HEIGHT = 1080
+const HEAD_RENDER_INTERVAL = isLowPowerHeadRender ? 33 : 16
+let lastPointerSample = { x: 0, y: 0 }
+let pointerRaycastCooldownUntil = 0
 
 function getHeadCanvasSize() {
   const width = window.innerWidth
@@ -450,6 +454,14 @@ function playHeadClickSound() {
 
 window.addEventListener('pointermove', (e) => {
   try {
+    const now = performance.now()
+    const dx = Math.abs(e.clientX - lastPointerSample.x)
+    const dy = Math.abs(e.clientY - lastPointerSample.y)
+    const shouldSkipRaycast = isLowPowerHeadRender && now < pointerRaycastCooldownUntil && dx < 2 && dy < 2
+    if (shouldSkipRaycast) return
+
+    lastPointerSample = { x: e.clientX, y: e.clientY }
+    pointerRaycastCooldownUntil = now + (isLowPowerHeadRender ? 34 : 16)
     updateTargetFromPointer(e.clientX, e.clientY)
     checkHeadHover(e.clientX, e.clientY)
   } catch (err) {}
@@ -777,6 +789,11 @@ function animate() {
   const now = performance.now()
   const delta = Math.min(0.033, (now - lastFrameTime) / 1000)
   lastFrameTime = now
+
+  if (isLowPowerHeadRender && delta * 1000 < HEAD_RENDER_INTERVAL) {
+    return
+  }
+
   updateHeadlightIntensity(delta)
   controls.update()
   // Плавный поворот модели к целевому углу, вычисленному по указателю

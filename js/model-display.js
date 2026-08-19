@@ -21,8 +21,7 @@ export function createModelRenderer(canvas) {
   // Attempt multiple strategies to create a WebGL context/renderer.
   // This increases chance on flaky Android webviews: try various attributes, ephemeral canvas, and a small retry/backoff.
   function createRendererWithRetries(targetCanvas) {
-    const maxAttempts = 3;
-    const backoff = [0, 200, 600];
+    const maxAttempts = isLowPowerDevice ? 2 : 3;
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       try {
         const attrsList = [
@@ -31,27 +30,23 @@ export function createModelRenderer(canvas) {
           { antialias: false, preserveDrawingBuffer: false },
         ];
         for (let a = 0; a < attrsList.length; a++) {
-          // try provided canvas first
           const attrs = attrsList[a];
           const ctx = tryGetContext(targetCanvas, attrs);
           if (ctx) {
             return new WebGLRenderer({ canvas: targetCanvas, alpha: true, antialias: !isLowPowerDevice, preserveDrawingBuffer: false, powerPreference: attrs.powerPreference || 'default' });
           }
-          // try ephemeral canvas as last resort
+
           try {
             const ep = document.createElement('canvas');
             ep.width = Math.max(1, targetCanvas ? targetCanvas.clientWidth : 64);
             ep.height = Math.max(1, targetCanvas ? targetCanvas.clientHeight : 64);
             const epCtx = tryGetContext(ep, attrs);
             if (epCtx) {
-              // assign ephemeral canvas to renderer but keep original canvas for sizing
               const rend = new WebGLRenderer({ canvas: ep, alpha: true, antialias: !isLowPowerDevice, preserveDrawingBuffer: false, powerPreference: attrs.powerPreference || 'default' });
-              // move renderer.domElement into targetCanvas's parent in case caller expects a canvas there
               if (targetCanvas && targetCanvas.parentNode && rend.domElement) {
                 rend.domElement.style.width = '100%';
                 rend.domElement.style.height = '100%';
                 rend.domElement.style.display = 'block';
-                // replace target canvas in DOM if it's present
                 try {
                   targetCanvas.parentNode.replaceChild(rend.domElement, targetCanvas);
                 } catch (e) {}
@@ -61,13 +56,7 @@ export function createModelRenderer(canvas) {
           } catch (e) {}
         }
       } catch (e) {
-        // continue to next attempt
-      }
-      // small backoff
-      const wait = backoff[attempt] || 400;
-      const start = Date.now();
-      while (Date.now() - start < wait) {
-        // busy-wait minimal backoff — small and bounded to keep sync when called during init
+        // continue to next attempt without blocking the main thread
       }
     }
     return null;

@@ -24,6 +24,9 @@ const SCROLL_HINT_DELAY = 3000
 let scrollHintObserver = null
 // timer to restore slide transitions after scroll stops
 let slideTransformRestoreTimer = null
+const isLowPowerScroll = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent) && window.innerWidth <= 768
+const SCROLL_UPDATE_EPSILON = isLowPowerScroll ? 0.8 : 0.3
+let lastAppliedTop = null
 
 function clearScrollHintTimeout() {
     if (scrollHintTimeout) {
@@ -95,6 +98,11 @@ function isNearZeroOpacity(value) {
 }
 
 function updateFrames(top){
+    if (lastAppliedTop !== null && Math.abs(lastAppliedTop - top) < SCROLL_UPDATE_EPSILON) {
+        return
+    }
+    lastAppliedTop = top
+
     const delta = lastPos - top
     lastPos = top
     // During active scroll, disable CSS transitions on the center slide so its
