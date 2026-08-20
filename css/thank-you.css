@@ -147,7 +147,7 @@ h2 {
 }
 
 .thank-you__circles.animate-click {
-  animation: expandThenShrink var(--click-duration, 0.1s) ease-in-out forwards;
+  animation: expandThenShrink var(--click-duration, 1.4s) ease-in-out forwards;
 }
 
 vfx-js-canvas,
@@ -171,8 +171,8 @@ canvas.visible-vfx {
   0% {
     transform: scale(1);
   }
-  50% {
-    transform: scale(2.5);
+  12% {
+    transform: scale(3);
   }
   100% {
     transform: scale(1);
