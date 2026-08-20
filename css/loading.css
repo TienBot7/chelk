@@ -5,7 +5,7 @@
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
   background: #121315;
   opacity: 1;
   transition: opacity 0.8s cubic-bezier(0.4,0,0.2,1);
@@ -21,7 +21,7 @@
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
   z-index: 9999;
   background: #121315;
   opacity: 1;

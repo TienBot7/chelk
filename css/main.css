@@ -201,7 +201,7 @@ canvas {
 body {
   background-color: #121315;
   font-family: 'Avenir_Next_W1G_Medium';
-  min-height: 100vh;
+  min-height: 100dvh;
   width: 100%;
   overflow: hidden;
 }
@@ -250,7 +250,7 @@ section.loading {
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
   z-index: 9999;
   opacity: 1;
   transition: 0.8s cubic-bezier(0.4, 0, 0.2, 1);
@@ -289,7 +289,7 @@ section.loading.hide {
   left: 50%;
   top: 0;
   width: 28vw;
-  height: 100vh;
+  height: 100dvh;
   transform-style: preserve-3d;
   transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
@@ -323,7 +323,7 @@ section.loading.hide {
   left: 50%;
   top: 0;
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
   transform: translateX(-50%) translateY(-50%) translateZ(0) scale(1);
 }
 .slide.center.visible {

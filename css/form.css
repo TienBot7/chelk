@@ -389,7 +389,7 @@
     padding-top: 12.8vh;
     /* gap: 18.4vh; */
     gap: unset;
-    height: 100vh;
+    height: 100dvh;
   }
   .form__text{
     /* font-size: calc(1.30vw + 1.30vh); */

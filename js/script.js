@@ -1046,7 +1046,7 @@ async function initThreeForSlide(slideElement, modelConfig, slideIndex) {
   } else if (window.innerWidth <= 1024) {
     slideElement.style.height = slideElement.style.height || '1600px';
   } else {
-    slideElement.style.height = slideElement.style.height || '100vh, 1080px)';
+    slideElement.style.height = slideElement.style.height || '100dvh, 1080px)';
   }
   slideElement.style.overflow = 'hidden';
   canvas.style.cssText = '';

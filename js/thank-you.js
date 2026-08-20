@@ -522,13 +522,6 @@ async function loadVfxModule(timeoutMs = 3000, attempts = 3) {
 }
 
 function preloadThankYouAudio() {
-  if (window.audioManager && typeof window.audioManager.init === 'function') {
-    try {
-      window.audioManager.init()
-    } catch (e) {}
-    return
-  }
-
   try {
     const preloadAudio = new Audio('./audio/chelk.mp3')
     preloadAudio.preload = 'auto'
@@ -640,7 +633,12 @@ const playCheklSound = () => {
   // If WebAudio decoded buffer is available, use it for immediate playback
   try {
     if (audioContext && decodedChekBuffer) {
-      if (audioContext.state === 'suspended') audioContext.resume().catch(() => {})
+      try {
+        if (audioContext.state === 'suspended') {
+          // Attempt to resume synchronously after a user gesture
+          audioContext.resume().catch(() => {})
+        }
+      } catch (e) {}
       const src = audioContext.createBufferSource()
       src.buffer = decodedChekBuffer
       const gain = audioContext.createGain()
@@ -690,8 +688,6 @@ function initCheklWebAudio() {
   document.addEventListener('touchstart', unlock, { once: true })
   document.addEventListener('mousedown', unlock, { once: true })
 }
-
-try { initCheklWebAudio() } catch (e) {}
 
 let animationStarted = false
 let circleNavigationTimer = null
@@ -765,10 +761,28 @@ if (thankYouLink) {
 if (thankYouScreen) {
   thankYouScreen.addEventListener('pointerdown', (event) => {
     if (event.target.closest('.mix-btn')) return
+    try {
+      // Initialize or unlock audio on the first user gesture
+      if (window.audioManager && typeof window.audioManager.init === 'function') {
+        try { window.audioManager.init() } catch (e) {}
+      } else {
+        if (!audioContext) initCheklWebAudio()
+        if (audioContext && audioContext.state === 'suspended') audioContext.resume().catch(() => {})
+      }
+    } catch (e) {}
     playScreenTapSound()
   }, { passive: true })
 
   thankYouScreen.addEventListener('mousedown', (event) => {
-    if (!event.target.closest('.mix-btn')) playScreenTapSound()
+    if (event.target.closest('.mix-btn')) return
+    try {
+      if (window.audioManager && typeof window.audioManager.init === 'function') {
+        try { window.audioManager.init() } catch (e) {}
+      } else {
+        if (!audioContext) initCheklWebAudio()
+        if (audioContext && audioContext.state === 'suspended') audioContext.resume().catch(() => {})
+      }
+    } catch (e) {}
+    playScreenTapSound()
   })
 }
