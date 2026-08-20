@@ -727,11 +727,11 @@ function initHeadScrollFade() {
 
     // Simple, predictable opacity transitions
     [headSection, canvasEl, titleL, titleR, desc, bubblesContainer].forEach((el) => {
-      try { if (el) el.style.transition = 'opacity 1200ms ease'; } catch (e) {}
+      try { if (el) el.style.transition = 'opacity 400ms ease'; } catch (e) {}
     });
     if (headSection) {
       try {
-        headSection.style.transition = 'opacity 1200ms ease, visibility 0ms linear 0ms';
+        headSection.style.transition = 'opacity 400ms ease, visibility 0ms linear 0ms';
       } catch (e) {}
     }
     if (carouselTrack) {
@@ -742,12 +742,12 @@ function initHeadScrollFade() {
     let lastExtrasVisible = null;
     let hasScrolled = false;
     let headPermanentlyHidden = false;
-    const fadeMax = Math.max(window.innerHeight * 0.8, 320);
+    const fadeMax = Math.max(window.innerHeight * 0.4, 160);
     const gameSection = document.querySelector('.game');
 
     if (gameSection) {
       try {
-        gameSection.style.transition = 'opacity 900ms ease';
+        gameSection.style.transition = 'opacity 400ms ease';
         gameSection.style.opacity = '0';
         gameSection.style.pointerEvents = 'none';
         gameSection.style.visibility = 'hidden';

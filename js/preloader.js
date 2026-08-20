@@ -426,6 +426,9 @@ export function runPreloader({ onComplete }) {
               }
             }
 
+            const isSmallMobile = window.innerWidth <= 500;
+            const carouselRevealDelay = isSmallMobile ? 1100 : 2600;
+
             setTimeout(() => {
               mainSection.querySelectorAll('.carousel, .text-overlay, .controls-wrapper').forEach(el => {
                   // show header after small delay
@@ -435,7 +438,7 @@ export function runPreloader({ onComplete }) {
                       header.classList.add('visible');
                       header.style.opacity = '';
                     }
-                  }, 900);
+                  }, isSmallMobile ? 300 : 900);
 
                   setTimeout(() => {
                     const carousel = document.getElementById('carousel');
@@ -457,8 +460,10 @@ export function runPreloader({ onComplete }) {
                       if (el.classList && el.classList.contains('controls-wrapper')) {
                         el.classList.add('visible');
                       }
-                  }, 2600);
+                  }, carouselRevealDelay);
                   
+                  const sideRevealDelay = isSmallMobile ? 2200 : 4000;
+
                   setTimeout(() => {
                     const slideLeft = document.querySelector('.slide.left');
                     const slideRight = document.querySelector('.slide.right');
@@ -541,7 +546,7 @@ export function runPreloader({ onComplete }) {
                         }, REMOVE_DELAY);
                       }, { once: true });
                     }
-                  }, 4000);
+                  }, sideRevealDelay);
               });
 
             }, 400);
