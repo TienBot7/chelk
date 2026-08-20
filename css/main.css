@@ -1123,6 +1123,7 @@ section.loading.hide {
 @media (max-width: 500px) {
   .header{
     padding-top: 20px;
+    padding-bottom: 10px;
   }
   .sound-btn {
     padding: 22px;

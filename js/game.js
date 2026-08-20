@@ -1,9 +1,9 @@
 const bubblesContainer = document.querySelector('.bubbles-container2')
 const grayColor = '#9E9E9E'
 const MAIN_OBJECT_COLORS = {
-  'Хорека': '#C4142D',
-  'Одежда': '#1D737B',
-  'Косметика': '#7B1D7B',
+  Хорека: '#C4142D',
+  Одежда: '#1D737B',
+  Косметика: '#7B1D7B',
 }
 
 function getSelectedColorVariant() {
@@ -18,7 +18,7 @@ const preloadedAudio = {
   chelk: new Audio('audio/chelk.mp3'),
   pop1: new Audio('audio/pop1.mp3'),
   pop2: new Audio('audio/pop2.mp3'),
-};
+}
 Object.values(preloadedAudio).forEach((audio) => {
   audio.preload = 'auto'
   audio.load()
@@ -146,8 +146,7 @@ function playCheklSound() {
     audio.volume = 0.54
     audio.currentTime = 0
     audio.play().catch(() => {})
-  } catch (e) {
-  }
+  } catch (e) {}
 }
 
 function updatePlatformLiquid(scoreValue) {
@@ -183,9 +182,7 @@ function updatePointsDisplay(scoreValue) {
 
 function applyPlatformColor(platformElement, color) {
   if (!platformElement) return
-  const device = platformElement.classList.contains('device')
-    ? platformElement
-    : platformElement.querySelector('.device')
+  const device = platformElement.classList.contains('device') ? platformElement : platformElement.querySelector('.device')
   if (!device) return
   for (let i = 1; i <= 5; i++) {
     device.style.setProperty(`--c${i}`, color)
@@ -287,7 +284,13 @@ function getLiquidEffectColor() {
 
 function hexToRgba(hex, alpha) {
   const cleanHex = (hex || '#1D737B').replace('#', '')
-  const normalized = cleanHex.length === 3 ? cleanHex.split('').map((ch) => ch + ch).join('') : cleanHex
+  const normalized =
+    cleanHex.length === 3
+      ? cleanHex
+          .split('')
+          .map((ch) => ch + ch)
+          .join('')
+      : cleanHex
   const intValue = Number.parseInt(normalized, 16)
   const r = (intValue >> 16) & 255
   const g = (intValue >> 8) & 255
@@ -589,7 +592,9 @@ function updateMessagePanel() {
   messagePanel.innerHTML = messages
     .map((message) => {
       const icon =
-        message.state === 'full' ? '<img src="./other/white-icon.svg" alt="full message icon" />' : '<img src="./other/red-icon.svg" alt="empty message icon" />'
+        message.state === 'full'
+          ? '<img src="./other/white-icon.svg" alt="full message icon" />'
+          : '<img src="./other/red-icon.svg" alt="empty message icon" />'
       const nullStateClass = message.state === 'empty' ? ' message-item-null' : ''
       return `
           <div class="message-item ${nullStateClass}">
@@ -677,27 +682,28 @@ function getLottiePathForColor(color) {
 }
 
 function preloadAudioFiles() {
-  const audioUrls = ['audio/chelk.mp3', 'audio/music.mp3'];
+  const audioUrls = ['audio/chelk.mp3', 'audio/music.mp3']
   return Promise.all(
     audioUrls.map((url) =>
       fetch(url, { cache: 'force-cache' })
         .then((response) => {
-          if (!response.ok) throw new Error(`Failed to preload audio: ${url}`);
-          return response.arrayBuffer();
+          if (!response.ok) throw new Error(`Failed to preload audio: ${url}`)
+          return response.arrayBuffer()
         })
         .catch((error) => {
-          console.warn('Audio preload failed:', url, error);
+          console.warn('Audio preload failed:', url, error)
         }),
     ),
-  );
+  )
 }
 
 const cachedLottieJson = {}
 
 function preloadSingleLottieResource(selectionValue = '') {
-  const color = selectionValue && typeof selectionValue === 'string' && MAIN_OBJECT_COLORS[selectionValue]
-    ? MAIN_OBJECT_COLORS[selectionValue]
-    : selectedColorVariant
+  const color =
+    selectionValue && typeof selectionValue === 'string' && MAIN_OBJECT_COLORS[selectionValue]
+      ? MAIN_OBJECT_COLORS[selectionValue]
+      : selectedColorVariant
   const path = getLottiePathForColor(color)
   if (cachedLottieJson[path]) {
     return Promise.resolve(cachedLottieJson[path])
@@ -726,23 +732,31 @@ function preloadStartupResources() {
 }
 
 if (typeof window !== 'undefined') {
-  preloadStartupResources();
+  preloadStartupResources()
 }
 
 function clearLottieScrollListener() {
   const scrollArea = document.getElementById('lottieScrollArea')
   const lottieContainerEl = document.getElementById('lottieContainer')
   if (scrollArea && lottieScrollHandler) {
-    try { scrollArea.removeEventListener('scroll', lottieScrollHandler) } catch (e) {}
+    try {
+      scrollArea.removeEventListener('scroll', lottieScrollHandler)
+    } catch (e) {}
   }
   if (lottieAnimation && lottieScrollHandler) {
-    try { lottieAnimation.removeEventListener('enterFrame', lottieScrollHandler) } catch (e) {}
+    try {
+      lottieAnimation.removeEventListener('enterFrame', lottieScrollHandler)
+    } catch (e) {}
   }
   if (lottieContainerEl && lottieAnimation && lottieAnimation._clickHandler) {
-    try { lottieContainerEl.removeEventListener('click', lottieAnimation._clickHandler) } catch (e) {}
+    try {
+      lottieContainerEl.removeEventListener('click', lottieAnimation._clickHandler)
+    } catch (e) {}
   }
   if (scrollArea && lottieAnimation && lottieAnimation._scrollHandler) {
-    try { scrollArea.removeEventListener('scroll', lottieAnimation._scrollHandler) } catch (e) {}
+    try {
+      scrollArea.removeEventListener('scroll', lottieAnimation._scrollHandler)
+    } catch (e) {}
   }
   lottieScrollHandler = null
 }
@@ -751,25 +765,25 @@ function playLottieAnimation(path) {
   const overlay = document.getElementById('lottieOverlay')
   const lottieContainerEl = document.getElementById('lottieContainer')
   const scrollArea = document.getElementById('lottieScrollArea')
-  
-  console.log('🎬 playLottieAnimation called:', { 
-    overlayExists: !!overlay, 
-    containerExists: !!lottieContainerEl, 
+
+  console.log('🎬 playLottieAnimation called:', {
+    overlayExists: !!overlay,
+    containerExists: !!lottieContainerEl,
     scrollAreaExists: !!scrollArea,
-    path 
+    path,
   })
-  
+
   if (!overlay || !lottieContainerEl || !scrollArea) {
-    console.error('❌ Lottie elements not found!', { overlay, lottieContainerEl, scrollArea });
+    console.error('❌ Lottie elements not found!', { overlay, lottieContainerEl, scrollArea })
     return
   }
-  
+
   overlay.classList.remove('show')
   overlay.style.removeProperty('display')
   overlay.style.visibility = 'hidden'
   overlay.style.opacity = '0'
   overlay.style.pointerEvents = 'none'
-  
+
   scrollArea.style.overflowY = 'auto'
   scrollArea.scrollTop = 0
   lottieContainerEl.innerHTML = ''
@@ -797,9 +811,9 @@ function playLottieAnimation(path) {
         animationOptions.path = path
       }
       lottieAnimation = lottie.loadAnimation(animationOptions)
-        let displayedFrame = 0
-        let isScrubbing = false
-        const baseAutoplaySpeed = 0.5
+      let displayedFrame = 0
+      let isScrubbing = false
+      const baseAutoplaySpeed = 0.5
 
       const getRenderedLottieElement = () => lottieContainerEl.querySelector('svg') || lottieContainerEl.querySelector('canvas')
       const updateFrame = () => {
@@ -857,7 +871,7 @@ function playLottieAnimation(path) {
         const section = document.getElementById('lottieSection')
         if (section) {
           const startThreshold = 0.92
-          const progress = (totalFrames > 1) ? (frame / (totalFrames - 1)) : 0
+          const progress = totalFrames > 1 ? frame / (totalFrames - 1) : 0
           let sectionProgress = 0
           if (progress > startThreshold) {
             sectionProgress = (progress - startThreshold) / (1 - startThreshold)
@@ -888,9 +902,13 @@ function playLottieAnimation(path) {
           displayedFrame = 0
           lottieAnimation.goToAndStop(displayedFrame, true)
           lottieAnimation.setSpeed(0.5)
-                    try { lottieAnimation.setSpeed(baseAutoplaySpeed) } catch (e) {}
-                    displayedFrame = 0
-                    try { lottieAnimation.setSpeed(baseAutoplaySpeed) } catch (e) {}
+          try {
+            lottieAnimation.setSpeed(baseAutoplaySpeed)
+          } catch (e) {}
+          displayedFrame = 0
+          try {
+            lottieAnimation.setSpeed(baseAutoplaySpeed)
+          } catch (e) {}
           lottieAnimation.play()
           updateFrame()
         })
@@ -941,9 +959,13 @@ function playLottieAnimation(path) {
             lottieAnimation.play()
           }
         } catch (e) {
-          try { lottieAnimation.play() } catch (err) {}
+          try {
+            lottieAnimation.play()
+          } catch (err) {}
         }
-        try { updateFrame() } catch (e) {}
+        try {
+          updateFrame()
+        } catch (e) {}
       }
 
       let lastScrollTop = 0
@@ -959,7 +981,9 @@ function playLottieAnimation(path) {
         if (Math.abs(diff) < 0.5) {
           displayedFrame = targetFrame
           lottieAnimation.goToAndStop(displayedFrame, true)
-          try { updateFrame() } catch (e) { }
+          try {
+            updateFrame()
+          } catch (e) {}
           lottieScrubRafId = null
           isScrubbing = false
           try {
@@ -988,7 +1012,9 @@ function playLottieAnimation(path) {
         }
 
         isScrubbing = true
-        try { if (lottieAnimation && lottieScrollHandler) lottieAnimation.removeEventListener('enterFrame', lottieScrollHandler) } catch (e) {}
+        try {
+          if (lottieAnimation && lottieScrollHandler) lottieAnimation.removeEventListener('enterFrame', lottieScrollHandler)
+        } catch (e) {}
 
         const currentScrollTop = scrollArea.scrollTop
         const maxScrollTop = Math.max(1, scrollArea.scrollHeight - scrollArea.clientHeight)
@@ -1018,14 +1044,16 @@ function playLottieAnimation(path) {
       const autoplayWatcher = setInterval(() => {
         if (overlay.classList.contains('show') && lottieAnimation && !isAutoPlaying) {
           isAutoPlaying = true
-          try { lottieAnimation.setSpeed(baseAutoplaySpeed) } catch (e) {}
+          try {
+            lottieAnimation.setSpeed(baseAutoplaySpeed)
+          } catch (e) {}
           lottieAnimation.play()
           clearInterval(autoplayWatcher)
         }
       }, 50)
     })
     .catch((err) => {
-      console.error('❌ Failed to load lottie:', err);
+      console.error('❌ Failed to load lottie:', err)
       overlay.classList.remove('show')
       overlay.style.display = 'none'
     })
@@ -1118,8 +1146,8 @@ function startMixAnimation() {
       updateBottleUnitsDisplay()
       const thermostat = centralBottle.querySelector('.thermostat')
       // if (thermostat) {
-        // thermostat.style.transition = 'transform 0.3s ease'
-        // thermostat.style.transform = 'scale(1.4)'
+      // thermostat.style.transition = 'transform 0.3s ease'
+      // thermostat.style.transform = 'scale(1.4)'
       // }
       // centralBottle.style.transition = 'transform 0.3s ease'
       centralBottle.classList.add('merged-central')
@@ -1400,10 +1428,7 @@ function showPlatformRow() {
   const maxStep = Math.min(maxBottleSpread / 4, (containerWidth - width) / 4)
   const availableLeft = baseLeft
   const availableRight = containerWidth - width - baseLeft
-  const step = Math.max(
-    0,
-    Math.min(maxStep, availableLeft / 2, availableRight / 2),
-  )
+  const step = Math.max(0, Math.min(maxStep, availableLeft / 2, availableRight / 2))
   const positions = [baseLeft - 2 * step, baseLeft - step, baseLeft, baseLeft + step, baseLeft + 2 * step]
   const winColors = getWinColors()
   const targetIndices = [0, 1, 3, 4]
@@ -1499,10 +1524,16 @@ if (mixBtn) {
   mixBtn.addEventListener('click', () => {
     if (!mixBtn.disabled) {
       playCheklSound()
-      if (typeof window !== 'undefined' && typeof window.hideHelpPrompt === 'function') {
+
+      if (
+        typeof window !== 'undefined' &&
+        typeof window.hideHelpPrompt === 'function'
+      ) {
         window.hideHelpPrompt()
       }
+
       const rotator = platform?.querySelector('.device-rotator')
+
       if (rotator) {
         setTimeout(() => {
           const device = platform?.querySelector('.device')
@@ -1511,38 +1542,95 @@ if (mixBtn) {
 
           const startProgressAfterRotation = () => {
             if (!device || pouringStarted) return
+
             pouringStarted = true
+
             // On very small screens, reveal decorative parts inside the rotator
-            if (typeof window !== 'undefined' && window.innerWidth <= 500) {
-              const t2 = platform.querySelector('.device-rotator .test2')
-              const t3 = platform.querySelector('.device-rotator .test3')
-              if (t2) {
-                t2.style.display = ''
-                t2.style.opacity = '1'
-                t2.style.pointerEvents = 'auto'
-              }
-              if (t3) {
-                t3.style.display = ''
-                t3.style.opacity = '1'
-                t3.style.pointerEvents = 'auto'
-              }
+            // Они уже начали появляться во время поворота
+            if (
+              typeof window !== 'undefined' &&
+              window.innerWidth <= 500
+            ) {
+              const t2 = platform.querySelector(
+                '.device-rotator .test2',
+              )
+              const t3 = platform.querySelector(
+                '.device-rotator .test3',
+              )
+
+              ;[t2, t3].forEach((el) => {
+                if (!el) return
+
+                // На всякий случай оставляем их видимыми
+                el.style.display = ''
+                el.style.opacity = '1'
+                el.style.pointerEvents = 'auto'
+              })
             }
+
             canvas = showLiquidEffectOverBottle(true)
-            animateDeviceProgress(device, 200, 4200) 
+            animateDeviceProgress(device, 200, 4200)
+          }
+
+          // -----------------------------------------
+          // Плавное появление test2 / test3
+          // во время вращения
+          // -----------------------------------------
+          if (
+            typeof window !== 'undefined' &&
+            window.innerWidth <= 500
+          ) {
+            const t2 = platform.querySelector(
+              '.device-rotator .test2',
+            )
+            const t3 = platform.querySelector(
+              '.device-rotator .test3',
+            )
+
+            ;[t2, t3].forEach((el, index) => {
+              if (!el) return
+
+              // Сначала делаем элемент невидимым
+              el.style.display = ''
+              el.style.opacity = '0'
+              el.style.pointerEvents = 'none'
+
+              // Плавность появления
+              el.style.transition = 'opacity 400ms ease'
+
+              // Начинаем появление ещё во время поворота
+              setTimeout(
+                () => {
+                  el.style.opacity = '1'
+                  el.style.pointerEvents = 'auto'
+                },
+                100 + index * 100,
+              )
+            })
           }
 
           const transitionEndHandler = (event) => {
             if (event.propertyName !== 'transform') return
-            rotator.removeEventListener('transitionend', transitionEndHandler)
+
+            rotator.removeEventListener(
+              'transitionend',
+              transitionEndHandler,
+            )
+
             startProgressAfterRotation()
           }
 
-          rotator.addEventListener('transitionend', transitionEndHandler)
+          rotator.addEventListener(
+            'transitionend',
+            transitionEndHandler,
+          )
+
           rotator.style.willChange = 'transform'
           rotator.style.transformOrigin = 'center center'
           rotator.style.transform = 'rotate(135deg)'
-        }, 1000) //поворот колбы
+        }, 1000) // поворот колбы
       }
+
       startMixAnimation()
     }
   })
@@ -1704,7 +1792,9 @@ platform.addEventListener('click', (event) => {
     if (window.innerWidth <= 500) {
       const rotatorEl = platform.querySelector('.device-rotator') || platform
       const transitionEndHandler = () => {
-        try { rotatorEl.removeEventListener('transitionend', transitionEndHandler) } catch (e) {}
+        try {
+          rotatorEl.removeEventListener('transitionend', transitionEndHandler)
+        } catch (e) {}
         // after rotation, show platform row (which will handle vertical layout)
         showPlatformRow()
       }
@@ -1924,14 +2014,16 @@ function endGame(preservePosition = false) {
   try {
     setTimeout(() => {
       try {
-        if (!platform) return;
-        if (platformClickedEarly) return;
+        if (!platform) return
+        if (platformClickedEarly) return
         if (platform && platform.removeEventListener) {
-          try { platform.removeEventListener('click', earlyClickHandler) } catch (e) {}
+          try {
+            platform.removeEventListener('click', earlyClickHandler)
+          } catch (e) {}
         }
-        const rect = platform.getBoundingClientRect();
-        const wrapper = document.createElement('div');
-        wrapper.className = 'click-svg-wrapper';
+        const rect = platform.getBoundingClientRect()
+        const wrapper = document.createElement('div')
+        wrapper.className = 'click-svg-wrapper'
 
         wrapper.innerHTML = `
           <svg width="73" height="73" viewBox="0 0 73 73" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1943,31 +2035,43 @@ function endGame(preservePosition = false) {
             <path d="M33 37V28.5C33 28.1022 33.158 27.7206 33.4393 27.4393C33.7206 27.158 34.1022 27 34.5 27C34.8978 27 35.2794 27.158 35.5607 27.4393C35.842 27.7206 36 28.1022 36 28.5V36M36 35.5V33.5C36 33.1022 36.158 32.7206 36.4393 32.4393C36.7206 32.158 37.1022 32 37.5 32C37.8978 32 38.2794 32.158 38.5607 32.4393C38.842 32.7206 39 33.1022 39 33.5V36M39 34.5C39 34.1022 39.158 33.7206 39.4393 33.4393C39.7206 33.158 40.1022 33 40.5 33C40.8978 33 41.2794 33.158 41.5607 33.4393C41.842 33.7206 42 34.1022 42 34.5V36" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             <path d="M42 35.5C42 35.1022 42.158 34.7206 42.4393 34.4393C42.7206 34.158 43.1022 34 43.5 34C43.8978 34 44.2794 34.158 44.5607 34.4393C44.842 34.7206 45 35.1022 45 35.5V40C45 41.5913 44.3679 43.1174 43.2426 44.2426C42.1174 45.3679 40.5913 46 39 46H37H37.208C36.2143 46.0002 35.2362 45.7535 34.3614 45.2823C33.4866 44.811 32.7425 44.1299 32.196 43.3L32 43C31.688 42.5213 30.5927 40.612 28.714 37.272C28.5224 36.9315 28.4713 36.5298 28.5714 36.1522C28.6715 35.7745 28.9149 35.4509 29.25 35.25C29.607 35.0364 30.0251 34.9479 30.4381 34.9986C30.851 35.0494 31.2353 35.2363 31.53 35.53L33 37M30 27L29 26M29 31H28M39 27L40 26M40 30H41" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-        `;
+        `
 
-        document.body.appendChild(wrapper);
+        document.body.appendChild(wrapper)
 
-        requestAnimationFrame(() => wrapper.classList.add('visible'));
+        requestAnimationFrame(() => wrapper.classList.add('visible'))
 
         try {
           if (window.audioManager && typeof window.audioManager.play === 'function') {
-            window.audioManager.play('chelk', { loop: false, volume: 0.54, forceImmediate: true });
+            window.audioManager.play('chelk', { loop: false, volume: 0.54, forceImmediate: true })
           } else if (typeof preloadedAudio !== 'undefined' && preloadedAudio.chelk) {
-            try { preloadedAudio.chelk.volume = 0.54; preloadedAudio.chelk.currentTime = 0; preloadedAudio.chelk.play().catch(()=>{}); } catch(e) {}
+            try {
+              preloadedAudio.chelk.volume = 0.54
+              preloadedAudio.chelk.currentTime = 0
+              preloadedAudio.chelk.play().catch(() => {})
+            } catch (e) {}
           }
         } catch (e) {}
 
         try {
           if (platform && platform.addEventListener) {
             const removeOverlay = () => {
-              try { wrapper.classList.remove('visible'); } catch (e) {}
-              setTimeout(() => { try { if (wrapper.parentNode) wrapper.parentNode.removeChild(wrapper); } catch (e) {} }, 400);
-            };
-            try { platform.removeEventListener('click', earlyClickHandler) } catch (e) {}
-            platform.addEventListener('click', removeOverlay, { once: true });
+              try {
+                wrapper.classList.remove('visible')
+              } catch (e) {}
+              setTimeout(() => {
+                try {
+                  if (wrapper.parentNode) wrapper.parentNode.removeChild(wrapper)
+                } catch (e) {}
+              }, 400)
+            }
+            try {
+              platform.removeEventListener('click', earlyClickHandler)
+            } catch (e) {}
+            platform.addEventListener('click', removeOverlay, { once: true })
           }
         } catch (e) {}
       } catch (e) {}
-    }, 3000);
+    }, 3000)
   } catch (e) {}
 }
