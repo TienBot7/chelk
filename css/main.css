@@ -59,6 +59,11 @@
   position: absolute;
   top: calc(50% - 28px);
   left: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  box-sizing: content-box;
   transform: translate(-50%, -50%);
   z-index: 200;
   background: transparent;
@@ -69,6 +74,7 @@
 }
 
 .sound-btn svg {
+  display: block;
   transition: 0.5s cubic-bezier(0.4,0,0.2,1);
   /* width: calc(1.50vw + 1.50vh); */
   height: auto;
@@ -309,7 +315,7 @@ section.loading.hide {
   z-index: 30;
   cursor: unset;
   width: 28vw;
-  height: 100vh;
+  height: 100dvh;
 }
 
 /* When we need the center slide to expand to fullscreen (explicit class), use this */
@@ -723,15 +729,21 @@ section.loading.hide {
   /* top: 30px; */
   /* top: calc(1.85vh + 10px); */
   /* top: max(30px, calc(4.44vh - 18px)); */
-  top: min(30px, calc(1.85vh + 10px));
+  padding-top: min(30px, calc(1.85vh + 10px));
+  top: 0;
   width: 100%;
   display: block;
   opacity: 0;
   transform: translateY(-8px);
   visibility: hidden;
-  transition: opacity 0.6s ease-out, transform 0.6s ease-out, visibility 0s linear 0.6s;
+  background: transparent;
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out, visibility 0s linear 0.6s, background-color 0.3s ease;
   z-index: 999 !important;
   pointer-events: none;
+}
+
+.header.is-dark {
+  background: #121315;
 }
 
 .header.visible{
@@ -892,7 +904,7 @@ section.loading.hide {
   /* border-radius: calc(1.20vw + 1.20vh); */
   border-radius: 50%;
   /* padding: calc(0.40vw + 0.40vh); */
-  padding: 10px 12px;
+  padding: 10px 10px;
   z-index: 1200;
   pointer-events: auto !important;
   cursor: pointer;
@@ -1016,7 +1028,10 @@ section.loading.hide {
 
 @media (max-width: 1024px) {
   .header{
-    top: 30px;
+    padding-top: 30px;
+  }
+  .sound-btn {
+    padding: 20px;
   }
   .main-section__top .title{
     max-width: 80.47vw;
@@ -1100,11 +1115,17 @@ section.loading.hide {
   .click-svg-wrapper {
     top: calc(50% - 33px) !important;
   }
+  .controls-wrapper.visible {
+    pointer-events: none !important;
+  }
 }
 
 @media (max-width: 500px) {
   .header{
-    top: 20px;
+    padding-top: 20px;
+  }
+  .sound-btn {
+    padding: 22px;
   }
   .container {
     padding: 0 10px;
@@ -1231,7 +1252,8 @@ section.loading.hide {
     bottom: 50px;
   }
   .help.open{
-    max-width: 370px;
+    max-width: calc(100vw - 20px);
+    width: calc(100vw - 20px);
     bottom: 10px;
     border-radius: 37px;
   }

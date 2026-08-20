@@ -705,14 +705,14 @@ function showTubes() {
 function playCloudAppearSound() {
   try {
     if (window.audioManager && typeof window.audioManager.play === 'function') {
-      window.audioManager.play('chelk', { loop: false, volume: 0.9, forceImmediate: true })
+      window.audioManager.play('chelk', { loop: false, volume: 0.54, forceImmediate: true })
       return
     }
   } catch (e) {}
 
   try {
     const audio = new Audio('audio/chelk.mp3')
-    audio.volume = 0.9
+    audio.volume = 0.54
     audio.currentTime = 0
     audio.play().catch(() => {})
   } catch (e) {}

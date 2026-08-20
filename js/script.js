@@ -1042,7 +1042,7 @@ async function initThreeForSlide(slideElement, modelConfig, slideIndex) {
   // slideElement.style.left = 'width: max(50%, calc(92% - 3.89vh));';
   slideElement.style.width = slideElement.style.width || '100%';
   if (window.innerWidth <= 768)  {
-    slideElement.style.height = slideElement.style.height || '1100px';
+    slideElement.style.height = slideElement.style.height;
   } else if (window.innerWidth <= 1024) {
     slideElement.style.height = slideElement.style.height || '1600px';
   } else {
@@ -1418,11 +1418,12 @@ async function syncChangeSlide(newSlideIndex) {
 function playChelkSound() {
   try {
     if (window.audioManager && typeof window.audioManager.play === 'function') {
-      window.audioManager.play('chelk', { loop: false, volume: 0.9 });
+      window.audioManager.play('chelk', { loop: false, volume: 0.54 });
       return;
     }
     const chelkAudio = new Audio('audio/chelk.mp3');
     chelkAudio.loop = false;
+    chelkAudio.volume = 0.54;
     chelkAudio.play().catch((err) => console.warn('chelk playback failed:', err));
   } catch (e) {
     console.warn('Failed to play chelk audio:', e);
@@ -1559,17 +1560,17 @@ async function buildCarousel() {
   let touchStartX = 0;
   let touchStartY = 0;
   const swipeThreshold = 60;
-  const isSmallMobileCarousel = () => typeof window !== 'undefined' && window.innerWidth <= 500;
+  const shouldEnableCarouselSwipe = () => typeof window !== 'undefined' && window.innerWidth <= 1024;
 
   const handleCarouselTouchStart = (e) => {
-    if (!isSmallMobileCarousel() || !e.changedTouches || !e.changedTouches.length) return;
+    if (!shouldEnableCarouselSwipe() || !e.changedTouches || !e.changedTouches.length) return;
     const touch = e.changedTouches[0];
     touchStartX = touch.clientX;
     touchStartY = touch.clientY;
   };
 
   const handleCarouselTouchEnd = (e) => {
-    if (!isSmallMobileCarousel() || !e.changedTouches || !e.changedTouches.length || isTransitioning) return;
+    if (!shouldEnableCarouselSwipe() || !e.changedTouches || !e.changedTouches.length || isTransitioning) return;
     const touch = e.changedTouches[0];
     const touchEndX = touch.clientX;
     const touchEndY = touch.clientY;
@@ -1584,7 +1585,7 @@ async function buildCarousel() {
     else navigateCarousel('prev');
   };
 
-  if (carouselViewport && isSmallMobileCarousel()) {
+  if (carouselViewport && shouldEnableCarouselSwipe()) {
     carouselViewport.addEventListener('touchstart', handleCarouselTouchStart, { passive: true });
     carouselViewport.addEventListener('touchend', handleCarouselTouchEnd, { passive: true });
   }
@@ -1674,9 +1675,10 @@ function initChoiseButton() {
             
             // Воспроизводим звук
             if (window.audioManager && typeof window.audioManager.play === 'function') {
-              window.audioManager.play('chelk', { loop: false, volume: 0.9, forceImmediate: true });
+              window.audioManager.play('chelk', { loop: false, volume: 0.54, forceImmediate: true });
             } else {
               const audio = new Audio('audio/chelk.mp3');
+              audio.volume = 0.54;
               audio.play().catch(error => {
                   console.log('Ошибка воспроизведения:', error);
               });
@@ -1796,27 +1798,132 @@ function updateHelpText(text, { duration = 500, opacity = '0.65' } = {}) {
   });
 }
 
+let helpAutoHideTimer = null;
+
+function resetHelpPromptState() {
+  const help = document.querySelector('.help');
+  if (!help) return;
+
+  if (helpAutoHideTimer) {
+    clearTimeout(helpAutoHideTimer);
+    helpAutoHideTimer = null;
+  }
+
+  help.classList.remove('open', 'visible');
+  help.style.opacity = '0';
+  help.style.visibility = 'hidden';
+}
+
+function isPreloaderActive() {
+  const loadingSection = document.querySelector('section.loading');
+  return !!(loadingSection && !loadingSection.classList.contains('hide'));
+}
+
 function showHelpPrompt() {
   const help = document.querySelector('.help');
   if (!help) return;
-  help.classList.add('visible', 'open');
+
+  if (isPreloaderActive()) {
+    resetHelpPromptState();
+    return;
+  }
+
+  const headSection = document.querySelector('section.head, .head');
+  const choiceBtn = document.getElementById('choiseBtn');
+  const choiceBtnVisible = !!(choiceBtn && choiceBtn.classList.contains('visible'));
+  const headVisible = !!(headSection && headSection.classList.contains('visible'));
+
+  if (!headVisible && (!choiceBtnVisible || typeof window === 'undefined' || window.__allowHelpDisplay !== true)) {
+    resetHelpPromptState();
+    return;
+  }
+
+  if (typeof window !== 'undefined' && (window.bubbleClick || window.bubblesActive)) {
+    resetHelpPromptState();
+    return;
+  }
+
+  help.classList.add('visible');
+  requestAnimationFrame(() => {
+    help.classList.add('open');
+  });
+  help.style.opacity = '1';
+  help.style.visibility = 'visible';
+
+  if (helpAutoHideTimer) {
+    clearTimeout(helpAutoHideTimer);
+    helpAutoHideTimer = null;
+  }
+
+  const timeoutMs = headVisible ? 10000 : 5000;
+
+  helpAutoHideTimer = setTimeout(() => {
+    const helpEl = document.querySelector('.help');
+    if (!helpEl) return;
+    helpEl.classList.remove('open');
+    helpEl.classList.add('visible');
+    helpEl.style.opacity = '1';
+    helpEl.style.visibility = 'visible';
+  }, timeoutMs);
 }
 
 function hideHelpPrompt() {
   const help = document.querySelector('.help');
   if (!help) return;
-  help.classList.remove('visible', 'open');
+
+  if (helpAutoHideTimer) {
+    clearTimeout(helpAutoHideTimer);
+    helpAutoHideTimer = null;
+  }
+
+  help.classList.remove('open', 'visible');
+  help.style.opacity = '0';
+  help.style.visibility = 'hidden';
+}
+
+function forceShowHelpPrompt() {
+  const help = document.querySelector('.help');
+  if (!help) return;
+
+  if (helpAutoHideTimer) {
+    clearTimeout(helpAutoHideTimer);
+    helpAutoHideTimer = null;
+  }
+
+  help.classList.add('visible');
+  requestAnimationFrame(() => {
+    help.classList.add('open');
+  });
+  help.style.opacity = '1';
+  help.style.visibility = 'visible';
+
+  helpAutoHideTimer = setTimeout(() => {
+    const helpEl = document.querySelector('.help');
+    if (!helpEl) return;
+    helpEl.classList.remove('open');
+    helpEl.classList.add('visible');
+    helpEl.style.opacity = '1';
+    helpEl.style.visibility = 'visible';
+  }, 5000);
 }
 
 if (typeof window !== 'undefined') {
   window.updateHelpText = updateHelpText;
   window.showHelpPrompt = showHelpPrompt;
   window.hideHelpPrompt = hideHelpPrompt;
+  window.forceShowHelpPrompt = forceShowHelpPrompt;
 }
 
 function initHelpTextTransition() {
   const helpText = document.querySelector('.help__text');
   const headSection = document.querySelector('section.head, .head');
+  const help = document.querySelector('.help');
+
+  if (help) {
+    help.classList.remove('visible', 'open');
+    help.style.opacity = '0';
+    help.style.visibility = 'hidden';
+  }
 
   if (!helpText || !headSection) return;
 
@@ -1832,23 +1939,58 @@ function initHelpTextTransition() {
       • Нажмите на <b>пузыри</b> — поймёте, как вас слышит агентство.`);
   };
 
-  if (headSection.classList.contains('visible')) {
+  const syncHeadHelpState = () => {
+    const choiceBtn = document.getElementById('choiseBtn');
+    const choiceBtnVisible = !!(choiceBtn && choiceBtn.classList.contains('visible'));
+    if (isPreloaderActive()) {
+      resetHelpPromptState();
+      return;
+    }
+
+    if (!headSection.classList.contains('visible')) {
+      resetHelpPromptState();
+      return;
+    }
+
+    if (!choiceBtnVisible && typeof window === 'undefined') {
+      resetHelpPromptState();
+      return;
+    }
+
+    if (!choiceBtnVisible && typeof window !== 'undefined' && window.__allowHelpDisplay !== true) {
+      if (typeof window !== 'undefined' && (window.bubbleClick || window.bubblesActive)) {
+        helpText.style.opacity = '0.65';
+        return;
+      }
+    }
+
     switchHelpText();
-  }
+
+    if (typeof window !== 'undefined' && (window.bubbleClick || window.bubblesActive)) {
+      helpText.style.opacity = '0.65';
+      return;
+    }
+
+    showHelpPrompt();
+  };
+
+  syncHeadHelpState();
 
   const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
-      if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-        if (headSection.classList.contains('visible')) {
-          switchHelpText();
-        } else {
-          hideHelpPrompt({ duration: 0 });
-        }
+      if (mutation.type !== 'attributes' || mutation.attributeName !== 'class') return;
+
+      const oldClasses = mutation.oldValue || '';
+      const wasVisible = oldClasses.includes('visible');
+      const isVisibleNow = headSection.classList.contains('visible');
+
+      if (wasVisible !== isVisibleNow) {
+        syncHeadHelpState();
       }
     });
   });
 
-  observer.observe(headSection, { attributes: true, attributeFilter: ['class'] });
+  observer.observe(headSection, { attributes: true, attributeFilter: ['class'], subtree: false });
 }
 
 if (document.readyState === 'loading') {
@@ -1871,11 +2013,16 @@ function initHelpToggle() {
   help.addEventListener('click', (event) => {
     event.preventDefault();
     event.stopPropagation();
+    if (helpAutoHideTimer) {
+      clearTimeout(helpAutoHideTimer);
+      helpAutoHideTimer = null;
+    }
     try {
       if (window.audioManager && typeof window.audioManager.play === 'function') {
-        window.audioManager.play('chelk', { loop: false, volume: 0.9 });
+        window.audioManager.play('chelk', { loop: false, volume: 0.54 });
       } else {
         const audio = new Audio('audio/chelk.mp3');
+        audio.volume = 0.54;
         audio.play().catch(() => {});
       }
     } catch (e) {}

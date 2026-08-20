@@ -32,7 +32,7 @@
 /* Body */
 html,
 body {
-  touch-action: none;
+  touch-action: manipulation;
 }
 
 body {
@@ -57,7 +57,7 @@ body,
 .thank-you__circles,
 vfx-js-canvas,
 canvas {
-  touch-action: none;
+  touch-action: manipulation;
 }
 
 /* Typography */
@@ -147,7 +147,7 @@ h2 {
 }
 
 .thank-you__circles.animate-click {
-  animation: expandThenShrink var(--click-duration, 1.4s) ease-in-out forwards;
+  animation: expandThenShrink var(--click-duration, 0.1s) ease-in-out forwards;
 }
 
 vfx-js-canvas,
@@ -171,8 +171,8 @@ canvas.visible-vfx {
   0% {
     transform: scale(1);
   }
-  12% {
-    transform: scale(3);
+  50% {
+    transform: scale(2.5);
   }
   100% {
     transform: scale(1);
@@ -344,6 +344,7 @@ canvas {
 
 .mix-btn {
   pointer-events: auto;
+  touch-action: manipulation;
   color: #fff;
   font-size: 12px;
   transition: all 0.6s ease-out;

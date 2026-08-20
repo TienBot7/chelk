@@ -573,11 +573,12 @@ function updateTargetFromPointer(clientX, clientY) {
 function playHeadClickSound() {
   try {
     if (window.audioManager && typeof window.audioManager.play === 'function') {
-      window.audioManager.play('chelk', { loop: false, volume: 0.9 })
+      window.audioManager.play('chelk', { loop: false, volume: 0.54 })
       return
     }
     const audio = new Audio('audio/chelk.mp3')
     audio.loop = false
+    audio.volume = 0.54
     audio.play().catch((err) => console.warn('Head chelk playback failed:', err))
   } catch (err) {
     console.warn('Failed to play head click sound:', err)
@@ -801,10 +802,23 @@ function initHeadScrollFade() {
     function updateFade(opacity) {
       if (headPermanentlyHidden) return;
       const visibleOpacity = String(opacity);
+      const help = document.querySelector('.help');
       if (headSection && opacity > 0 && headSection.style.display === 'none') {
         headSection.style.display = 'flex';
       }
       [headSection, canvasEl, titleL, titleR, desc, bubblesContainer].forEach((el) => { try { if (el) el.style.opacity = visibleOpacity; } catch (e) {} });
+      if (help) {
+        try {
+          const helpOpacity = Math.max(0, Math.min(1, opacity));
+          help.style.opacity = String(helpOpacity);
+          help.style.visibility = helpOpacity > 0.01 ? 'visible' : 'hidden';
+          if (helpOpacity <= 0.01) {
+            help.classList.remove('open', 'visible');
+          } else {
+            help.classList.add('visible');
+          }
+        } catch (e) {}
+      }
       if (headSection) {
         try {
           headSection.style.pointerEvents = opacity > 0.01 ? 'auto' : 'none';
@@ -878,6 +892,12 @@ function initHeadScrollFade() {
         headSection.style.opacity = '1';
         headSection.style.pointerEvents = 'auto';
         headSection.style.visibility = 'visible';
+      }
+      const help = document.querySelector('.help');
+      if (help) {
+        help.classList.remove('open', 'visible');
+        help.style.opacity = '0';
+        help.style.visibility = 'hidden';
       }
       const mainSection = document.getElementById('main-section');
       if (mainSection) {

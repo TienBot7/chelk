@@ -205,11 +205,17 @@ const originalCircles = document.querySelector('.thank-you__circles')
 let app
 if (originalCircles) {
   const clone = originalCircles.cloneNode(true)
-  clone.style.position = 'absolute'
-  clone.style.left = '-9999px'
-  clone.style.top = '-9999px'
+  clone.style.position = 'fixed'
+  clone.style.inset = '0'
+  clone.style.left = '0'
+  clone.style.top = '0'
+  clone.style.width = '100vw'
+  clone.style.height = '100vh'
+  clone.style.margin = '0'
   clone.style.opacity = '0'
   clone.style.pointerEvents = 'none'
+  clone.style.display = 'block'
+  clone.style.zIndex = '0'
   document.body.appendChild(clone)
   app = clone
 } else {
@@ -240,7 +246,6 @@ const setCenterTarget = () => {
   p0.x = centerX
   p0.y = centerY
 
-  // Сильное изменение размера — жёстко сбрасываем всё
   if (Math.abs(window.innerWidth - lastWidth) > 20 || 
       Math.abs(window.innerHeight - lastHeight) > 20) {
     p1.x = p0.x; p1.y = p0.y
@@ -251,6 +256,11 @@ const setCenterTarget = () => {
 }
 
 const updatePointerPosition = (clientX, clientY) => {
+  if (isMobileThankYouDevice()) {
+    setCenterTarget()
+    return
+  }
+
   p0.x = clientX
   p0.y = window.innerHeight - clientY
 }
@@ -258,6 +268,14 @@ const updatePointerPosition = (clientX, clientY) => {
 const pressStart = (clientX, clientY) => {
   isPressed = true
   circlesElement?.classList.add('pressed')
+
+  if (isMobileThankYouDevice()) {
+    setCenterTarget()
+    p1.x = p0.x; p1.y = p0.y
+    p2.x = p0.x; p2.y = p0.y
+    return
+  }
+
   updatePointerPosition(clientX, clientY)
   p1.x = p0.x; p1.y = p0.y
   p2.x = p0.x; p2.y = p0.y
@@ -273,6 +291,11 @@ const addCaptureListener = (target, type, handler) => {
   target.addEventListener(type, handler, { passive: false, capture: true })
 }
 
+const isInteractiveTarget = (target) => {
+  if (!target || !target.closest) return false
+  return !!target.closest('.mix-btn, a, button, input, textarea, select, label')
+}
+
 if (buttonElement) {
   buttonElement.addEventListener('pointerdown', () => circlesElement?.classList.add('pressed'))
   buttonElement.addEventListener('pointerup', () => circlesElement?.classList.remove('pressed'))
@@ -280,8 +303,10 @@ if (buttonElement) {
 }
 
 addCaptureListener(window, 'pointerdown', (e) => {
+  if (!isInteractiveTarget(e.target) && e.pointerType === 'touch' && e.cancelable) {
+    e.preventDefault()
+  }
   pressStart(e.clientX, e.clientY)
-  if (e.pointerType === 'touch' && e.cancelable) e.preventDefault()
 })
 
 addCaptureListener(window, 'pointerup', () => {
@@ -300,8 +325,8 @@ addCaptureListener(window, 'pointermove', (e) => {
 const touchStartHandler = (e) => {
   const touch = e.changedTouches[0]
   if (!touch) return
+  if (!isInteractiveTarget(e.target) && e.cancelable) e.preventDefault()
   pressStart(touch.clientX, touch.clientY)
-  if (e.cancelable) e.preventDefault()
 }
 
 const touchMoveHandler = (e) => {
@@ -309,7 +334,7 @@ const touchMoveHandler = (e) => {
   const touch = e.changedTouches[0]
   if (!touch) return
   updatePointerPosition(touch.clientX, touch.clientY)
-  if (e.cancelable) e.preventDefault()
+  if (!isInteractiveTarget(e.target) && e.cancelable) e.preventDefault()
 }
 
 const touchEndHandler = () => {
@@ -337,6 +362,10 @@ const bubbles = new Float32Array(N * 4)
 const t0 = performance.now() / 1000
 
 let vfx // объявляем заранее
+
+const isMobileThankYouDevice = () => {
+  return window.innerWidth <= 768 || (navigator && navigator.maxTouchPoints > 0 && window.innerWidth <= 1024)
+}
 
 function tick() {
   const time = performance.now() / 1000 - t0
@@ -409,6 +438,7 @@ document.head.appendChild(style)
 async function initializeVfx() {
   if (typeof initializeVfx._running === 'undefined') initializeVfx._running = false
   if (vfx || initializeVfx._running) return
+
   initializeVfx._running = true
   if (!VFX) {
     const LoadedVFX = await loadVfxModule()
@@ -459,9 +489,28 @@ const getThankYouVfxScale = () => {
 const applyThankYouVfxScale = () => {
   const canvasRoot = document.querySelector('vfx-js-canvas') || document.querySelector('canvas')
   if (!canvasRoot) return
+
+  const target = document.querySelector('.thank-you__circles')
   const scale = getThankYouVfxScale()
+
+  canvasRoot.style.position = 'fixed'
+  canvasRoot.style.inset = '0'
+  canvasRoot.style.left = '0'
+  canvasRoot.style.top = '0'
+  canvasRoot.style.width = '100vw'
+  canvasRoot.style.height = '100vh'
+  canvasRoot.style.margin = '0'
+  canvasRoot.style.display = 'block'
   canvasRoot.style.transformOrigin = 'center center'
   canvasRoot.style.transform = scale === 1 ? '' : `scale(${scale})`
+
+  if (target) {
+    const rect = target.getBoundingClientRect()
+    canvasRoot.style.width = `${rect.width}px`
+    canvasRoot.style.height = `${rect.height}px`
+    canvasRoot.style.left = `${rect.left - 9}px`
+    canvasRoot.style.top = `${rect.top - 9}px`
+  }
 }
 
 const revealVfxCanvas = (tryCount = 0) => {
@@ -586,7 +635,7 @@ let audioUnlocked = false
 const getButtonAudio = (resetCurrentTime = true) => {
   if (!buttonAudio) {
     buttonAudio = new Audio('./audio/chelk.mp3')
-    buttonAudio.volume = 0.9
+    buttonAudio.volume = 0.54
     buttonAudio.preload = 'auto'
     try { buttonAudio.load() } catch (e) {}
   }
@@ -599,14 +648,14 @@ const getButtonAudio = (resetCurrentTime = true) => {
 }
 
 const playCheklSound = () => {
-  // If WebAudio decoded buffer is available, use it for immediate playback
+  // Match the project-wide click volume used elsewhere (0.54)
   try {
     if (audioContext && decodedChekBuffer) {
       if (audioContext.state === 'suspended') audioContext.resume().catch(() => {})
       const src = audioContext.createBufferSource()
       src.buffer = decodedChekBuffer
       const gain = audioContext.createGain()
-      gain.gain.value = 0.9
+      gain.gain.value = 0.54
       src.connect(gain)
       gain.connect(audioContext.destination)
       try { src.start(0) } catch (e) { try { src.start() } catch (e2) {} }
@@ -616,7 +665,7 @@ const playCheklSound = () => {
 
   // fallback to HTMLAudio when WebAudio not ready
   const audio = getButtonAudio()
-  try { audio.currentTime = 0; audio.play().catch(() => {}) } catch (e) {}
+  try { audio.currentTime = 0; audio.volume = 0.54; audio.play().catch(() => {}) } catch (e) {}
   return audio
 }
 
@@ -645,38 +694,91 @@ function initCheklWebAudio() {
 try { initCheklWebAudio() } catch (e) {}
 
 let animationStarted = false
-const startSvgAnimation = (duration = 1.4) => {
-  if (animationStarted) return
-  animationStarted = true
+let circleNavigationTimer = null
+let circleNavigationLocked = false
+
+const startSvgAnimation = (duration = 0.8) => {
   if (!circlesElement) return
-  const safeDuration = Math.max(duration, 0.8)
-  circlesElement.style.setProperty('--click-duration', `${safeDuration}s`)
+  animationStarted = true
+  const baseDuration = 0.8
+  circlesElement.style.setProperty('--click-duration', `${baseDuration}s`)
   circlesElement.classList.remove('animate-click')
   void circlesElement.offsetWidth
   circlesElement.classList.add('animate-click')
 }
 
+const waitForCircleResetThenNavigate = (targetHref) => {
+  if (circleNavigationLocked) return
+  circleNavigationLocked = true
+
+  const navigate = () => {
+    window.location.assign(targetHref)
+  }
+
+  const el = document.querySelector('.thank-you__circles')
+  if (!el) {
+    navigate()
+    return
+  }
+
+  const finishNavigation = () => {
+    if (circleNavigationTimer) {
+      clearTimeout(circleNavigationTimer)
+      circleNavigationTimer = null
+    }
+    animationStarted = false
+    navigate()
+  }
+
+  const onAnimationEnd = (event) => {
+    if (event && event.target !== el) return
+    animationStarted = false
+    finishNavigation()
+  }
+
+  el.addEventListener('animationend', onAnimationEnd, { once: true })
+  el.addEventListener('webkitAnimationEnd', onAnimationEnd, { once: true })
+
+  circleNavigationTimer = setTimeout(() => {
+    finishNavigation()
+  }, 2200)
+}
+
+let touchAudioConsumed = false
+
+const triggerThankYouTapFeedback = (isMobileTap = false) => {
+  if (isMobileTap) {
+    touchAudioConsumed = true
+  }
+
+  playCheklSound()
+  startSvgAnimation(0.8)
+}
+
 if (thankYouLink) {
   thankYouLink.addEventListener('mousedown', () => {
-    const audio = playCheklSound()
-    startSvgAnimation(audio.duration && !isNaN(audio.duration) ? audio.duration : 1.4)
+    triggerThankYouTapFeedback(false)
   })
+
+  thankYouLink.addEventListener('touchstart', (event) => {
+    if (event.cancelable) event.preventDefault()
+    triggerThankYouTapFeedback(true)
+  }, { passive: false })
 
   thankYouLink.addEventListener('click', (event) => {
     event.preventDefault()
     const targetHref = thankYouLink.getAttribute('href') || './index.html'
-    const navigate = () => {
-      window.location.assign(targetHref)
+
+    if (circleNavigationLocked) return
+
+    if (isMobileThankYouDevice() && touchAudioConsumed) {
+      touchAudioConsumed = false
+    } else {
+      triggerThankYouTapFeedback(false)
     }
 
-    const audio = getButtonAudio(false)
-    if (audio && typeof audio.addEventListener === 'function') {
-      audio.addEventListener('ended', navigate, { once: true })
-      audio.addEventListener('error', navigate, { once: true })
-    }
-
-    playCheklSound()
-    setTimeout(navigate, 220)
+    startSvgAnimation(0.8)
+    waitForCircleResetThenNavigate(targetHref)
   })
 }
 
@@ -684,4 +786,11 @@ if (thankYouScreen) {
   thankYouScreen.addEventListener('mousedown', (event) => {
     if (!event.target.closest('.mix-btn')) playCheklSound()
   })
+
+  thankYouScreen.addEventListener('touchstart', (event) => {
+    if (!event.target.closest('.mix-btn') && isMobileThankYouDevice()) {
+      if (event.cancelable) event.preventDefault()
+      triggerThankYouTapFeedback(true)
+    }
+  }, { passive: false })
 }

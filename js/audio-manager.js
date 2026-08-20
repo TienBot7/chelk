@@ -261,7 +261,8 @@
   function play(name, opts={}){
     const { loop=false, volume=1, delay=0, forceImmediate=false } = opts;
     const url = manifest[name] || name;
-    const vol = Math.max(0, Math.min(1, volume));
+    const baseVolume = name === 'chelk' ? 0.6 : 1;
+    const vol = Math.max(0, Math.min(1, volume * baseVolume));
 
     const playNow = () => {
       const existing = currentPlayers[name];

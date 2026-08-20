@@ -38,14 +38,14 @@ function clearScrollHintTimeout() {
 function playScrollCardClickSound() {
     try {
         if (window.audioManager && typeof window.audioManager.play === 'function') {
-            window.audioManager.play('chelk', { loop: false, volume: 0.9, forceImmediate: true })
+            window.audioManager.play('chelk', { loop: false, volume: 0.54, forceImmediate: true })
             return
         }
     } catch (e) {}
 
     try {
         const audio = new Audio('audio/chelk.mp3')
-        audio.volume = 0.9
+        audio.volume = 0.54
         audio.currentTime = 0
         audio.play().catch(() => {})
     } catch (e) {}
@@ -180,10 +180,10 @@ function updateFrames(top){
     try {
         const headSection = document.querySelector('.head')
         const scrollSection = document.querySelector('.scroll-section')
+        const help = document.querySelector('.help')
         if (headSection) {
-            if (top === 0) {
-                headSection.classList.remove('visible')
-            } else if (centerIsTinyZero) {
+            const shouldShowHead = !(top === 0) && centerIsTinyZero
+            if (shouldShowHead) {
                 headSection.classList.add('visible')
                 const mainSection = document.getElementById('main-section')
                 if (mainSection) {
@@ -191,6 +191,11 @@ function updateFrames(top){
                 }
             } else {
                 headSection.classList.remove('visible')
+                if (help) {
+                    help.classList.remove('open', 'visible')
+                    help.style.opacity = '0'
+                    help.style.visibility = 'hidden'
+                }
             }
 
             if (headSection.classList.contains('visible') && scrollSection) {

@@ -126,8 +126,12 @@ if (btnRequest) {
     event.stopPropagation()
     playCheklSound()
     const formSection = document.querySelector('.form')
+    const header = document.getElementById('header')
     if (formSection) {
       formSection.classList.add('visible')
+    }
+    if (header) {
+      header.classList.add('is-dark')
     }
   })
 }
@@ -135,11 +139,11 @@ if (btnRequest) {
 function playCheklSound() {
   try {
     if (window.audioManager && typeof window.audioManager.play === 'function') {
-      window.audioManager.play('chelk', { volume: 0.9 })
+      window.audioManager.play('chelk', { volume: 0.54 })
       return
     }
     const audio = getPreloadedAudio('audio/chelk.mp3')
-    audio.volume = 0.9
+    audio.volume = 0.54
     audio.currentTime = 0
     audio.play().catch(() => {})
   } catch (e) {
@@ -535,6 +539,12 @@ function updateBottleUnitsDisplay() {
     const percent = Math.round((used / TARGET_SCORE) * 100)
     pointsCounter.textContent = `${used} / ${TARGET_SCORE} частей (${percent}% жидкости)`
   }
+
+  if (used >= 5 && typeof window !== 'undefined' && typeof window.forceShowHelpPrompt === 'function' && !window.__firstBottleHelpShown) {
+    window.__firstBottleHelpShown = true
+    window.forceShowHelpPrompt()
+  }
+
   updateRangeLinePositions()
   updateMessagePanel()
   updateMixButtonVisibility()
@@ -1078,7 +1088,7 @@ function startMixAnimation() {
     bottle.style.top = `${positions[i].top}px`
     bottle.style.margin = '0'
     bottle.style.zIndex = '12'
-    bottle.style.transition = 'all 0.65s cubic-bezier(0.4, 0, 0.2, 1)'
+    // bottle.style.transition = 'all 0.65s cubic-bezier(0.4, 0, 0.2, 1)'
     bottle.style.width = 'max-content'
   })
 
@@ -1107,11 +1117,11 @@ function startMixAnimation() {
       applyPlatformColor(centralBottle, getMergedBottleColor(selectedColorVariant))
       updateBottleUnitsDisplay()
       const thermostat = centralBottle.querySelector('.thermostat')
-      if (thermostat) {
-        thermostat.style.transition = 'transform 0.3s ease'
+      // if (thermostat) {
+        // thermostat.style.transition = 'transform 0.3s ease'
         // thermostat.style.transform = 'scale(1.4)'
-      }
-      centralBottle.style.transition = 'transform 0.3s ease'
+      // }
+      // centralBottle.style.transition = 'transform 0.3s ease'
       centralBottle.classList.add('merged-central')
       createFlashEffect(selectedColorVariant).then(() => {
         // playLottieAnimation(getLottiePathForColor(selectedColorVariant))
@@ -1172,6 +1182,14 @@ function cycleBottleState(platformElement) {
   const delta = bottleStateValue[next] - bottleStateValue[current]
   if (delta > 0 && used + delta > TARGET_SCORE) return false
   setBottleState(platformElement, next)
+
+  if (typeof window !== 'undefined' && !window.__firstBottleHelpShown) {
+    window.__firstBottleHelpShown = true
+    if (typeof window.forceShowHelpPrompt === 'function') {
+      window.forceShowHelpPrompt()
+    }
+  }
+
   updateBottleUnitsDisplay()
   return true
 }
@@ -1447,7 +1465,11 @@ function showPlatformRow() {
   if (typeof window !== 'undefined' && typeof window.updateHelpText === 'function') {
     try {
       const helpEl = document.querySelector('.help')
-      if (helpEl && !helpEl.classList.contains('open')) helpEl.classList.add('open')
+      if (helpEl) {
+        helpEl.classList.remove('open', 'visible')
+        helpEl.style.opacity = '0'
+        helpEl.style.visibility = 'hidden'
+      }
     } catch (e) {}
     window.updateHelpText('Меняйте уровень жидкости в колбах — так вы распределяете усилия своей стратегии продвижения.')
   }
@@ -1505,10 +1527,8 @@ if (mixBtn) {
                 t3.style.pointerEvents = 'auto'
               }
             }
-            setTimeout(() => {
-              canvas = showLiquidEffectOverBottle(true)
-              animateDeviceProgress(device, 200, 4200)
-            }, 1000) //выливание жидкости из колбы
+            canvas = showLiquidEffectOverBottle(true)
+            animateDeviceProgress(device, 200, 4200) 
           }
 
           const transitionEndHandler = (event) => {
@@ -1520,9 +1540,7 @@ if (mixBtn) {
           rotator.addEventListener('transitionend', transitionEndHandler)
           rotator.style.willChange = 'transform'
           rotator.style.transformOrigin = 'center center'
-          rotator.style.transition = 'transform 1200ms cubic-bezier(0.22, 0.61, 0.36, 1)'
           rotator.style.transform = 'rotate(135deg)'
-          requestAnimationFrame(startProgressAfterRotation)
         }, 1000) //поворот колбы
       }
       startMixAnimation()
@@ -1531,22 +1549,17 @@ if (mixBtn) {
 }
 
 if (platform) {
-  platform.addEventListener('click', () => {
-    if (!platform.classList.contains('end-vertical')) return
-
-    const help = document.querySelector('.help')
-    if (help && help.classList.contains('visible')) return
-
-    if (typeof window !== 'undefined' && typeof window.updateHelpText === 'function') {
-      window.updateHelpText('Меняйте уровень жидкости в колбах — так вы распределяете усилия своей стратегии продвижения.')
-    }
-    if (typeof window !== 'undefined' && typeof window.showHelpPrompt === 'function') {
-      window.showHelpPrompt()
+  platform.addEventListener('click', (event) => {
+    if (event.target && event.target.closest && event.target.closest('.platform, .platform-copy')) {
+      return
     }
   })
 }
 
 function resetGame(preservePosition = false) {
+  if (typeof window !== 'undefined') {
+    window.__firstBottleHelpShown = false
+  }
   gameActive = false
   allowStart = true
   showThermostatIntroUI()
@@ -1647,6 +1660,7 @@ function resetAppState() {
   const lottieContainerEl = document.getElementById('lottieContainer')
   const lottieSectionEl = document.getElementById('lottieSection')
   const formSection = document.querySelector('.form')
+  const header = document.getElementById('header')
 
   if (overlay) overlay.classList.remove('show')
   if (scrollArea) {
@@ -1656,6 +1670,7 @@ function resetAppState() {
   if (lottieContainerEl) lottieContainerEl.innerHTML = ''
   if (lottieSectionEl) lottieSectionEl.style.transform = 'translateX(100%)'
   if (formSection) formSection.classList.remove('visible')
+  if (header) header.classList.remove('is-dark')
   clearLottieScrollListener()
   if (lottieAnimation) {
     lottieAnimation.destroy()
@@ -1707,8 +1722,9 @@ platform.addEventListener('click', (event) => {
   try {
     const helpEl = document.querySelector('.help')
     if (helpEl) {
-      helpEl.classList.remove('open')
-      helpEl.removeAttribute('style')
+      helpEl.classList.remove('open', 'visible')
+      helpEl.style.opacity = '0'
+      helpEl.style.visibility = 'hidden'
     }
   } catch (e) {}
 
@@ -1935,9 +1951,9 @@ function endGame(preservePosition = false) {
 
         try {
           if (window.audioManager && typeof window.audioManager.play === 'function') {
-            window.audioManager.play('chelk', { loop: false, volume: 0.9, forceImmediate: true });
+            window.audioManager.play('chelk', { loop: false, volume: 0.54, forceImmediate: true });
           } else if (typeof preloadedAudio !== 'undefined' && preloadedAudio.chelk) {
-            try { preloadedAudio.chelk.currentTime = 0; preloadedAudio.chelk.play().catch(()=>{}); } catch(e) {}
+            try { preloadedAudio.chelk.volume = 0.54; preloadedAudio.chelk.currentTime = 0; preloadedAudio.chelk.play().catch(()=>{}); } catch(e) {}
           }
         } catch (e) {}
 

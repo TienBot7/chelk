@@ -395,6 +395,21 @@ function attachBehavior(bubble, item) {
     }
 
     const cycleState = Number(bubble.dataset.bubbleTextState || '0')
+    const isSmallTouchScreen = isTouchDevice && window.innerWidth <= 500
+
+    if (isSmallTouchScreen) {
+      if (cycleState === 0) {
+        swapText(item.text1, '✦ клиент ✦', true)
+        bubble.dataset.bubbleTextState = '1'
+      } else if (cycleState === 1) {
+        swapText(item.text2, '✦ агентство ✦', true)
+        bubble.dataset.bubbleTextState = '2'
+      } else {
+        swapText(item.text1, '✦ клиент ✦', true)
+        bubble.dataset.bubbleTextState = '1'
+      }
+      return
+    }
 
     if (isTouchDevice) {
       if (cycleState === 0) {

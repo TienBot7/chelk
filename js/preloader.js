@@ -6,6 +6,11 @@ const soundAudioCache = {
   pop1: new Audio('audio/pop1.mp3'),
   pop2: new Audio('audio/pop2.mp3'),
 };
+const shopAssetUrls = [
+  './img/shop/red.webp',
+  './img/shop/green.webp',
+  './img/shop/purple.webp',
+];
 // Только критические активы для первого отрисовки — ничего не будет блокировать
 const requiredInitialAssets = [];
 
@@ -243,6 +248,10 @@ export function runPreloader({ onComplete }) {
   function hideLoading() {
     loadingSection.classList.add('hide');
 
+    setTimeout(() => {
+      loadingSection.style.display = 'none';
+    }, 800);
+
     let idleHintTimer = null;
     let idleHintAttached = false;
 
@@ -286,6 +295,12 @@ export function runPreloader({ onComplete }) {
       const mainSection = document.getElementById('main-section');
       if (mainSection) {
           mainSection.className = 'visible';
+          const help = document.querySelector('.help');
+          if (help) {
+            help.classList.remove('visible', 'open');
+            help.style.opacity = '0';
+            help.style.visibility = 'hidden';
+          }
               const introTop = document.querySelector('.main-section__top');
               if (introTop) {
                 introTop.classList.add('show-after-sound');
@@ -344,7 +359,7 @@ export function runPreloader({ onComplete }) {
             // play chelk once and a looping background music
             try {
               if (window.audioManager && typeof window.audioManager.play === 'function') {
-                window.audioManager.play('chelk', { loop: false, volume: 0.9, forceImmediate: true });
+                window.audioManager.play('chelk', { loop: false, volume: 0.54, forceImmediate: true });
                 // start music slightly delayed through audioManager
                 setTimeout(() => {
                   try { playBackgroundMusic(0); } catch (e) {}
@@ -460,17 +475,20 @@ export function runPreloader({ onComplete }) {
                     if (choiseBtn) {
                       choiseBtn.classList.add('visible');
                       choiseBtn.style.opacity = '';
-                    }
-
-                    const help = document.querySelector('.help');
-                    if (help) {
-                      help.classList.add('visible');
-                      help.style.opacity = '';
+                      if (typeof window !== 'undefined') {
+                        window.__allowHelpDisplay = true;
+                      }
+                      if (typeof window !== 'undefined' && typeof window.showHelpPrompt === 'function') {
+                        window.showHelpPrompt();
+                      }
                     }
 
                     // When user confirms choice, fade out side slides, controls, text and svg, then remove from DOM
                     if (choiseBtn) {
                       choiseBtn.addEventListener('click', () => {
+                        if (typeof window !== 'undefined') {
+                          window.__allowHelpDisplay = false;
+                        }
                         // show the scroll-section when user confirms choice
                         try {
                           const scrollSec = document.querySelector('.scroll-section');
@@ -606,13 +624,14 @@ export function runPreloader({ onComplete }) {
       function playToggleClickSound() {
         try {
           if (window.audioManager && typeof window.audioManager.play === 'function') {
-            window.audioManager.play('chelk', { loop: false, volume: 0.9, forceImmediate: true });
+            window.audioManager.play('chelk', { loop: false, volume: 0.54, forceImmediate: true });
             return;
           }
 
           const chelkAudio = new Audio('audio/chelk.mp3');
           chelkAudio.loop = false;
           chelkAudio.currentTime = 0;
+          chelkAudio.volume = 0.54;
           chelkAudio.play().catch((err) => console.warn('chelk playback failed:', err));
         } catch (e) {
           console.warn('Failed to play chelk audio:', e);
@@ -661,7 +680,19 @@ export function runPreloader({ onComplete }) {
   }
 
   // Ждем полной загрузки window, затем запускаем анимацию прогресса
+  function preloadShopImages() {
+    shopAssetUrls.forEach((url) => {
+      try {
+        const img = new Image();
+        img.decoding = 'async';
+        img.loading = 'eager';
+        img.src = url;
+      } catch (e) {}
+    });
+  }
+
   function startPreloader() {
+    preloadShopImages();
     displayedPercent = 1;
     targetPercent = 1;
     renderPercent(1);
@@ -680,6 +711,7 @@ export function runPreloader({ onComplete }) {
 
   // Фоновая загрузка моделей и аудиофайлов после показа страницы
   function startBackgroundAssetLoading() {
+    preloadShopImages();
     // Загружаем модели в фоне после того, как страница видна
     let carouselModels = [
       './models/t-shirt-black.glb',
