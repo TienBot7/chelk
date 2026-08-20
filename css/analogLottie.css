@@ -1,5 +1,5 @@
 .analogSection {
-  height: 100dvh;
+  height: 100vh;
   position: fixed;
   overflow: hidden;
   top: 0;
@@ -13,7 +13,7 @@
   position: relative;
   z-index: 25;
   text-align: center;
-  height: 100dvh;
+  height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
