@@ -1418,7 +1418,7 @@ body {
     bottom: 60px;
     transform: translate(-50%, 0px) rotate(-90deg);
     z-index: 30;
-    pointer-events: auto;
+    pointer-events: none;
     transition: opacity 300ms, transform 300ms;
     height: 26px;
     width: 121px;
