@@ -456,9 +456,6 @@ function getImageContentRect() {
   const scale = Math.max(containerWidth / naturalWidth, containerHeight / naturalHeight)
   const renderedWidth = naturalWidth * scale
   const renderedHeight = naturalHeight * scale
-  // Respect CSS `object-position` so elements positioned relative to the
-  // visible image area follow the same shift when shopImage is aligned
-  // left/center/right or using percentage offsets.
   let objectPosition = '50% 50%'
   try {
     objectPosition = getComputedStyle(shopImage).objectPosition || shopImage.style.objectPosition || objectPosition
@@ -601,8 +598,6 @@ function positionPerson(person, positionKey, options = {}) {
     const startX = currentRect.left - sectionRect.left
     const startY = currentRect.top - sectionRect.top
 
-    // When the element is hidden or not yet painted, don't animate from a stale
-    // measurement; jump directly to the target coordinate to avoid it floating in space.
     if (!currentRect.width && !currentRect.height) {
       person.style.transition = 'none'
       person.style.left = `${targetX}px`
@@ -788,7 +783,6 @@ function animatePerson4() {
   personAnimationState.person4.key = 'initial'
   person4.style.top = 'auto'
   person4.style.bottom = '0px'
-  // place initial (offscreen) position using the shared coordinate system
   positionPerson(person4, 'initial', { duration: 0 })
   formScreen.style.left = '100%'
   formScreen.style.right = '0px'
@@ -833,7 +827,6 @@ function animatePersons() {
     return
   }
 
-  // red и purple
   const delay1 = choice === 'purple' ? 200 : 300
   const delay2 = choice === 'purple' ? 900 : 1100
   const delay3 = choice === 'purple' ? 1600 : 1900
@@ -917,7 +910,8 @@ function drawLiquid() {
 function animate() {
   if (!isPaused) {
     if (isFilling && fillLevel < targetFill) {
-      fillLevel += (targetFill - fillLevel) * 0.01 //скорость поднятия экрана с жидкостью
+      const riseFactor = height > width ? 0.015 : 0.01
+      fillLevel += (targetFill - fillLevel) * riseFactor //скорость поднятия экрана с жидкостью
     }
 
     if (isFilling && bubbles.length === 0 && fillLevel > height * 0.7 && !isFading) {
@@ -969,9 +963,7 @@ function setShopImageByChoice(selectedChoice) {
 }
 
 function positionShopImageByChoice(selectedChoice) {
-  // Apply alignment only for narrow viewports
   if (window.innerWidth > 1024) {
-    // reset to default for large viewports
     shopImage.style.objectPosition = 'center center'
     shopImage.style.width = ''
     shopImage.style.left = ''
@@ -979,20 +971,15 @@ function positionShopImageByChoice(selectedChoice) {
   }
 
   if (window.innerWidth <= 500) {
-    // For very small screens, widen the image and shift it so it
-    // protrudes beyond the viewport edge by the requested amount.
     if (selectedChoice === 'red') {
-      // Хорека -> выступить на 40px за правый край
       shopImage.style.width = 'calc(100% + 40px)'
       shopImage.style.objectPosition = 'right top'
       shopImage.style.left = '0'
     } else if (selectedChoice === 'green') {
-      // Одежда -> выступить на 40px за левый край
       shopImage.style.width = 'calc(100% + 40px)'
       shopImage.style.objectPosition = 'left top'
       shopImage.style.left = '-40px'
     } else if (selectedChoice === 'purple') {
-      // Косметика -> сдвинуть на 110px влево
       shopImage.style.width = 'calc(100% + 110px)'
       shopImage.style.objectPosition = 'center top'
       shopImage.style.left = '-110px'
@@ -1004,7 +991,6 @@ function positionShopImageByChoice(selectedChoice) {
     return
   }
 
-  // Default narrow viewport behaviour (<=1024 && >500)
   shopImage.style.width = ''
   shopImage.style.left = ''
   if (selectedChoice === 'red') {

@@ -506,11 +506,6 @@
       <canvas id="canvas"></canvas>
       <p class="head__title left">мысли <span>клиента</span></p>
       <p class="head__title right">клиента</p>
-      <!-- <div class="head__description">
-        Этот экран — шарж из мыслей клиента и агентства во время работы.
-        Коснитесь головы, чтобы заглянуть в мысли клиента.
-        Нажмите на пузыри, чтобы понять, как вас слышит агентство.
-      </div> -->
       <div class="bubbles-container"></div>
     </div>
     <div class="scroll-down">
@@ -673,10 +668,8 @@
       </button>
     </div>
   </section>
-
   <section class="analogSection" id="analogSection">
     <img id="shopImage" src="./img/shop.webp" alt="Shop">
-
     <img id="person1" class="person" src="./img/person1/frame1.webp" alt="Person 1">
     <img id="person2" class="person" src="./img/person2/frame1.webp" alt="Person 2">
     <img id="person3" class="person" src="./img/person3/frame1.webp" alt="Person 3">
@@ -719,12 +712,9 @@
       </div>
     </div>
     </div>
-
     <div class="content" id="content"></div>
-
     <canvas id="wavesCanvas"></canvas>
   </section>
-
   <section class="form" id="formSection">
     <div class="container">
       <div class="form__content">
@@ -760,7 +750,7 @@
         </div>
         <div class="form__bottom-content">
           <form class="form__bottom" id="requestForm" action="https://formsubmit.co/aaa5efa0056521d7cb2a15484e629d7b"
-            method="POST" novalidate>
+            method="POST" target="_top" novalidate>
             <input type="hidden" name="_subject" value="Новая заявка с сайта Щёлк">
             <input type="hidden" name="_captcha" value="false">
             <input type="hidden" name="_template" value="table">
@@ -818,7 +808,6 @@
       </div>
     </div>
   </section>
-
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const yearEl = document.getElementById('current-year');
@@ -827,7 +816,6 @@
       }
     });
   </script>
-
   <script type="importmap">
     {
       "imports": {

@@ -8,7 +8,6 @@
   let accumulatedTime = 0
   let isRunning = true
 
-  // keys are normalized to lowercase for case-insensitive matching
   const NAME_COLOR_MAP = {
     'хорека': '#C4142D',
     'косметика': '#7B1D7B',
@@ -76,7 +75,6 @@
     const svgString = getSvgString(currentColor)
     let svgElement = createSvgElement(svgString)
 
-    // Используем переиспользуемый keyframe diveOpacity из CSS
     svgElement.style.animation = `diveOpacity ${ANIMATION_DURATION}ms linear forwards`
     
     stage.appendChild(svgElement)
@@ -86,7 +84,6 @@
     }, ANIMATION_DURATION)
   }
 
-  // Основной цикл анимации
   function animationLoop(timestamp) {
     if (!isRunning) return
     if (!isLinesVisible()) {
@@ -120,10 +117,9 @@
   }
 
   function startInfiniteAnimation() {
-    cleanup() // очистка перед стартом
+    cleanup()
     clearInitialTimeouts()
 
-    // Начальные слои
     createAndAnimateLayer()
     initialTimeout1 = setTimeout(() => createAndAnimateLayer(), 180)
     initialTimeout2 = setTimeout(() => createAndAnimateLayer(), 380)
@@ -165,10 +161,8 @@
     accumulatedTime = 0
     lastTime = 0
     document.querySelectorAll('.animated-svg').forEach(el => el.remove())
-    // styleSheet.textContent = '' // можно оставить, если не хочешь мигания
   }
 
-  // === Управление видимостью вкладки ===
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       pauseAnimation()
@@ -177,7 +171,6 @@
     }
   })
 
-  // Инициализация
   window.addEventListener('load', () => {
     fetch('other/lines.svg')
       .then(res => res.text())
@@ -195,7 +188,6 @@
     
     if (choiceBtn) {
       choiceBtn.addEventListener('click', () => {
-        // enable lines visibility toggling from scroll behavior after explicit user choice
         try { window._linesEnabled = true } catch (e) {}
         document.querySelector('.lines')?.classList.add('visible')
       })
@@ -204,7 +196,6 @@
 
   window.changeColor = changeColor
 
-  // Listen for mainObject selection changes (custom event) and apply color
   window.addEventListener('mainObjectChange', (ev) => {
     try {
       const payload = ev && ev.detail ? ev.detail : ev
@@ -212,7 +203,6 @@
       const newColor = NAME_COLOR_MAP[name]
       if (newColor) changeColor(newColor)
     } catch (e) {
-      // silent
     }
   })
 })()

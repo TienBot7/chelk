@@ -1,6 +1,5 @@
 let VFX = null
 
-// Параметры эффекта
 const PARAMS = {
   sphereR: 0.12,
   bubbleCount: 8,
@@ -10,7 +9,6 @@ const PARAMS = {
   mouseSmoothing: 0.05,
 }
 
-// Шейдер эффекта (без изменений)
 const postEffectShader = `
         precision highp float;
         uniform sampler2D src;
@@ -200,7 +198,6 @@ const postEffectShader = `
         }
       `
 
-// Клонируем элемент для VFX
 const originalCircles = document.querySelector('.thank-you__circles')
 let app
 if (originalCircles) {
@@ -241,7 +238,6 @@ const setCenterTarget = () => {
   p0.x = centerX
   p0.y = centerY
 
-  // Сильное изменение размера — жёстко сбрасываем всё
   if (Math.abs(window.innerWidth - lastWidth) > 20 || 
       Math.abs(window.innerHeight - lastHeight) > 20) {
     p1.x = p0.x; p1.y = p0.y
@@ -344,7 +340,7 @@ window.addEventListener('resize', () => {
 const bubbles = new Float32Array(N * 4)
 const t0 = performance.now() / 1000
 
-let vfx // объявляем заранее
+let vfx
 
 function tick() {
   if (isMobileThankYouScreen()) return
@@ -354,7 +350,6 @@ function tick() {
 
   if (!isPressed) {
     setCenterTarget()
-    // Если отпустили, возвращаемся в центр плавно
     p1.x += (p0.x - p1.x) * sm
     p1.y += (p0.y - p1.y) * sm
     p2.x += (p1.x - p2.x) * sm
@@ -402,12 +397,10 @@ function tick() {
 }
 tick()
 
-// Создаём VFX
 function getThankYouEffectScale() {
   return window.innerWidth <= 1024 ? 1.58 : 1
 }
 
-// Прозрачный фон
 const style = document.createElement('style')
 style.textContent = `
   vfx-js-canvas, canvas {
@@ -484,12 +477,10 @@ const applyThankYouVfxScale = () => {
 const revealVfxCanvas = (tryCount = 0) => {
   const canvasRoot = document.querySelector('vfx-js-canvas') || document.querySelector('canvas')
   if (!canvasRoot) {
-    // If VFX is not initialized, try to initialize it again (non-blocking)
     if (!vfx) {
       initializeVfx().catch(() => {})
     }
 
-    // Retry for a while; bail out after many attempts
     if (tryCount < 100) {
       setTimeout(() => revealVfxCanvas(tryCount + 1), 50)
     }
@@ -512,7 +503,6 @@ async function loadVfxModule(timeoutMs = 3000, attempts = 3) {
     } catch (err) {
       console.warn(`[thank-you] VFX module load attempt ${i + 1} failed:`, err)
       if (i < attempts - 1) {
-        // backoff before retrying
         await new Promise((r) => setTimeout(r, 300 + i * 300))
       }
     }
@@ -537,7 +527,6 @@ const animateCounter = () => {
     if (counterPercent === 99) {
       const inner = document.querySelector('.thank-you__circles__inner')
       const counter = document.querySelector('.loading__counter')
-      // Start initializing VFX (don't reveal yet) so it can warm up during fade
       initializeVfx().catch(() => {})
       if (inner) {
         inner.style.transform = 'translate(-50%, -50%) rotate(0deg)'
@@ -604,7 +593,6 @@ if (document.readyState === 'complete' || document.readyState === 'interactive')
   window.addEventListener('DOMContentLoaded', initThankYouPage)
 }
 
-// === Аудио и анимация (без изменений) ===
 const thankYouLink = document.querySelector('.thank-you__bottom a.mix-btn')
 const thankYouScreen = document.querySelector('.thank-you')
 let buttonAudio = null
@@ -630,12 +618,10 @@ const getButtonAudio = (resetCurrentTime = true) => {
 }
 
 const playCheklSound = () => {
-  // If WebAudio decoded buffer is available, use it for immediate playback
   try {
     if (audioContext && decodedChekBuffer) {
       try {
         if (audioContext.state === 'suspended') {
-          // Attempt to resume synchronously after a user gesture
           audioContext.resume().catch(() => {})
         }
       } catch (e) {}
@@ -650,7 +636,6 @@ const playCheklSound = () => {
     }
   } catch (e) {}
 
-  // fallback to HTMLAudio when WebAudio not ready
   const audio = getButtonAudio()
   try {
     audio.volume = THANK_YOU_SOUND_VOLUME
@@ -672,7 +657,6 @@ function initCheklWebAudio() {
   if (!AC) return
   try { audioContext = new AC() } catch (e) { audioContext = null; return }
 
-  // prefetch & decode
   fetch('./audio/chelk.mp3').then((r) => r.arrayBuffer()).then((ab) => {
     if (!audioContext) return
     try {
@@ -683,7 +667,6 @@ function initCheklWebAudio() {
     }
   }).catch(() => {})
 
-  // Unlock/resume on first user gesture
   const unlock = () => { if (!audioContext) return; audioContext.resume().then(() => { audioUnlocked = true }).catch(() => {}); document.removeEventListener('touchstart', unlock); document.removeEventListener('mousedown', unlock); }
   document.addEventListener('touchstart', unlock, { once: true })
   document.addEventListener('mousedown', unlock, { once: true })
@@ -762,7 +745,6 @@ if (thankYouScreen) {
   thankYouScreen.addEventListener('pointerdown', (event) => {
     if (event.target.closest('.mix-btn')) return
     try {
-      // Initialize or unlock audio on the first user gesture
       if (window.audioManager && typeof window.audioManager.init === 'function') {
         try { window.audioManager.init() } catch (e) {}
       } else {

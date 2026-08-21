@@ -1,5 +1,4 @@
 (function(){
-  // Audio manager with Safari optimization: eager HTMLAudio pools + fast fallback
   const AC = window.AudioContext || window.webkitAudioContext;
   let audioContext = null;
   let contextUnlocked = false;
@@ -107,7 +106,6 @@
     Object.keys(manifest).forEach((key) => {
       const url = manifest[key];
       htmlCache[key] = createAudio(url);
-      // Safari: pre-populate pool with extra instances for zero-latency playback
       if (isSafari && htmlCache[key]) {
         for (let i = 0; i < 2; i++) {
           const audio = createAudio(url);
@@ -123,7 +121,6 @@
       }).catch(()=>{})
     });
 
-    // Aggressive context unlock for Safari
     const unlock = () => {
       if (!audioContext) return;
       unlockContext().catch(() => {});
@@ -169,7 +166,7 @@
   function resumePlayerIfNeeded(name) {
     const meta = wasPlayingBeforeHide[name];
     if (!meta) return;
-    // Only resume music on tab return; skip SFX (chelk, pop1, pop2) to prevent unwanted looping
+    
     if (name !== 'music') {
       try { delete wasPlayingBeforeHide[name]; } catch (e) {}
       return;
@@ -411,7 +408,6 @@
   window.audioManager = { init, play, stop, isPlaying, isReady, fadeVolume, setVolume: fadeVolume, _internal:{buffers,htmlCache,htmlPools,manifest,currentPlayers,pendingPlays,gainNodes,fadeTimers} };
 
   try{ init(); }catch(e){}
-  // Pause/resume audio when page visibility changes (useful for Android tab switch)
   try {
     const handleVisibility = () => {
       try {

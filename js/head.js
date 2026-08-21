@@ -20,7 +20,6 @@ function getHeadCanvasSize() {
   return { width, height }
 }
 
-// --- ИНИЦИАЛИЗАЦИЯ ---
 const canvas = document.getElementById('canvas')
 if (canvas) {
   canvas.style.width = '100%'
@@ -70,7 +69,6 @@ if (scene) {
 
 const initialHeadCanvasSize = getHeadCanvasSize()
 
-// === ПРЕДУСТАНОВЛЕННЫЕ НАСТРОЙКИ КАМЕРЫ ===
 const camera = mobileHeadFallbackEnabled ? null : new PerspectiveCamera(45, initialHeadCanvasSize.width / initialHeadCanvasSize.height, 0.1, 1000)
 if (camera) {
   camera.position.set(0.0, 0.8, 0.5)
@@ -84,20 +82,15 @@ if (controls) {
   controls.zoomSpeed = 1.3
   controls.panSpeed = 0.9
   controls.target.set(0.0, 0.6, -0.1)
-  // Запрещаем вращение камеры пользователем — модель не будет вращаться от управления камерой
   controls.enableRotate = false
-  // Запрещаем изменение масштаба камеры (скролл/пинч) — модель не будет увеличиваться/уменьшаться
   controls.enableZoom = false
 }
 
-// === ОСВЕЩЕНИЕ (предустановленные параметры) ===
-// Окружающий свет
 const ambientLight = mobileHeadFallbackEnabled ? null : new AmbientLight(0xffffff, 0.35)
 if (ambientLight && scene) {
   scene.add(ambientLight)
 }
 
-// Контровой левый
 const rimLeftLight = mobileHeadFallbackEnabled ? null : new PointLight(0xc4142d, 0.7)
 if (rimLeftLight) {
   rimLeftLight.position.set(-2.4, 1.2, -7.0)
@@ -106,7 +99,6 @@ if (rimLeftLight) {
   scene.add(rimLeftLight)
 }
 
-// Контровой правый
 const rimRightLight = mobileHeadFallbackEnabled ? null : new PointLight(0xc4142d, 2.1)
 if (rimRightLight) {
   rimRightLight.position.set(2.8, -1.0, -6.0)
@@ -115,7 +107,6 @@ if (rimRightLight) {
   scene.add(rimRightLight)
 }
 
-// Передний свет (фиксированный белый)
 const frontLight = mobileHeadFallbackEnabled ? null : new PointLight(0xffffff, 2.5)
 if (frontLight) {
   frontLight.position.set(1.4, 1.7, 3.0)
@@ -124,7 +115,6 @@ if (frontLight) {
   scene.add(frontLight)
 }
 
-// Fill light (фиксированный голубой)
 const fillLight = mobileHeadFallbackEnabled ? null : new PointLight(0x87a9fe, 0.45)
 if (fillLight) {
   fillLight.position.set(1.2, 1.0, 2.0)
@@ -133,7 +123,6 @@ if (fillLight) {
   scene.add(fillLight)
 }
 
-// Группа для экспорта
 const exportGroup = mobileHeadFallbackEnabled ? null : new Group()
 if (exportGroup && scene) {
   scene.add(exportGroup)
@@ -173,25 +162,19 @@ let targetGlowIntensity = 0
 let currentGlowIntensity = 0
 let headMeshes = []
 
-// Параметры слежения модели за курсором (горизонталь + вертикаль)
 let targetModelRotationY = 0
 let targetModelRotationX = 0
-// Горизонталь: немного увеличим общую амплитуду и добавим отдельный множитель для левой стороны
-const maxFollowAngle = Math.PI / 5 // ~36°
-const maxLeftMultiplier = 2.8 // левый поворот сильнее (умножает амплитуду влево)
-// Вертикаль: уменьшаем амплитуду вверх/вниз
-const maxPitch = Math.PI / 36 // ~5°
-// Когда курсор поднимается вверх, усиливаем вертикальную амплитуду
-const upPitchMultiplier = 4.0 // множитель амплитуды при движении вверх (увеличен)
-const followLerp = 0.04 // сглаживание поворота (уменьшено для более плавного движения)
+const maxFollowAngle = Math.PI / 5
+const maxLeftMultiplier = 2.8
+const maxPitch = Math.PI / 36
+const upPitchMultiplier = 4.0
+const followLerp = 0.04
 
-// === УПРАВЛЕНИЕ ЦВЕТОМ ===
 function updateLightColor(color) {
   if (rimLeftLight) rimLeftLight.color.set(color)
   if (rimRightLight) rimRightLight.color.set(color)
 }
 
-// Map `mainObject` names to rim colors and apply when selection changes
 function applyColorForMainObject(name) {
   if (!name) return;
   const map = {
@@ -233,7 +216,6 @@ function applyFormStylesForMainObject(name) {
   });
 }
 
-// Listen for selection changes dispatched from script.js
 window.addEventListener('mainObjectChange', (e) => {
   const name = e && e.detail ? e.detail : null;
   try {
@@ -245,7 +227,6 @@ window.addEventListener('mainObjectChange', (e) => {
   }
 });
 
-// Initial sync: if there's an element `#mainObject` present, set color accordingly
 try {
   const el = document.getElementById('mainObject');
   if (el && el.textContent) {
@@ -254,8 +235,6 @@ try {
     applyFormStylesForMainObject(name);
   }
 } catch (e) {}
-
-// Color preset UI removed — color controlled programmatically
 
 function getHeadImageVariantName() {
   const selectedText = (document.getElementById('mainObject')?.textContent || window.mainObject || '').trim()
@@ -294,7 +273,7 @@ function ensureHeadImageFallback() {
     headImageFallback.style.boxShadow = 'none'
     headImageFallback.style.webkitUserSelect = 'none'
     headImageFallback.style.userSelect = 'none'
-    // Track if we're in the middle of a scroll to avoid playing click sound on scroll
+  
     let isScrollingHead = false
     headImageFallback.addEventListener('pointerdown', (event) => {
       isScrollingHead = false
@@ -323,7 +302,6 @@ function ensureHeadImageFallback() {
   }
 
   const variant = getHeadImageVariantName()
-  // Use modern WebP images for head fallbacks to reduce size on mobile
   headImageFallback.src = `./img/head/${variant}.webp`
   headImageFallback.style.display = 'block'
   if (canvas) {
@@ -345,7 +323,6 @@ function updateHeadFallbackTransform() {
   headImageFallback.style.transformOrigin = 'center bottom'
 }
 
-// === ЗАГРУЗКА МОДЕЛИ ===
 const loader = new GLTFLoader()
 
 function getHeadModelScaleFactor() {
@@ -374,7 +351,6 @@ function getHeadModelPosition() {
     return new Vector3(0.005, getHeadModelYOffset() - 0.065, 0.01)
   }
   else if (width <= 1440) {
-    // return new Vector3(0.01, getHeadModelYOffset(), 0.01)
     return new Vector3(0.02, getHeadModelYOffset() - 0.06, 0.01)
   }
   return new Vector3(-0.001, getHeadModelYOffset() - 0.11, 0.01)
@@ -387,7 +363,6 @@ function applyHeadModelLayout(model = currentModel) {
   model.scale.setScalar(getHeadModelScaleFactor())
 }
 
-// Загружает модель по URL (локальный файл в проекте)
 function loadModelFromURL(url, name = '') {
 
   loader.load(
@@ -434,7 +409,6 @@ function loadModelFromURL(url, name = '') {
   )
 }
 
-// On mobile, delay the heavy 3D model startup until the page has settled so the first render is not blocked.
 if (useHeadImageFallback()) {
   ensureHeadImageFallback()
 } else if (isMobileDevice) {
@@ -552,24 +526,18 @@ function checkHeadHover(clientX, clientY) {
   }
 }
 
-// Обработчики указателя: обновляют целевой угол поворота модели
 function updateTargetFromPointer(clientX, clientY) {
   const rect = canvas.getBoundingClientRect()
-  // Горизонталь
-  const x = (clientX - rect.left) / rect.width // 0..1
-  const nx = (x - 0.5) * 2 // -1..1
-  // Для правой стороны используем базовую амплитуду, для левой — усилитель
+  const x = (clientX - rect.left) / rect.width
+  const nx = (x - 0.5) * 2
   if (nx >= 0) {
     targetModelRotationY = nx * maxFollowAngle
   } else {
     targetModelRotationY = nx * maxFollowAngle * maxLeftMultiplier
   }
-  // Вертикальное смещение игнорируем — модель двигается только влево/вправо
   targetModelRotationX = 0
 }
 
-// Track pointer globally so the head follows the cursor even when hovering UI elements.
-// Use Pointer Events to cover mouse and touch in one handler; keep buttons clickable.
 function playHeadClickSound() {
   try {
     if (window.audioManager && typeof window.audioManager.play === 'function') {
@@ -612,7 +580,6 @@ window.addEventListener('pointerdown', (e) => {
     if (!headSection || !headSection.classList.contains('visible')) return
 
     if (useHeadImageFallback()) {
-      // The image element has its own pointerdown handler, so skip here
       return
     }
 
@@ -623,7 +590,6 @@ window.addEventListener('pointerdown', (e) => {
   } catch (err) {}
 }, { passive: true })
 
-// When pointer leaves the page/window (relatedTarget === null), reset head to neutral.
 window.addEventListener('pointerout', (e) => {
   try {
     if (!e.relatedTarget) {
@@ -635,7 +601,6 @@ window.addEventListener('pointerout', (e) => {
   } catch (err) {}
 })
 
-// reset view UI removed; keep programmatic reset function if needed
 function resetView() {
   camera.position.set(0.0, 0.8, 0.5)
   controls.target.set(0.0, 0.6, -0.1)
@@ -643,10 +608,6 @@ function resetView() {
   applyHeadModelLayout(currentModel)
 }
 
-// Загрузка моделей отключена (UI скрыт и обработчики блокированы)
-
-// === ЭКСПОРТ В GLB ===
-// Export UI removed; exporter function kept if needed programmatically
 function exportSceneToGLB(filename = 'exported_scene.glb') {
   if (!currentModel) {
     console.warn('Export skipped — no model loaded')
@@ -683,12 +644,8 @@ function exportSceneToGLB(filename = 'exported_scene.glb') {
     link.click()
     document.body.removeChild(link)
     URL.revokeObjectURL(url)
-    console.log('Export finished:', filename)
   }, (error) => { console.error('Ошибка экспорта:', error) }, { binary: true, animations: [] })
-
 }
-
-// Settings UI removed
 
 window.addEventListener('resize', () => {
   if (useHeadImageFallback()) {
@@ -710,7 +667,6 @@ window.addEventListener('resize', () => {
   applyHeadModelLayout(currentModel)
 })
 
-// Fade head elements on scroll while keeping bubbles visible.
 function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
 function initHeadScrollFade() {
   try {
@@ -725,7 +681,6 @@ function initHeadScrollFade() {
     const bubblesContainer = headSection.querySelector('.bubbles-container');
     if (!canvasEl || !headSection) return;
 
-    // Simple, predictable opacity transitions
     [headSection, canvasEl, titleL, titleR, desc, bubblesContainer].forEach((el) => {
       try { if (el) el.style.transition = 'opacity 400ms ease'; } catch (e) {}
     });
@@ -747,7 +702,6 @@ function initHeadScrollFade() {
 
     if (gameSection) {
       try {
-        gameSection.style.transition = 'opacity 400ms ease';
         gameSection.style.opacity = '0';
         gameSection.style.pointerEvents = 'none';
         gameSection.style.visibility = 'hidden';
@@ -841,7 +795,12 @@ function initHeadScrollFade() {
       if (gameSection) {
         const gameOp = 1 - opacity;
         try {
-          gameSection.style.opacity = String(gameOp);
+          const headOpacity = parseFloat((headSection && headSection.style && headSection.style.opacity) || String(opacity)) || 0;
+          if (headOpacity <= 0.01) {
+            gameSection.style.opacity = String(gameOp);
+          } else {
+            gameSection.style.opacity = '0';
+          }
           gameSection.style.pointerEvents = gameOp > 0.05 ? 'auto' : 'none';
           gameSection.style.visibility = gameOp > 0 ? 'visible' : 'hidden';
         } catch (e) {}
@@ -951,7 +910,6 @@ function initHeadScrollFade() {
   } catch (e) {}
 }
 
-// init on load (if head elements already present)
 try { if (document.readyState === 'complete' || document.readyState === 'interactive') setTimeout(initHeadScrollFade, 80); else window.addEventListener('DOMContentLoaded', () => setTimeout(initHeadScrollFade, 80)); } catch (e) {}
 
 let lastFrameTime = performance.now()
@@ -972,12 +930,9 @@ function animate() {
 
   updateHeadlightIntensity(delta)
   controls.update()
-  // Плавный поворот модели к целевому углу, вычисленному по указателю
   if (currentModel) {
-    // Горизонталь (yaw)
     const deltaY = targetModelRotationY - currentModel.rotation.y
     currentModel.rotation.y += deltaY * followLerp
-    // Вертикаль (pitch) не используется — плавно возвращаемся к 0
     currentModel.rotation.x += (0 - currentModel.rotation.x) * followLerp
   }
   renderer.render(scene, camera)

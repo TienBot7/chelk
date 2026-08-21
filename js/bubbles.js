@@ -1,10 +1,8 @@
 const container = document.querySelector('.bubbles-container')
-// global flag: becomes true on the first bubble click
 if (typeof window !== 'undefined') {
   if (typeof window.bubbleClick === 'undefined') window.bubbleClick = false
   if (typeof window.headBubbleClicks === 'undefined') window.headBubbleClicks = 0
 }
-// store placed rectangles to avoid overlaps
 const placedRects = []
 
 const itemsGreen = [
@@ -106,8 +104,6 @@ const itemsPurple = [
   },
 ]
 
-// NOTE: initial bubbles removed — page starts empty.
-// Helper: find non-overlapping random position for a bubble and register its rect
 function buildBubbleTextHtml(mainHtml, label) {
   return `<p class="bubble-label">${label}</p>${mainHtml}`
 }
@@ -295,7 +291,6 @@ function attachBehavior(bubble, item) {
       bubble.style.transform = 'translate3d(0, 0, 0)'
       bubble.style.webkitTransform = 'translate3d(0, 0, 0)'
 
-      // Hover is always text1. Click can temporarily toggle text2, but a new hover must reset to text1.
       textElement.style.transition = 'opacity 0.18s ease'
       textElement.innerHTML = buildBubbleTextHtml(item.text1, '✦ клиент ✦')
       void textElement.offsetWidth
@@ -333,7 +328,6 @@ function attachBehavior(bubble, item) {
     }
     clearTimeout(swapTimeout)
     textElement.style.transition = 'opacity 0.18s ease'
-    // fade out first
     textElement.style.opacity = '0'
     swapTimeout = setTimeout(() => {
       if (isGameActive()) {
@@ -363,7 +357,6 @@ function attachBehavior(bubble, item) {
       if (typeof window !== 'undefined') {
         window.bubbleClick = true
         window.bubblesActive = true
-        console.log('bubbleClick:', true, '(bubble click)')
       }
       const scrollSection = document.querySelector('.scroll-section')
       if (scrollSection) {
@@ -437,7 +430,6 @@ function attachBehavior(bubble, item) {
   })
 }
 
-// Вынесенная функция: спавнит один пузырь по дуге из кнопки
 function spawnBubble(item, fixedTarget, sourcePoint) {
   const bubble = document.createElement('div')
   bubble.className = 'bubble'
@@ -590,7 +582,7 @@ function spawnBubble(item, fixedTarget, sourcePoint) {
 }
 
 const spawnBtn = document.querySelector('.bubbles-btn')
-let spawnLocked = false // prevent multiple rapid clicks
+let spawnLocked = false
 
 function triggerBubbleSpawn({ triggeredBy, sourcePoint } = {}) {
   if (triggeredBy !== 'head' && triggeredBy !== 'button') return
@@ -625,7 +617,7 @@ function triggerBubbleSpawn({ triggeredBy, sourcePoint } = {}) {
     else if (nm === 'одежда') forcedGroup = itemsGreen
     else if (nm === 'косметика') forcedGroup = itemsPurple
 
-    if (forcedGroup) console.log('[bubbles] forced group by mainObject:', activeMain)
+    if (forcedGroup)
     spawnThreeWithStagger(
       () => {
         spawnLocked = false
@@ -638,8 +630,8 @@ function triggerBubbleSpawn({ triggeredBy, sourcePoint } = {}) {
     return
   }
 
-  const fallDuration = 1500 // ms for translate (shorter, smoother)
-  const fadeBefore = 0 // ms before end to start fade
+  const fallDuration = 1500
+  const fadeBefore = 0
   existing.forEach((b) => {
     b.style.animation = 'none'
     b.style.animationPlayState = 'paused'
@@ -675,7 +667,7 @@ function triggerBubbleSpawn({ triggeredBy, sourcePoint } = {}) {
     }
   })
 
-  const fallWait = fallDuration - 500 // spawn new bubbles immediately after the fall ends
+  const fallWait = fallDuration - 500
   setTimeout(() => {
     existing.forEach(removeBubbleImmediate)
     let activeMain2 = null
@@ -709,7 +701,6 @@ window.addEventListener('resize', () => {
   requestAnimationFrame(syncBubblePositionsOnResize)
 })
 
-// helper: try to remove the placedRects entry for a bubble
 function removePlacedRectForBubble(bubble) {
   const left = parseInt(bubble.style.left || 0, 10)
   const top = parseInt(bubble.style.top || 0, 10)
@@ -774,8 +765,8 @@ const headMobileFixedTargets = [
 function spawnThreeWithStagger(done, forcedGroup, sourcePoint, options = {}) {
   const maxBubbles = window.innerWidth <= 1024 ? 2 : 3
   const count = Number.isFinite(options.count) ? Math.max(1, Math.min(maxBubbles, options.count)) : maxBubbles
-  const stagger = 220 // ms between spawns
-  // fixed relative target positions for the three bubbles (fractions of available area)
+  const stagger = 220
+  
   const defaultFixedTargets = [
     { fx: 0.954, fy: 0.41 },
     { fx: 0.13, fy: 0.68 },
@@ -816,14 +807,12 @@ function spawnThreeWithStagger(done, forcedGroup, sourcePoint, options = {}) {
     }
   }
 
-  // Choose group strictly based on forcedGroup or current mainObject value (no random group selection)
   let picks = null
   let chosenGroup = null
   const pickMode = options.pickMode || 'default'
   if (Array.isArray(forcedGroup) && forcedGroup.length > 0) {
     chosenGroup = forcedGroup
   } else {
-    // determine active mainObject (normalized)
     let activeMain = null
     try {
       const el = document.getElementById('mainObject')
@@ -834,11 +823,10 @@ function spawnThreeWithStagger(done, forcedGroup, sourcePoint, options = {}) {
     if (nm === 'хорека') chosenGroup = itemsRed
     else if (nm === 'одежда') chosenGroup = itemsGreen
     else if (nm === 'косметика') chosenGroup = itemsPurple
-    else chosenGroup = itemsGreen // default group when mainObject not set
+    else chosenGroup = itemsGreen
     if (chosenGroup) console.log('[bubbles] chosen group by mainObject (spawn):', activeMain || '<none>')
   }
 
-  // pick items based on the requested mode
   if (chosenGroup) {
     if (pickMode === 'headMobile') {
       picks = pickTwoMobileHeadItems(chosenGroup)
@@ -846,7 +834,6 @@ function spawnThreeWithStagger(done, forcedGroup, sourcePoint, options = {}) {
       const copy = chosenGroup.slice()
       shuffleArray(copy)
 
-      // pick up to 3 items but allow at most 2 items of the same color
       picks = []
       const colorCounts = {}
       for (let i = 0; i < copy.length && picks.length < 3; i++) {
@@ -859,7 +846,6 @@ function spawnThreeWithStagger(done, forcedGroup, sourcePoint, options = {}) {
         }
       }
 
-      // if we couldn't gather 3 items under the constraint, fill remaining slots ignoring color
       if (picks.length < 3) {
         for (let i = 0; i < copy.length && picks.length < 3; i++) {
           const it = copy[i]
@@ -870,7 +856,6 @@ function spawnThreeWithStagger(done, forcedGroup, sourcePoint, options = {}) {
   }
 
   const finalCount = Math.min(count, picks.length)
-  // finally spawn the picked items in order with stagger
   for (let i = 0; i < finalCount; i++) {
     setTimeout(() => {
       spawnBubble(picks[i], fixedTargets[i], sourcePoint)
@@ -878,7 +863,7 @@ function spawnThreeWithStagger(done, forcedGroup, sourcePoint, options = {}) {
   }
 
   if (typeof done === 'function') {
-    const totalSpawnTime = (finalCount - 1) * stagger + 700 + 80 // last spawn start + anim duration + buffer
+    const totalSpawnTime = (finalCount - 1) * stagger + 700 + 80
     setTimeout(() => done(), totalSpawnTime)
   }
 }

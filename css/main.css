@@ -26,7 +26,6 @@
   color: #ACACAD;
   letter-spacing: -0.03em;
   line-height: 1.4;
-
 }
 
 .main-section__top .white{
@@ -40,7 +39,6 @@
   display: block;
   opacity: 1 !important;
   pointer-events: auto !important;
-  /* Allow page scrolling when interacting with bottom section */
   overflow: visible;
   -webkit-overflow-scrolling: touch;
 }
@@ -76,7 +74,6 @@
 .sound-btn svg {
   display: block;
   transition: 0.5s cubic-bezier(0.4,0,0.2,1);
-  /* width: calc(1.50vw + 1.50vh); */
   height: auto;
 }
 .sound-btn:hover svg {
@@ -114,8 +111,6 @@
 
 html,
 body {
-  /* overflow-x: hidden;
-  overflow-y: auto; */
   -ms-overflow-style: none;
   scrollbar-width: none;
   overflow: hidden;
@@ -151,7 +146,6 @@ section#main-section > :not(.svg-background) {
 }
 section#main-section.visible > :not(.svg-background),
 section#main-section > .show-after-sound {
-  /* opacity: 1 !important; */
   pointer-events: auto;
   z-index: 1;
 }
@@ -235,7 +229,6 @@ a,
 .container{
   padding: 0 40px;
   width: 100%;
-  /* max-width: 1840px; */
 }
 
 section#main-section {
@@ -304,7 +297,6 @@ section.loading.hide {
 
 .slide.left {
   transform: translateX(calc(-50% - min(42vw, 74.67vh))) translateY(-50%) translateZ(-120px) scale(0.8);
-  /* transform: translateX(calc(-50% - 800px)) translateZ(-120px) scale(0.8); */
   opacity: 0;
   z-index: 10;
 }
@@ -318,7 +310,6 @@ section.loading.hide {
   height: 100dvh;
 }
 
-/* When we need the center slide to expand to fullscreen (explicit class), use this */
 .slide.center.fullscreen {
   left: 50%;
   top: 0;
@@ -332,7 +323,6 @@ section.loading.hide {
 
 .slide.right {
   transform: translateX(calc(-50% + min(42vw, 74.67vh))) translateY(-50%) translateZ(-120px) scale(0.8);
-  /* transform: translateX(calc(-50% + 800px)) translateZ(-120px) scale(0.8); */
   opacity: 0;
   z-index: 10;
 }
@@ -357,16 +347,12 @@ section.loading.hide {
 .svg-background {
   opacity: 0;
   transition: 0.8s cubic-bezier(0.4,0,0.2,1);
-  /* position: fixed; */
   position: absolute;
   top: calc(50% - 28px);
   left: 50%;
   transform: translate(-50%, -50%);
   pointer-events: none;
-  /* width: min(33.96vw, 75vh); */
-  /* width: calc(21.73vw + 21.73vh); */
   width: 640px;
-  /* width: min(640px, calc(58.33vh + 10px)); */
   height: auto;
   filter: drop-shadow(0 0 15px rgba(0, 0, 0, 0.3));
 }
@@ -513,7 +499,6 @@ section.loading.hide {
   transform: scale(1);
 }
 
-/* Click SVG wrapper used after game end */
 .click-svg-wrapper {
   opacity: 0;
   transform: translate(-50%, -50%) translateY(6px) scale(0.92);
@@ -529,7 +514,6 @@ section.loading.hide {
   transform: translate(-50%, -50%) translateY(0) scale(1);
 }
 
-/* Pulsating dashed circle inside the SVG */
 .click-svg-wrapper .pulse {
   transform-box: fill-box;
   transform-origin: 50% 50%;
@@ -540,7 +524,6 @@ section.loading.hide {
 
 @keyframes clickPulse {
   0% { transform: scale(0.9); stroke-opacity: 0.9; }
-  /* 25% { transform: scale(1.63); stroke-opacity: 0.6; } */
   12.5% { transform: scale(1.63); stroke-opacity: 0.6; }
   25% { transform: scale(0.9); stroke-opacity: 0.6; }
   37.5% { transform: scale(1.63); stroke-opacity: 0.6; }
@@ -599,7 +582,6 @@ section.loading.hide {
 
 .letter {
   display: inline-block;
-  /* font-size: 300px; */
   font-size: min(300px, 27.78vh);
   font-weight: 400;
   font-family: 'Comforter', sans-serif;
@@ -636,7 +618,6 @@ section.loading.hide {
 
 .controls-wrapper {
   position: fixed;
-  /* bottom: 40%; */
   top: 50%;
   left: 50%;
   transform: translateX(-50%) translateY(-50%);
@@ -644,8 +625,6 @@ section.loading.hide {
   justify-content: space-between;
   align-items: center;
   z-index: 100;
-  /* max-width: calc(53.8vw + 53.8vh) !important; */
-  /* max-width: 1730px !important; */
   max-width: min(1730px, calc(135.19vh + 271px)) !important;
   width: 100%;
   pointer-events: auto !important;
@@ -726,9 +705,6 @@ section.loading.hide {
 
 .header {
   position: fixed;
-  /* top: 30px; */
-  /* top: calc(1.85vh + 10px); */
-  /* top: max(30px, calc(4.44vh - 18px)); */
   padding-top: min(30px, calc(1.85vh + 10px));
   top: 0;
   width: 100%;
@@ -777,7 +753,6 @@ section.loading.hide {
 }
 
 .choise-button {
-  /* keep element out of sight but renderable so we can animate opacity/transform */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -786,7 +761,6 @@ section.loading.hide {
   font-size: 12px;
   text-transform: uppercase;
   position: fixed;
-  /* bottom: 50px; */
   bottom: min(50px, calc(5.56vh - 10px));
   left: 50%;
   width: auto;
@@ -835,7 +809,6 @@ section.loading.hide {
     transition: opacity 0.4s ease-out;
 }
 
-/* Fade-out utility used when user confirms choice */
 .fade-out {
   opacity: 0 !important;
   will-change: opacity;
@@ -847,7 +820,6 @@ section.loading.hide {
     opacity: 1;
 }
 
-/* Ensure scroll-section appears by fading only (no slide/translate) */
 .scroll-section {
   opacity: 0 !important;
   pointer-events: none;
@@ -901,9 +873,7 @@ section.loading.hide {
   right: 40px;
   background: #161618;
   border: 1px solid #4A4A4A;
-  /* border-radius: calc(1.20vw + 1.20vh); */
   border-radius: 50%;
-  /* padding: calc(0.40vw + 0.40vh); */
   padding: 10px 10px;
   z-index: 1200;
   pointer-events: auto !important;
@@ -919,10 +889,8 @@ section.loading.hide {
   transition-delay: 0s;
 }
 .help.open{
-  /* max-width: calc(15.20vw + 15.20vh); */
   max-width: 456px;
   width: 100%;
-  /* bottom: 52px; */
   bottom: min(52px, calc(5.56vh - 8px));
   border-radius: 30px;
 }
@@ -938,29 +906,23 @@ section.loading.hide {
   align-items: center;
   gap: 10px;
   background: #1E1E21;
-  /* border-radius: calc(0.63vw + 0.63vh); */
   border-radius: 19.5px;
-  /* padding: calc(0.27vw + 0.27vh); */
   padding: 8px;
   cursor: pointer;
   pointer-events: auto;
 }
 .help__svg{
-  /* width: calc(0.80vw + 0.80vh); */
   height: auto;
 }
 .help__title{
   color: white;
-  /* font-size: calc(0.53vw + 0.53vh); */
   font-size: 16px;
 }
 .help__collapse{
   opacity: 30%;
   color: white;
-  /* font-size: calc(0.47vw + 0.47vh); */
   font-size: 14px;
   margin-left: auto;
-  /* margin-right: calc(0.17vw + 0.17vh); */
   margin-right: 4px;
   letter-spacing: -0.03em;
 }
@@ -971,7 +933,6 @@ section.loading.hide {
 .help__text{
   opacity: 0.65;
   color: white;
-  /* font-size: calc(0.53vw + 0.53vh); */
   font-size: 16px;
   line-height: 1.4;
   white-space: pre-line;
@@ -1002,16 +963,9 @@ section.loading.hide {
   .letter{
     font-size: 300px;
   }
-  /* .sound-btn svg {
-    width: calc(1.83vw + 1.83vh);
-  } */
   .svg-background {
     top: calc(50% - 18px);
-    /* width: calc(26.46vw + 26.46vh); */
   }
-  /* .sound-descr {
-    margin-top: calc(4.46vw + 4.46vh);
-  } */
   .help{
     right: 20px;
   }
@@ -1029,6 +983,7 @@ section.loading.hide {
 @media (max-width: 1024px) {
   .header{
     padding-top: 30px;
+    padding-bottom: 10px;
   }
   .sound-btn {
     padding: 20px;
@@ -1044,9 +999,6 @@ section.loading.hide {
   .sound-btn{
     top: calc(50% - 30px);
   }
-  /* .letter {
-    font-size: calc(10.55vw + 10.55vh);
-  } */
   .word-slide[data-word-idx="0"] .letter{
     font-size: 29.3vw;
   }
@@ -1054,7 +1006,6 @@ section.loading.hide {
     font-size: 29.3vw;
   }
   .svg-background {
-    /* width: calc(27.28vw + 27.28vh); */
     top: calc(50% - 30px);
   }
   .sound-descr {
@@ -1072,6 +1023,9 @@ section.loading.hide {
   .click-svg-wrapper {
     top: calc(50% - 85px);
   }
+  .form__bottom-content{
+    padding-bottom: 50px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -1084,7 +1038,6 @@ section.loading.hide {
     font-size: 2.0833vw;
   }
   .letter {
-    /* font-size: calc(9vw + 9vh); */
     font-size: 200px;
   }
   .word-slide[data-word-idx="0"] .letter{
@@ -1097,17 +1050,9 @@ section.loading.hide {
     white-space: normal;
     justify-content: center;
   }
-  /* .svg-background {
-    width: calc(25.22vw + 25.22vh);
-  } */
-
   .slide {
     width: 40vw;
   }
-  /* .controls-wrapper {
-    bottom: 20px;
-    gap: 20px;
-  } */
   .dots {
     padding: 6px 18px;
     gap: 10px;
@@ -1117,6 +1062,9 @@ section.loading.hide {
   }
   .controls-wrapper.visible {
     pointer-events: none !important;
+  }
+  .form__bottom-content{
+    padding-bottom: 30px;
   }
 }
 
@@ -1146,7 +1094,6 @@ section.loading.hide {
     width: 350px;
   }
   .letter {
-    /* font-size: calc(8vw + 8vh); */
     font-size: 144px;
   }
   .word-slide[data-word-idx="0"] .letter{
@@ -1161,7 +1108,6 @@ section.loading.hide {
     transform: translateX(-50%) translateZ(0) scale(1);
   }
   .svg-background {
-    /* width: calc(28.68vw + 28.68vh); */
     top: calc(50% + 2px);
   }
   .sound-btn{
@@ -1267,5 +1213,8 @@ section.loading.hide {
   }
   .click-svg-wrapper {
     top: calc(50% + 25px) !important;
+  }
+  .form__bottom-content{
+    padding-bottom: 20px;
   }
 }

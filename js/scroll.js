@@ -1,12 +1,9 @@
-// 3D scroll effect (translateZ based)
 let zSpacing = -1000,
     lastPos = 0,
     $frames = document.getElementsByClassName('frame'),
     frames = Array.from($frames),
     zVals = []
 
-// Virtual scroll support: if document scrolling is disabled (overflow:hidden),
-// we listen to wheel/touch and update a virtual `top` value.
 let virtualTop = 0
 let virtualTopTarget = 0
 const maxTop = Math.max(1, frames.length * Math.abs(zSpacing))
@@ -14,15 +11,11 @@ let ticking = false
 let wheelAnimating = false
 const WHEEL_SCROLL_SCALE = 0.75
 const WHEEL_SCROLL_LERP = 0.22
-// whether the carousel video has been activated by user click
 let videoActivated = false
-// timeout id for hiding the scroll-section after fade
 let hideScrollSectionTimeout = null
-// timeout id for delayed scroll hint reveal
 let scrollHintTimeout = null
 const SCROLL_HINT_DELAY = 3000
 let scrollHintObserver = null
-// timer to restore slide transitions after scroll stops
 let slideTransformRestoreTimer = null
 const isLowPowerScroll = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent) && window.innerWidth <= 768
 const SCROLL_UPDATE_EPSILON = isLowPowerScroll ? 0.8 : 0.3
@@ -105,12 +98,9 @@ function updateFrames(top){
 
     const delta = lastPos - top
     lastPos = top
-    // During active scroll, disable CSS transitions on the center slide so its
-    // transform/scale updates apply immediately (prevents lag vs frames).
     try {
         const sc = document.querySelector('.slide.center')
         if (sc) {
-            // Use CSS class instead of inline style
             if (!sc.classList.contains('no-transition')) {
                 sc.classList.add('no-transition')
                 if (slideTransformRestoreTimer) clearTimeout(slideTransformRestoreTimer)
@@ -125,31 +115,23 @@ function updateFrames(top){
     frames.forEach(function(frame, i){
         if (zVals[i] === undefined) zVals[i] = (i * zSpacing) + zSpacing
         zVals[i] += delta * -5.5
-        // Use CSS variables instead of inline styles
         const opacityValue = 1 - Math.min(Math.max((Math.abs(zVals[i]) - Math.abs(zSpacing) / 4) / Math.abs(zSpacing), 0), 1)
         const opacity = Math.abs(opacityValue) < 0.001 ? 0 : opacityValue
         frame.style.setProperty('--frame-transform-z', zVals[i] + 'px')
         frame.style.setProperty('--frame-opacity', opacity)
         if (opacity > maxOpacity) maxOpacity = opacity
     })
-    // allow pointer events on visible frames (opacity > 0) and
-    // set z-index ordering by depth (closer frames on top)
     const indices = frames.map((_, i) => i)
-    // sort indices by zVals descending (larger z => closer to viewer)
     indices.sort((a, b) => zVals[b] - zVals[a])
     indices.forEach((idx, rank) => {
         const frame = frames[idx]
         const opacity = Number(frame.style.getPropertyValue('--frame-opacity')) || 0
         const isVisible = opacity > 0.03
-        // frame.style.setProperty('--frame-pointer-events', isVisible ? 'auto' : 'none')
-        // higher rank (closer) gets higher z-index
         frame.style.setProperty('--frame-z-index', String(100 + (indices.length - rank)))
     })
 
-    // determine whether we've reached the end of the virtual scroll
     const endThreshold = 0.98
     const endReached = (top / maxTop) >= endThreshold
-    // compute center slide opacity (if available) and treat it as authoritative
     let centerOpacity = null
     try {
         const slideCenter = document.querySelector('.slide.center')
@@ -158,11 +140,8 @@ function updateFrames(top){
             centerOpacity = Number(cs && cs.opacity != null ? cs.opacity : null)
         }
     } catch(e) {}
-    // Safari and Chrome can report near-zero opacity slightly differently, so use a tolerance-based check.
     const centerIsTinyZero = (centerOpacity !== null) ? isNearZeroOpacity(centerOpacity) : endReached
 
-    // toggle carousel background video visibility only after user activated it,
-    // and synchronized with center slide opacity
     try {
         const carouselVideo = document.querySelector('#carousel .scroll-bg-video')
         if (carouselVideo && videoActivated) {
@@ -176,7 +155,6 @@ function updateFrames(top){
         }
     } catch(e) {}
 
-    // show/hide head section based on centerIsTinyZero
     try {
         const headSection = document.querySelector('.head')
         const scrollSection = document.querySelector('.scroll-section')
@@ -202,9 +180,6 @@ function updateFrames(top){
                 scrollSection.classList.remove('visible')
                 scrollSection.style.display = 'none'
             }
-            // Keep `.lines` visible during scroll once enabled.
-            // The old toggling logic hid lines on scroll, which caused accumulated animation.
-            // No action needed here.
         }
     } catch(e) {}
 
@@ -227,12 +202,10 @@ function updateFrames(top){
         clearScrollHintTimeout()
     }
 
-    // when all frames are faded, hide the entire .scroll-section (display:none)
     try {
         const scrollSection = document.querySelector('.scroll-section')
         if (scrollSection) {
             if (endReached) {
-                // wait for CSS opacity transition to finish before setting display:none
                 if (!hideScrollSectionTimeout) {
                     hideScrollSectionTimeout = setTimeout(() => {
                         scrollSection.style.display = 'none'
@@ -240,7 +213,6 @@ function updateFrames(top){
                     }, 900)
                 }
             } else {
-                // cancel pending hide and ensure section is visible again
                 if (hideScrollSectionTimeout) {
                     clearTimeout(hideScrollSectionTimeout)
                     hideScrollSectionTimeout = null
@@ -283,8 +255,6 @@ function animateWheelScroll(){
 
 function onTouch(e){
     if (e.touches && e.touches.length) {
-        // use touchmove's clientY to influence virtualTop
-        // handled via touchmove listener below
     }
 }
 
@@ -307,19 +277,15 @@ window.addEventListener('touchstart', e => { lastTouchY = e.touches[0] ? e.touch
 window.addEventListener('touchmove', onTouchMove, {passive: true})
 window.requestAnimationFrame(animateWheelScroll)
 
-// observe scroll-section visibility and start hint delay when it opens
 try {
     initScrollHintObserver()
 } catch (e) {}
 
-// kickstart positions
 updateFrames(0)
 
-// preserve existing card open/close behaviour
 document.querySelectorAll('.scroll-card').forEach(button => {
     const card = button.closest('.scroll-card')
     if (!card) return
-    // initialize aria
     button.setAttribute('aria-expanded', 'false')
     button.addEventListener('click', () => {
         playScrollCardClickSound()
@@ -329,19 +295,15 @@ document.querySelectorAll('.scroll-card').forEach(button => {
     })
 })
 
-// Show background video inside carousel after user clicks the choice button
 try {
     const choiceBtn = document.getElementById('choiseBtn')
     const carouselVideo = document.querySelector('#carousel .scroll-bg-video')
     if (choiceBtn && carouselVideo) {
         choiceBtn.addEventListener('click', () => {
-            // mark activation so updateFrames won't auto-show video before click
             videoActivated = true
             carouselVideo.classList.add('visible')
-            // user gesture; ensure playback starts
             carouselVideo.play && carouselVideo.play().catch(() => {})
         })
     }
 } catch (e) {
-    // ignore
 }

@@ -8,7 +8,6 @@ export function createModelRenderer(canvas) {
   const isAndroidDevice = typeof navigator !== 'undefined' && /Android/i.test(userAgent);
   let renderer;
 
-  // Helper: try to obtain a WebGL context from a canvas with given attributes
   function tryGetContext(c, attrs) {
     try {
       if (!c || !c.getContext) return null;
@@ -18,8 +17,6 @@ export function createModelRenderer(canvas) {
     }
   }
 
-  // Attempt multiple strategies to create a WebGL context/renderer.
-  // This increases chance on flaky Android webviews: try various attributes, ephemeral canvas, and a small retry/backoff.
   function createRendererWithRetries(targetCanvas) {
     const maxAttempts = isLowPowerDevice ? 2 : 3;
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -56,7 +53,6 @@ export function createModelRenderer(canvas) {
           } catch (e) {}
         }
       } catch (e) {
-        // continue to next attempt without blocking the main thread
       }
     }
     return null;
@@ -76,7 +72,7 @@ export function createModelRenderer(canvas) {
         dispose: () => {},
         toneMappingExposure: isLowPowerDevice ? 0.6 : 0.75,
       };
-      // show a lightweight overlay so the user sees the slider is still alive instead of a blank white canvas
+
       try {
         if (canvas && canvas.parentNode) {
           const note = document.createElement('div');
@@ -196,7 +192,7 @@ export function setupLighting(scene) {
       }
     });
   } catch (e) {
-    // ignore
+
   }
 }
 
@@ -232,7 +228,7 @@ export function enhanceMaterials(model) {
       if (child.material && child.material.color) child.userData.origColor = child.material.color.clone();
       if (child.material && child.material.emissive) child.userData.origEmissive = child.material.emissive.clone();
     } catch (e) {
-      // ignore
+
     }
 
     child.castShadow = !isLowPowerDevice;

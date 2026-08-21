@@ -8,10 +8,8 @@
   top: 0;
   pointer-events: none;
 }
-
 .bubble {
   position: absolute;
-  /* width: calc(9.67vw + 9.67vh); */
   width: min(290px, calc(9.67vw + 9.67vh));
   max-width: none;
   cursor: pointer;
@@ -30,15 +28,12 @@
   user-select: none;
   touch-action: manipulation;
 }
-
 .bubble.spawning {
   transition: none !important;
 }
-
 .bubble.falling {
   transform: translateY(120vh) !important;
 }
-
 .bubble-inner {
   border-radius: 50%;
   display: block;
@@ -55,7 +50,6 @@
   user-select: none;
   touch-action: manipulation;
 }
-
 .bubble-inner:before,
 .bubble-inner:after,
 .bubble-inner span {
@@ -65,16 +59,13 @@
   position: absolute;
   pointer-events: none;
 }
-
 .bubble-inner:before {
   background: #fff;
   transform: rotate(-30deg);
 }
-
 .bubble-inner span {
   background: radial-gradient(at center bottom, transparent, transparent 70%, rgba(255, 255, 255, 0.85));
 }
-
 .bubble .bubble-inner {
   box-shadow:
     0 -0.18vw 0.3vw #fff inset,
@@ -84,7 +75,6 @@
     -0.09vw 0 0.3vw #fff inset,
     0 0.25vw 1.1vw #ffffff inset;
 }
-
 .bubble .bubble-inner:before {
   top: 12%;
   left: 18%;
@@ -104,8 +94,6 @@
   width: 79%;
   height: 60%;
 }
-
-/* Текст */
 .bubble-text {
   position: absolute;
   top: 50%;
@@ -124,7 +112,6 @@
   align-items: center;
   gap: 15px;
 }
-
 .bubble-inner:hover .bubble-text {
   opacity: 1;
 }
@@ -136,7 +123,6 @@
   padding: 3px 12px;
   width: fit-content;
 }
-
 @keyframes shake {
   from {
     transform: scale(1, 1);
@@ -151,7 +137,6 @@
     transform: scale(1, 1);
   }
 }
-
 .bubble-inner.shake {
   animation: shake 0.4s linear;
 }
@@ -163,19 +148,13 @@
     transform: translate3d(var(--float-x, 6vw), -6.5vh, 0);
   }
 }
-
 .bubble.disabled,
 .bubble.falling {
   animation-play-state: paused !important;
 }
-
-/* removed .bubble.locked rule to ensure hover-only text visibility */
-
-/* While spawning, ignore pointer on inner so moving bubble doesn't trigger hover */
 .bubble.spawning .bubble-inner {
   pointer-events: none;
 }
-
 .bubbles-btn {
   position: absolute;
   left: 50%;
@@ -211,9 +190,6 @@
 }
 
 @media (max-width: 500px) {
-  /* .bubble{
-    width: 39vw;
-  } */
    .bubbles-container {
     z-index: 1;
    }

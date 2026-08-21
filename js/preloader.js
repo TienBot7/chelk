@@ -1,4 +1,3 @@
-// Прелоадер: логика и экспорт функции запуска
 let preloaderHasRun = false;
 const soundAudioCache = {
   chelk: new Audio('audio/chelk.mp3'),
@@ -11,7 +10,19 @@ const shopAssetUrls = [
   './img/shop/green.webp',
   './img/shop/purple.webp',
 ];
-// Только критические активы для первого отрисовки — ничего не будет блокировать
+
+const goodsAssetUrls = [
+  './img/goods/cosmetic-black.webp',
+  './img/goods/soda_black.webp',
+  './img/goods/t-shirt-black.webp'
+];
+
+const mobilePriorityUrls = [
+  './img/tube.webp',
+  './img/t-shirt.webp',
+  './img/cans.webp'
+];
+
 const requiredInitialAssets = [];
 
 function preloadAsset(url) {
@@ -26,7 +37,6 @@ function preloadAsset(url) {
     });
 }
 
-// Не загружаем аудио автоматически - будут загружаться по требованию
 Object.values(soundAudioCache).forEach((audio) => {
   try {
     audio.preload = 'none'; // Отключаем предварительную загрузку
@@ -89,7 +99,6 @@ export function runPreloader({ onComplete }) {
       modelFraction = 1;
     }
 
-    // Real progress is weighted toward the actual model load, not a binary 0/1 switch.
     return (windowFraction * 0.25) + (requiredAssetsFraction * 0.2) + (modelFraction * 0.55);
   }
 
@@ -154,7 +163,7 @@ export function runPreloader({ onComplete }) {
     if (!canFinishBase) return;
     if (isMobile) {
       const sliderReady = typeof window !== 'undefined' && window.__sliderModelsReady__ === true;
-      // On mobile the slider is a hard gate: it must not appear before all 3 slider models are loaded.
+
       if (sliderReady && areWaitTasksComplete()) {
         setTimeout(finishPreloader, 300);
       }
@@ -181,17 +190,11 @@ export function runPreloader({ onComplete }) {
         }
       });
     }
-    // Start preloading the critical assets for the first screen.
     try {
-      // Do not release the preloader before the 3D model is actually ready.
-      // The head/carousel models report completion via markModelLoaded() after GLTF load success.
-      const preloadHeadModelTask = Promise.resolve(null); // Head model will be preloaded separately
+      const preloadHeadModelTask = Promise.resolve(null);
       if (typeof window !== 'undefined') {
         window.preloader.preloadHeadModel = () => preloadHeadModelTask;
       }
-
-      // Don't wait for audio - load on demand instead
-      // This significantly reduces initial LCP
     } catch (e) {}
   }
 
@@ -229,8 +232,6 @@ export function runPreloader({ onComplete }) {
     const mainSection = document.getElementById('main-section');
     if (mainSection) {
       mainSection.classList.remove('visible');
-      // mainSection.style.opacity = '0';
-      
     }
     if (onComplete) {
       Promise.resolve(onComplete()).then(() => {
@@ -289,9 +290,7 @@ export function runPreloader({ onComplete }) {
       idleHintAttached = true;
     }
 
-    // Плавно показать основной контент только после исчезновения прелоадера
     setTimeout(() => {
-      // Скрыть все элементы, кроме svg-background и показать soundOverlay
       const mainSection = document.getElementById('main-section');
       if (mainSection) {
           mainSection.className = 'visible';
@@ -306,37 +305,29 @@ export function runPreloader({ onComplete }) {
                 introTop.classList.add('show-after-sound');
               }
               scheduleMainTopHint();
-        // Скрыть текст, карусель, элементы управления
         mainSection.querySelectorAll('.carousel, .text-overlay, .controls-wrapper').forEach(el => {
           el.classList.add('hidden-on-start');
         });
-        // svg-background показать
         const svgBg = mainSection.querySelector('.svg-background');
         if (svgBg) {
           svgBg.classList.add('visible');
         }
       }
-      // Показать soundOverlay
       const soundOverlay = document.getElementById('soundOverlay');
       const soundBtn = document.getElementById('soundBtn');
       const soundDescr = document.getElementById('soundDescr');
       const svgBg = mainSection ? mainSection.querySelector('.svg-background') : null;
       if (soundOverlay && soundBtn) {
         soundOverlay.style.display = 'block';
-        // ВАЖНО: начинаем фоновую загрузку сразу после показа интерактивной страницы
         startBackgroundAssetLoading();
-        // Сначала svg-background
         if (svgBg) svgBg.classList.add('visible');
-        // Затем с задержкой появляется soundBtn
         setTimeout(() => {
           soundBtn.classList.add('visible');
           soundDescr.classList.add('visible');
         }, 700);
       }
-      // loadingSection.style.display = 'none';
     }, 850);
 
-    // Обработчик для кнопки sound
     setTimeout(() => {
       const soundBtn = document.getElementById('soundBtn');
       const soundDescr = document.getElementById('soundDescr');
@@ -354,13 +345,10 @@ export function runPreloader({ onComplete }) {
           soundBtn.disabled = true;
           soundBtn.classList.add('disabled');
 
-          // Play background music (user gesture allows autoplay)
           try {
-            // play chelk once and a looping background music
             try {
               if (window.audioManager && typeof window.audioManager.play === 'function') {
                 window.audioManager.play('chelk', { loop: false, volume: 0.54, forceImmediate: true });
-                // start music slightly delayed through audioManager
                 setTimeout(() => {
                   try { playBackgroundMusic(0); } catch (e) {}
                 }, 500);
@@ -387,30 +375,24 @@ export function runPreloader({ onComplete }) {
               } catch (err) {}
             }
 
-            // expose for debugging/control: bgAudio refers to looping music
             window.chelkAudio = chelkAudio;
 
-            // Log current mainObject text to console on sound button click
             try {
               const mainObj = document.getElementById('mainObject');
-              if (mainObj) console.log('mainObject on soundBtn:', mainObj.textContent);
             } catch (e) {
               console.warn('Failed to read #mainObject:', e);
             }
           } catch (e) {
             console.warn('Failed to start music:', e);
           }
-          // Плавно показать все элементы
           const mainSection = document.getElementById('main-section');
           const introTop = document.querySelector('.main-section__top');
             if (mainSection) {
-            // Do not force-disable scrolling here; keep native scroll enabled.
             try { mainSection.style.overflow = ''; } catch (e) {}
             if (introTop) {
               introTop.style.display = 'none';
             }
 
-            // If the carousel is not already prepared, build it now.
             if (!window.carouselBuildPromise) {
               try {
                 window.carouselBuildPromise = import('./script.js').then((script) => {
@@ -431,7 +413,6 @@ export function runPreloader({ onComplete }) {
 
             setTimeout(() => {
               mainSection.querySelectorAll('.carousel, .text-overlay, .controls-wrapper').forEach(el => {
-                  // show header after small delay
                   setTimeout(() => {
                     const header = document.getElementById('header');
                     if (header) {
@@ -447,14 +428,11 @@ export function runPreloader({ onComplete }) {
                       carousel.style.opacity = '';
                     }
 
-                    // slides are created by buildCarousel; query them fresh
                     const slideCenter = document.querySelector('.slide.center');
                     if (slideCenter) {
                       slideCenter.classList.add('visible');
                       slideCenter.style.opacity = '';
                     }
-
-                      // If element is controls-wrapper, also mark it visible
                       el.classList.add('show-after-sound');
                       el.classList.remove('hidden-on-start');
                       if (el.classList && el.classList.contains('controls-wrapper')) {
@@ -488,13 +466,11 @@ export function runPreloader({ onComplete }) {
                       }
                     }
 
-                    // When user confirms choice, fade out side slides, controls, text and svg, then remove from DOM
                     if (choiseBtn) {
                       choiseBtn.addEventListener('click', () => {
                         if (typeof window !== 'undefined') {
                           window.__allowHelpDisplay = false;
                         }
-                        // show the scroll-section when user confirms choice
                         try {
                           const scrollSec = document.querySelector('.scroll-section');
                           if (scrollSec) {
@@ -509,8 +485,6 @@ export function runPreloader({ onComplete }) {
                         const svgBg = document.querySelector('.svg-background');
 
                         const targets = [slideLeft, slideRight, controls, textOverlay, svgBg].filter(Boolean);
-                        // start fade animation on elements and their canvases (WebGL canvas needs explicit transition)
-                        // enable wheel-scaling for center model when user confirms
                         try {
                           import('./script.js').then((m) => {
                             if (m && m.enableCenterScrollScale) m.enableCenterScrollScale();
@@ -519,7 +493,6 @@ export function runPreloader({ onComplete }) {
 
                         targets.forEach((el) => {
                           el.classList.add('fade-out');
-                          // also fade any canvas inside the element to ensure smooth WebGL fade
                           try {
                             const canvases = el.querySelectorAll && el.querySelectorAll('canvas');
                             if (canvases && canvases.length) {
@@ -529,12 +502,10 @@ export function runPreloader({ onComplete }) {
                               });
                             }
                           } catch (e) {
-                            // ignore
                           }
                         });
 
-                        // After transition, remove elements from DOM
-                        const REMOVE_DELAY = 1700; // match CSS transition duration (1.6s) + small buffer
+                        const REMOVE_DELAY = 1700;
                         setTimeout(() => {
                           targets.forEach((el) => {
                             try {
@@ -551,8 +522,6 @@ export function runPreloader({ onComplete }) {
 
             }, 400);
 
-
-            // Масштабируем svg-background
             const svgBg = mainSection.querySelector('.svg-background');
             if (svgBg) svgBg.classList.add('scale-full');
           }
@@ -564,7 +533,6 @@ export function runPreloader({ onComplete }) {
           }, 800);
         };
       }
-      // Music toggle button: плавное затухание и повторное проигрывание с начала
       const musicToggleBtn = document.getElementById('musicToggleBtn');
 
       function playBackgroundMusic(delay = 500, volume = 0.8) {
@@ -684,7 +652,6 @@ export function runPreloader({ onComplete }) {
     }, 900);
   }
 
-  // Ждем полной загрузки window, затем запускаем анимацию прогресса
   function preloadShopImages() {
     shopAssetUrls.forEach((url) => {
       try {
@@ -698,13 +665,18 @@ export function runPreloader({ onComplete }) {
 
   function startPreloader() {
     preloadShopImages();
+    try {
+      if (typeof window !== 'undefined' && window.innerWidth <= 500) {
+        addWaitTask(preloadGoodsImages(mobilePriorityUrls));
+        addWaitTask(preloadGoodsImages());
+      }
+    } catch (e) {}
     displayedPercent = 1;
     targetPercent = 1;
     renderPercent(1);
     animateProgress();
     setTimeout(() => {
       if (!finished) {
-        // Safety net only: do not release the loader before the three slider models are ready.
         preloaderState.modelLoaded = true;
         preloaderState.requiredAssetsLoaded = true;
         preloaderState.windowLoaded = true;
@@ -714,10 +686,43 @@ export function runPreloader({ onComplete }) {
     }, MAX_WAIT_MS);
   }
 
-  // Фоновая загрузка моделей и аудиофайлов после показа страницы
+  function preloadGoodsImages(urls = null, timeoutMs = 10000) {
+    const sources = Array.isArray(urls) && urls.length ? urls.slice() : (Array.isArray(goodsAssetUrls) ? goodsAssetUrls.slice() : []);
+    if (!sources.length) return Promise.resolve();
+    return new Promise((resolve) => {
+      let remaining = sources.length;
+      let finished = false;
+      const onDone = () => {
+        if (finished) return;
+        finished = true;
+        resolve(true);
+      };
+      sources.forEach((u) => {
+        try {
+          const img = new Image();
+          img.decoding = 'async';
+          img.loading = 'eager';
+          img.onload = () => {
+            remaining -= 1;
+            if (remaining <= 0) onDone();
+          };
+          img.onerror = () => {
+            remaining -= 1;
+            if (remaining <= 0) onDone();
+          };
+          img.src = u;
+        } catch (e) {
+          remaining -= 1;
+          if (remaining <= 0) onDone();
+        }
+      });
+
+      setTimeout(() => onDone(), timeoutMs);
+    });
+  }
+
   function startBackgroundAssetLoading() {
     preloadShopImages();
-    // Загружаем модели в фоне после того, как страница видна
     let carouselModels = [
       './models/t-shirt-black.glb',
       './models/soda_black.glb',
@@ -725,8 +730,6 @@ export function runPreloader({ onComplete }) {
       './models/head.glb'
     ];
 
-    // On very small screens we use an image fallback for the head instead
-    // of the heavy 3D model. Avoid preloading head.glb for widths <= 500px.
     try {
       if (typeof window !== 'undefined' && window.innerWidth <= 500) {
         carouselModels = carouselModels.filter((u) => !/head\.glb$/.test(u));
@@ -734,20 +737,17 @@ export function runPreloader({ onComplete }) {
     } catch (e) {}
 
     carouselModels.forEach((url) => {
-      // Используем requestIdleCallback для загрузки только когда браузер свободен
       if (typeof requestIdleCallback !== 'undefined') {
         requestIdleCallback(() => {
           preloadAsset(url).catch(() => {});
         }, { timeout: 5000 });
       } else {
-        // Fallback для браузеров без requestIdleCallback
         setTimeout(() => {
           preloadAsset(url).catch(() => {});
         }, 2000);
       }
     });
 
-    // Презагружаем аудиофайлы по требованию
     const audioFiles = [
       { key: 'music', url: 'audio/music.mp3' },
       { key: 'chelk', url: 'audio/chelk.mp3' },
@@ -756,7 +756,6 @@ export function runPreloader({ onComplete }) {
     ];
 
     audioFiles.forEach(({ key, url }) => {
-      // Загружаем аудиофайлы в фоне с меньшим приоритетом
       if (typeof requestIdleCallback !== 'undefined') {
         requestIdleCallback(() => {
           if (soundAudioCache[key]) {
@@ -767,7 +766,6 @@ export function runPreloader({ onComplete }) {
                 loadResult.catch(() => {});
               }
             } catch (e) {
-              // ignore
             }
           }
         }, { timeout: 10000 });

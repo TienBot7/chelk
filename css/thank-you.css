@@ -28,8 +28,6 @@
   font-display: swap;
 }
 
-
-/* Body */
 html,
 body {
   touch-action: manipulation;
@@ -62,7 +60,6 @@ canvas {
   touch-action: manipulation;
 }
 
-/* Typography */
 h1,
 h2 {
   font-family: 'Comforter', cursive;
@@ -70,12 +67,10 @@ h2 {
   font-style: normal;
 }
 
-/* Container */
 .container {
   padding: 0 40px;
 }
 
-/* Header */
 .header {
   position: fixed;
   top: 30px;
@@ -90,7 +85,6 @@ h2 {
   display: block;
 }
 
-/* Thank You Page */
 .thank-you {
   width: 100%;
   min-height: 100dvh;
@@ -106,7 +100,6 @@ h2 {
   position: relative;
 }
 
-/* Circles Background */
 .thank-you__circles {
   position: fixed;
   inset: 0;
@@ -190,7 +183,6 @@ canvas.visible-vfx {
   }
 }
 
-/* Center Content */
 .thank-you__center {
   position: relative;
   display: flex;
@@ -285,7 +277,6 @@ canvas.visible-vfx {
   opacity: 1;
 }
 
-/* Canvas от VFX между circles.svg и текстом */
 vfx-js-canvas {
   position: fixed !important;
   top: 0 !important;
@@ -299,7 +290,6 @@ vfx-js-canvas {
 canvas {
   z-index: 0 !important;
 }
-/* Adaptive */
 @media (max-width: 1024px) {
   .thank-you__title {
     font-size: calc(9.29vw + 9.29vh);

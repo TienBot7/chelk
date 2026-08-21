@@ -360,25 +360,20 @@ function createLiquidCanvas(color) {
   canvas.style.background = 'transparent'
   canvas.style.opacity = '0'
   canvas.style.transition = 'opacity 0.35s ease'
-  // Apply gooey SVG filter where supported. Safari has inconsistent
-  // support for CSS `filter: url(#...)` on canvases which can result
-  // in the liquid not being visible, so skip the filter there.
+
   try {
     const ua = (navigator && navigator.userAgent) || ''
     const isSafari = /Safari/.test(ua) && !/Chrome/.test(ua) && !/Chromium/.test(ua) && !/Android/.test(ua)
     if (!isSafari) {
       canvas.style.filter = 'url(#chelkLiquidGooeyFilter)'
-      // also set -webkit-filter for browsers that use the prefixed name
       canvas.style.webkitFilter = 'url(#chelkLiquidGooeyFilter)'
     } else {
-      // fallback: don't apply the filter in Safari so particles remain visible
       canvas.style.filter = 'none'
       canvas.style.webkitFilter = 'none'
     }
   } catch (e) {
     canvas.style.filter = 'none'
   }
-  // canvas.style.mixBlendMode = 'screen'
 
   liquidWrapper.appendChild(canvas)
   const ctx = canvas.getContext('2d')
@@ -1110,13 +1105,17 @@ function startMixAnimation() {
   if (pointsCounter) pointsCounter.classList.add('fade-out-ui')
   if (mixWrapper) mixWrapper.classList.add('fade-out-ui')
 
+  try {
+    const cards = Array.from(document.querySelectorAll('.colb-card'))
+    cards.forEach((c) => c.classList.add('fade-out-ui'))
+  } catch (e) {}
+
   bottles.forEach((bottle, i) => {
     bottle.style.position = 'fixed'
     bottle.style.left = `${positions[i].left}px`
     bottle.style.top = `${positions[i].top}px`
     bottle.style.margin = '0'
     bottle.style.zIndex = '12'
-    // bottle.style.transition = 'all 0.65s cubic-bezier(0.4, 0, 0.2, 1)'
     bottle.style.width = 'max-content'
   })
 
@@ -1136,7 +1135,6 @@ function startMixAnimation() {
     })
     const centralBottle = getBottleByIndex(2)
     if (centralBottle) {
-      // centralBottle.style.position = 'relative'
       centralBottle.style.left = 'auto'
       centralBottle.style.top = 'auto'
       centralBottle.style.opacity = '1'
@@ -1145,14 +1143,9 @@ function startMixAnimation() {
       applyPlatformColor(centralBottle, getMergedBottleColor(selectedColorVariant))
       updateBottleUnitsDisplay()
       const thermostat = centralBottle.querySelector('.thermostat')
-      // if (thermostat) {
-      // thermostat.style.transition = 'transform 0.3s ease'
-      // thermostat.style.transform = 'scale(1.4)'
-      // }
-      // centralBottle.style.transition = 'transform 0.3s ease'
+
       centralBottle.classList.add('merged-central')
       createFlashEffect(selectedColorVariant).then(() => {
-        // playLottieAnimation(getLottiePathForColor(selectedColorVariant))
       })
       const sparkContainer = document.createElement('div')
       sparkContainer.style.position = 'fixed'
@@ -1322,7 +1315,7 @@ function spawnDrop(forceColor = false) {
   bubble.innerHTML = '<span class="bubble-inner"><span></span></span>'
   bubblesContainer.appendChild(bubble)
 
-  const duration = 3000 + Math.random() * 2500 // 3s .. 5.5s
+  const duration = 3000 + Math.random() * 2500
 
   const anim = bubble.animate(
     [
@@ -1452,7 +1445,6 @@ function showPlatformRow() {
   platform.dataset.index = '2'
   platform.dataset.state = 'half'
 
-  // Support vertical layout on very small screens: stack 2 above, center, 2 below
   const isVerticalLayout = window.innerWidth <= 500
   let positionsLeft = []
   let positionsTop = []
@@ -1478,6 +1470,59 @@ function showPlatformRow() {
     applyPlatformColor(platform, winColors[2])
     setBottleState(platform, 'half')
     updateBottleUnitsDisplay()
+    
+    if (window.innerWidth <= 500) {
+      const tryPositionCards = (attemptsLeft = 4) => {
+        try {
+          const colbsContainer = document.getElementById('colbsContainer')
+          if (!colbsContainer) return
+          const cards = Array.from(colbsContainer.querySelectorAll('.colb-card'))
+          if (!cards.length) return
+
+          let needRetry = false
+          cards.forEach((card, i) => {
+            try {
+              const index = Number(card.querySelector('input.range-input')?.dataset.index ?? i)
+              const bottle = getBottleByIndex(index)
+              if (!bottle) return
+
+              const device = bottle.querySelector('.device')
+              if (!device) return
+              if (card.parentNode !== device) {
+                card.dataset._moved = '1'
+                try {
+                  if (!device.dataset._posSet) {
+                    device.dataset._posSet = '1'
+                    device.style.position = device.style.position || 'relative'
+                  }
+                } catch (e) {}
+                device.appendChild(card)
+              }
+
+              card.style.display = ''
+              card.style.opacity = card.style.opacity || '0'
+              const rect = device.getBoundingClientRect()
+              const cardWidth = card.offsetWidth || 160
+              if (cardWidth === 0) {
+                needRetry = true
+                return
+              }
+
+              card.style.opacity = '1'
+            } catch (e) {
+              needRetry = true
+            }
+          })
+
+          if (needRetry && attemptsLeft > 0) {
+            setTimeout(() => tryPositionCards(attemptsLeft - 1), 60)
+          }
+        } catch (e) {
+          if (attemptsLeft > 0) setTimeout(() => tryPositionCards(attemptsLeft - 1), 60)
+        }
+      }
+      requestAnimationFrame(() => tryPositionCards())
+    }
   })
   if (pointsWrapper) {
     pointsWrapper.classList.add('expanded')
@@ -1545,8 +1590,6 @@ if (mixBtn) {
 
             pouringStarted = true
 
-            // On very small screens, reveal decorative parts inside the rotator
-            // Они уже начали появляться во время поворота
             if (
               typeof window !== 'undefined' &&
               window.innerWidth <= 500
@@ -1561,7 +1604,6 @@ if (mixBtn) {
               ;[t2, t3].forEach((el) => {
                 if (!el) return
 
-                // На всякий случай оставляем их видимыми
                 el.style.display = ''
                 el.style.opacity = '1'
                 el.style.pointerEvents = 'auto'
@@ -1572,10 +1614,6 @@ if (mixBtn) {
             animateDeviceProgress(device, 200, 4200)
           }
 
-          // -----------------------------------------
-          // Плавное появление test2 / test3
-          // во время вращения
-          // -----------------------------------------
           if (
             typeof window !== 'undefined' &&
             window.innerWidth <= 500
@@ -1590,21 +1628,17 @@ if (mixBtn) {
             ;[t2, t3].forEach((el, index) => {
               if (!el) return
 
-              // Сначала делаем элемент невидимым
               el.style.display = ''
               el.style.opacity = '0'
               el.style.pointerEvents = 'none'
-
-              // Плавность появления
               el.style.transition = 'opacity 400ms ease'
 
-              // Начинаем появление ещё во время поворота
               setTimeout(
                 () => {
                   el.style.opacity = '1'
                   el.style.pointerEvents = 'auto'
                 },
-                100 + index * 100,
+                900 + index * 100,
               )
             })
           }
@@ -1686,7 +1720,6 @@ function resetGame(preservePosition = false) {
     rotator.style.willChange = ''
     rotator.style.transformOrigin = ''
   }
-  // restore any decorative parts that were hidden for small screens
   const testDivs = platform.querySelectorAll('div.test, div.test2, div.test3')
   testDivs.forEach((d) => {
     d.style.display = ''
@@ -1713,6 +1746,42 @@ function resetGame(preservePosition = false) {
   if (controlsPanel) controlsPanel.classList.remove('show', 'fade-out-ui')
   if (mixWrapper) mixWrapper.classList.remove('show', 'fade-out-ui')
   if (messagePanel) messagePanel.classList.remove('show', 'fade-out-ui')
+  
+  try {
+    const cards = Array.from(document.querySelectorAll('.colb-card'))
+    const colbsContainer = document.getElementById('colbsContainer')
+    cards.forEach((card) => {
+      try {
+        if (card.dataset && card.dataset._moved && colbsContainer) {
+          colbsContainer.appendChild(card)
+          delete card.dataset._moved
+        }
+      } catch (e) {}
+      try {
+        card.classList.remove('fade-out-ui')
+      } catch (e) {}
+      card.style.position = ''
+      card.style.left = ''
+      card.style.top = ''
+      card.style.transform = ''
+      card.style.zIndex = ''
+      card.style.pointerEvents = ''
+      card.style.transition = ''
+      card.style.opacity = ''
+    })
+    
+    try {
+      const devices = Array.from(document.querySelectorAll('.platform .device, .platform-copy .device'))
+      devices.forEach((d) => {
+        try {
+          if (d.dataset && d.dataset._posSet) {
+            d.style.position = ''
+            delete d.dataset._posSet
+          }
+        } catch (e) {}
+      })
+    } catch (e) {}
+  } catch (e) {}
 }
 
 function hideThermostatIntroUI() {
@@ -1788,18 +1857,15 @@ platform.addEventListener('click', (event) => {
   if (!allowStart) {
     event.stopPropagation()
     playCheklSound()
-    // On very small screens, rotate the bottle first, then spawn the row vertically
     if (window.innerWidth <= 500) {
       const rotatorEl = platform.querySelector('.device-rotator') || platform
       const transitionEndHandler = () => {
         try {
           rotatorEl.removeEventListener('transitionend', transitionEndHandler)
         } catch (e) {}
-        // after rotation, show platform row (which will handle vertical layout)
         showPlatformRow()
       }
       rotatorEl.addEventListener('transitionend', transitionEndHandler)
-      // apply a smoother, slightly slower transition and rotate 90deg to the right
       rotatorEl.style.willChange = 'transform'
       rotatorEl.style.transformOrigin = 'center center'
       rotatorEl.style.transition = 'transform 1200ms cubic-bezier(0.22, 0.61, 0.36, 1)'
@@ -1951,8 +2017,8 @@ function checkCollisions() {
         if (b.parentNode) b.parentNode.removeChild(b)
       }
 
-      // if (score >= TARGET_SCORE) {
-      if (score >= 1) {
+      if (score >= TARGET_SCORE) {
+      // if (score >= 1) {
         endGame()
         break
       }
@@ -1991,7 +2057,6 @@ function endGame(preservePosition = false) {
     platform.style.top = rect.top + 'px'
     const testDivs = platform.querySelectorAll('div.test2, div.test3')
     if (window && window.innerWidth <= 500) {
-      // On very small screens hide these decorative parts when the platform rises
       testDivs.forEach((testDiv) => {
         testDiv.style.display = 'none'
         testDiv.style.opacity = '0'

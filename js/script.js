@@ -1,4 +1,3 @@
-// --- script.js content starts here ---
 const WORDS = ['Одежда', 'Хорека', 'Косметика'];
 const SVG_COLORS = { Одежда: '#1D737B', Хорека: '#C4142D', Косметика: '#7B1D7B' };
 const CAMERA_SETTINGS = { position: { x: 0, y: 0.4, z: 5.8 }, target: { x: 0, y: 0, z: 0 } };
@@ -26,21 +25,13 @@ const MODELS_CONFIG = [
   { name: 'Косметика', scale: BASE_SCALE, activeScale: BASE_SCALE * 1.05, file: 'cosmetic-black.glb', rotation: { x: 0, y: -0.78, z: 0 } },
 ];
 
-// Diagnostic collector to help debug mobile loading issues
 if (typeof window !== 'undefined') {
   window.__carouselDiagnostics__ = window.__carouselDiagnostics__ || { loads: [], errors: [] };
 }
 
 function preloadCarouselModelFiles() {
-  // Модели теперь загружаются в фоне через preloader.js
-  // Эта функция оставлена для совместимости, но не блокирует загрузку
   return Promise.resolve();
 }
-
-// НЕ добавляем в очередь preloader - модели загружаются в фоне
-// if (typeof window !== 'undefined' && window.preloader && typeof window.preloader.addWaitTask === 'function') {
-//   window.preloader.addWaitTask(preloadCarouselModelFiles());
-// }
 
 let slidesArray = [];
 let threeInstances = [];
@@ -63,17 +54,14 @@ let expectedFiles = {
   'cosmetic-black.glb': 'Косметика',
 };
 let mainObject = ''
-// Helper to update visible mainObject element and log changes
 function updateMainObjectText(text) {
   try {
     const el = document.getElementById('mainObject');
     if (el) {
       el.textContent = text;
     }
-    // keep module-level and global copies in sync so other scripts can read the active value
     try { mainObject = text; } catch (e) {}
     try { if (typeof window !== 'undefined') window.mainObject = text; } catch (e) {}
-    console.log('mainObject:', text);
       try {
         window.dispatchEvent(new CustomEvent('mainObjectChange', { detail: text }));
       } catch (e) {}
@@ -125,30 +113,23 @@ function onTouchEndScale() {
   lastTouchYForScale = null;
 }
 
-// Scroll/zoom tuning
-const SCALE_SENSITIVITY = 0.00009; // legacy sensitivity (not used for time-based scaling)
-// Time-based constant scaling rate (scale units per second)
-// Doubled to make the center model grow faster while scrolling
+const SCALE_SENSITIVITY = 0.00009;
 const SCALE_RATE = 0.7;
-// Multiplier to make center slide scaling respond faster to scroll
 const CENTER_SCROLL_MULTIPLIER = 2.6;
 const MOBILE_TOUCH_SCALE_MULTIPLIER = 3.0;
-const CAMERA_MOVE_SENSITIVITY = 0.025; // how fast camera moves when "entering" model
+const CAMERA_MOVE_SENSITIVITY = 0.025;
 const CAMERA_MIN_DISTANCE = 0.2;
 const CAMERA_MAX_DISTANCE = 30;
-const SCALE_TO_CAMERA_THRESHOLD_MULT = 1.4; // when model scale passes this multiplier of base, start moving camera
+const SCALE_TO_CAMERA_THRESHOLD_MULT = 1.4;
 
 function clamp(v, a, b) {
   return Math.max(a, Math.min(b, v));
 }
 
-// Apply darkness (0..1) to an instance's model materials (lerp original color -> black)
 function setModelDarkness(inst, factor) {
-  // Color-changing disabled per user request. No-op.
   return;
 }
 
-// Restore original colors/emissive from userData.origColor/origEmissive
 function restoreModelColors(inst) {
   if (!inst || !inst.modelGroup) return;
   inst.modelGroup.traverse((child) => {
@@ -165,37 +146,28 @@ function onWheelScale(e) {
   if (!scrollScaleEnabled) return;
   const inst = threeInstances[currentSlideIndex];
   if (!inst || !inst.modelGroup) return;
-  // set wheel direction, magnitude and active timeout; actual scaling applied in animateModels per-frame
-  // Normalize delta across browsers (pixels / lines / pages)
   const rawDelta = (typeof e.deltaY === 'number') ? e.deltaY : 0;
   let normDelta = rawDelta;
   if (typeof e.deltaMode === 'number') {
-    if (e.deltaMode === 1) normDelta = rawDelta * 15; // lines -> approx pixels
-    else if (e.deltaMode === 2) normDelta = rawDelta * 60; // pages -> larger
+    if (e.deltaMode === 1) normDelta = rawDelta * 15;
+    else if (e.deltaMode === 2) normDelta = rawDelta * 60;
   }
   const dir = Math.sign(normDelta) || 0;
   const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
   inst._wheelDirection = dir;
-  // extend active timeout slightly to accommodate lower-frequency events on Safari
   inst._wheelActiveUntil = now + 260;
-  // magnitude proportional to (normalized) delta, but allow small fractional values
-  // so trackpad/precision scrolling remains smooth in Safari
   const mag = Math.abs(normDelta) * 0.02;
   inst._wheelMagnitude = clamp(mag, 0.02, 12);
-  // integrate into a velocity accumulator so sparse/stepped events become smooth
     try {
       const add = dir * Math.max(0.02, inst._wheelMagnitude) * 0.06;
-      // If velocity is effectively zero, set an initial velocity in the intended direction
       if (!inst._wheelVelocity || Math.abs(inst._wheelVelocity) < 0.02) {
-        inst._wheelVelocity = add * 2.5; // stronger initial bias to avoid brief opposite shrink
+        inst._wheelVelocity = add * 2.5;
       } else {
         inst._wheelVelocity = (inst._wheelVelocity || 0) + add;
       }
       inst._wheelVelocity = clamp(inst._wheelVelocity, -8, 8);
     } catch (e) {}
     return;
-
-  // If scrolling out (delta<0) and camera is closer than base distance, move camera back first
   try {
     const cam = inst.camera;
     const tgt = inst.controls.target;
@@ -205,18 +177,14 @@ function onWheelScale(e) {
       const dirBack = new Vector3().subVectors(cam.position, tgt).normalize();
       const moveBack = Math.abs(delta) * CAMERA_MOVE_SENSITIVITY * 0.001;
       cam.position.addScaledVector(dirBack, moveBack);
-      // clamp not to exceed baseDist
       const newDist = cam.position.distanceTo(tgt);
       if (newDist > baseDist) {
-        // snap to baseDist
         const adj = new Vector3().subVectors(cam.position, tgt).setLength(baseDist);
         cam.position.copy(new Vector3().addVectors(tgt, adj));
       }
       inst.controls.update();
-        // reduce accumulated darkness when moving back
         try {
         inst.darknessAccumulator = clamp((inst.darknessAccumulator || 0) - Math.abs(delta) * 0.0007, 0, 1);
-        // restore lights and slide opacity when moving back (smooth)
         animateInstanceLightFactor(inst, 1, 250);
         try { animateSlideOpacity(inst, 1, 180); } catch (e) {}
       } catch (e) {}
@@ -224,9 +192,7 @@ function onWheelScale(e) {
     }
   } catch (e) {}
 
-  // Otherwise scale the wrapper slowly
   const next = clamp(cur + change, MIN_MODEL_SCALE, MAX_MODEL_SCALE);
-  // Prevent scaling further in if camera already at model edge
   try {
     const baseRadius = inst.baseBoundingRadius || 0.5;
     const currentScale = inst.modelGroup.scale.x || 1;
@@ -234,27 +200,22 @@ function onWheelScale(e) {
     const padding = Math.max(0.03, modelEdge * 0.02);
     const minAllowed = modelEdge + padding;
     const camDist = inst.camera.position.distanceTo(inst.controls.target);
-    // if attempting to increase scale but camera is already at or below minAllowed, block further increase
     if (delta > 0 && camDist <= minAllowed + 1e-6) {
-      // do not increase
     } else {
       inst.modelGroup.scale.set(next, next, next);
     }
   } catch (e) {
     inst.modelGroup.scale.set(next, next, next);
   }
-  // when scaling in/out adjust darkness: start darkening when in last 20% towards max
+  
   try {
-    // compute normalized position between min and max
     const base = clamp((next - MIN_MODEL_SCALE) / (MAX_MODEL_SCALE - MIN_MODEL_SCALE), 0, 1);
     const baseDark = Math.max(0, (base - 0.8) / 0.2);
-    // if increasing, allow accumulation
     if (delta > 0) inst.darknessAccumulator = clamp((inst.darknessAccumulator || 0) + Math.abs(delta) * 0.0002, 0, 1);
     else inst.darknessAccumulator = clamp((inst.darknessAccumulator || 0) - Math.abs(delta) * 0.0004, 0, 1);
     const totalDark = clamp(baseDark + inst.darknessAccumulator, 0, 1);
-    // adjust lights based on scale: when in last 20% reduce lights to zero
     try {
-      const baseNorm = base; // 0..1
+      const baseNorm = base;
       if (baseNorm >= 0.8) {
         const t = clamp((baseNorm - 0.8) / 0.2, 0, 1);
         const lightFactor = clamp(1 - t, 0, 1);
@@ -275,10 +236,8 @@ function enableCenterScrollScale() {
   window.addEventListener('touchstart', onTouchStartScale, { passive: true });
   window.addEventListener('touchmove', onTouchMoveScale, { passive: true });
   window.addEventListener('touchend', onTouchEndScale, { passive: true });
-  console.log('enableCenterScrollScale: wheel and touch scaling enabled for center model');
 }
 
-// ========== ПЛАВНАЯ СМЕНА ЦВЕТА ==========
 function syncSvgColorTransition(newColor) {
   if (!svgBackground) return;
   const svg = svgBackground.querySelector('svg');
@@ -295,7 +254,6 @@ function syncSvgColorTransition(newColor) {
     el.setAttribute('stroke-opacity', targetOpacity);
   });
 
-  // Apply the same color behavior as slider.js for all branded .change-color elements.
   changeColorElements.forEach((el) => {
     el.style.setProperty('transition', 'fill 0.7s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.7s cubic-bezier(0.4, 0, 0.2, 1)', 'important');
     el.setAttribute('fill', newColor);
@@ -305,10 +263,8 @@ function syncSvgColorTransition(newColor) {
   });
 }
 
-// ========== ТЕКСТОВАЯ АНИМАЦИЯ ==========
 let activeTextSlide = null;
 
-// Экспортируем функции для явного вызова после динамического импорта
 export { initTextSlides, buildCarousel, initKeyboardControls, enableCenterScrollScale };
 
 function createTextSlide(word, idx, isActive = false) {
@@ -334,7 +290,7 @@ function initTextSlides() {
     textOverlay.appendChild(slide);
     if (isActive) activeTextSlide = slide;
   });
-  // initial syncs: svg color and mainObject text
+
   setTimeout(() => {
     syncSvgColorTransition(SVG_COLORS[WORDS[currentWordIndex]]);
     updateMainObjectText(WORDS[currentWordIndex]);
@@ -406,11 +362,9 @@ async function syncSwitchToWord(newIndex) {
 
   currentWordIndex = newIndex;
   activeTextSlide = newSlide;
-  // Update mainObject and log the new active word
   updateMainObjectText(WORDS[newIndex]);
 }
 
-// Set per-instance light factor (0..1) multiplies original intensities
 function setInstanceLightFactor(inst, factor) {
   if (!inst || !inst.scene || typeof factor !== 'number') return;
   factor = clamp(factor, 0, 1);
@@ -444,7 +398,6 @@ function getInstanceLightFactor(inst) {
 function animateInstanceLightFactor(inst, targetFactor, duration = 200) {
   if (!inst) return;
   try {
-    // cancel previous
     if (inst._lightAnimCancel) { inst._lightAnimCancel(); inst._lightAnimCancel = null; }
     const start = performance.now();
     const from = getInstanceLightFactor(inst);
@@ -477,10 +430,8 @@ function animateSlideOpacity(inst, targetOpacity, duration = 200) {
   try {
     const el = inst.slideElement;
     const to = clamp(targetOpacity, 0, 1);
-    // If value already very close, still set to ensure important override
     try { el.style.setProperty('transition', `opacity ${Math.max(1, duration)}ms cubic-bezier(0.4,0,0.2,1)`, 'important'); } catch (e) {}
     try { el.style.setProperty('opacity', String(to), 'important'); } catch (e) {}
-    // clear any previously scheduled transition removal and schedule cleanup
     if (inst._slideTransitionRestoreTimer) clearTimeout(inst._slideTransitionRestoreTimer);
     inst._slideTransitionRestoreTimer = setTimeout(() => {
       try { el.style.removeProperty('transition'); } catch (e) {}
@@ -489,19 +440,14 @@ function animateSlideOpacity(inst, targetOpacity, duration = 200) {
   } catch (e) {}
 }
 
-// Apply opacity instantly during continuous scroll: disable transitions, set opacity with !important,
-// and restore transitions shortly after scrolling stops.
 function setSlideOpacityInstant(inst, targetOpacity) {
   if (!inst || !inst.slideElement) return;
   try {
-    // cancel any running scripted animation
     if (inst._slideAnimCancel) { inst._slideAnimCancel(); inst._slideAnimCancel = null; }
     const el = inst.slideElement;
     const v = clamp(targetOpacity, 0, 1);
-    // disable transitions so change is immediate and override any CSS !important
     try { el.style.setProperty('transition', 'none', 'important'); } catch (e) {}
     try { el.style.setProperty('opacity', String(v), 'important'); } catch (e) {}
-    // schedule restoration of transition after user stops scrolling
     if (inst._slideTransitionRestoreTimer) clearTimeout(inst._slideTransitionRestoreTimer);
     inst._slideTransitionRestoreTimer = setTimeout(() => {
       try { el.style.removeProperty('transition'); } catch (e) {}
@@ -510,14 +456,11 @@ function setSlideOpacityInstant(inst, targetOpacity) {
   } catch (e) {}
 }
 
-// ========== 3D МОДЕЛИ ==========
 function applyCameraSettings(instance) {
   if (!instance) return;
-  // If we have a base bounding radius for the instance, place the camera so the model fits
   const baseRadius = instance.baseBoundingRadius || 0;
   let dist = CAMERA_SETTINGS.position.z;
   if (baseRadius > 0) {
-    // factor tuned to provide comfortable framing for most models
     dist = Math.max(dist, baseRadius * 2.8 + 0.8);
   }
   instance.camera.position.set(
@@ -533,8 +476,6 @@ function applyCameraSettings(instance) {
   instance.controls.update();
 }
 
-// Stabilize a single instance as if the carousel had shifted it (resizes renderer,
-// recomputes bbox and reapplies uniform scale) but WITHOUT changing classes or colors.
 async function stabilizeInstanceAsIfShifted(inst, slideIndex) {
   if (!inst || !inst.modelGroup || !inst.slideElement) return;
   try {
@@ -546,7 +487,6 @@ async function stabilizeInstanceAsIfShifted(inst, slideIndex) {
     try { inst.renderer.setSize(cw, ch, false); } catch (e) {}
     try { if (inst.camera) { inst.camera.aspect = cw / ch; inst.camera.updateProjectionMatrix(); } } catch (e) {}
 
-    // allow layout to settle
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
     const wrapper = inst.modelGroup;
@@ -569,15 +509,12 @@ async function stabilizeInstanceAsIfShifted(inst, slideIndex) {
       updateModelScale(inst, slideIndex === currentSlideIndex, inst.modelConfig);
       applyCameraSettings(inst);
       try { inst.renderer.render(inst.scene, inst.camera); } catch (e) {}
-      console.log(`[slide ${slideIndex}] stabilized as-if-shifted finalAutoScale=${finalAutoScale.toFixed(4)}`);
     } catch (e) {}
   } catch (e) {}
 }
 
 function updateModelScale(instance, isActive, modelConfig) {
   if (!instance || !instance.modelGroup) return;
-  // If the slide element itself has both 'slide' and 'center' classes, do not apply the
-  // "active" enlarged scale — keep the base model scale to prevent enlargement.
   const slideEl = instance.slideElement;
   const shouldPreventEnlarge = slideEl && slideEl.classList && slideEl.classList.contains('slide') && slideEl.classList.contains('center');
   let targetScale;
@@ -596,16 +533,13 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
   
   if (inst.modelGroup) {
     try { if (inst.scene && inst.scene.remove) inst.scene.remove(inst.modelGroup); } catch (e) {}
-    // also remove any DOM fallback image if present
     try { if (inst.mockImage && inst.mockImage.parentNode) inst.mockImage.parentNode.removeChild(inst.mockImage); } catch (e) {}
   }
 
-  // Mobile fallback: if screen is <=500px, use lightweight image from img/goods
   try {
     if (typeof window !== 'undefined' && window.innerWidth <= 500) {
       const slideEl = inst.slideElement;
       if (slideEl) {
-        // create image fallback
         const imgEl = document.createElement('img');
         const imgFile = (modelConfig && modelConfig.file) ? modelConfig.file.replace(/\.glb$/i, '.webp') : 'placeholder.webp';
         imgEl.src = `./img/goods/${imgFile}`;
@@ -624,7 +558,6 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
         imgEl.style.willChange = 'transform, opacity';
         slideEl.appendChild(imgEl);
 
-        // create a lightweight mock modelGroup to keep animation code working
         const mock = {
           isMockImage: true,
           position: { x: 0, y: 0, z: 0 },
@@ -634,11 +567,9 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
           traverse: function() {},
           updateWorldMatrix: function() {},
         };
-        // attach image for external sync
         inst.mockImage = imgEl;
         inst.modelGroup = mock;
 
-        // initial transform sync
         try { imgEl.style.transform = `translate(-50%, calc(-50% + ${mock.position.y * 100}px)) scale(${mock.scale.x})`; } catch (e) {}
       }
       return;
@@ -647,8 +578,6 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
   
   const loader = new GLTFLoader();
   const modelPath = `./models/${modelConfig.file}`;
-  
-  console.log(`🔄 Загрузка модели "${modelConfig.name}" из ${modelPath}`);
   try {
     if (typeof window !== 'undefined' && window.__carouselDiagnostics__) {
       window.__carouselDiagnostics__.loads.push({ slideIndex, modelPath, ts: Date.now(), event: 'start' });
@@ -701,7 +630,6 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
     const gltf = await loadGltfWithRetry(modelPath, 2);
     const model = gltf.scene;
     
-    console.log(`[slide ${slideIndex}] GLTF loaded:`, modelConfig.file, gltf);
     try {
       if (typeof window !== 'undefined' && window.__carouselDiagnostics__) {
         window.__carouselDiagnostics__.loads.push({ slideIndex, modelPath, ts: Date.now(), event: 'loaded' });
@@ -709,19 +637,14 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
     } catch (e) {}
     try {
       const childrenCount = model.children ? model.children.length : 0;
-      console.log(`[slide ${slideIndex}] model children count:`, childrenCount);
     } catch (e) {}
 
-    // Улучшаем материалы для корректного освещения
     enhanceMaterials(model);
 
-    // Wrap model in a parent group so scaling happens around a stable origin
     const wrapper = new Group();
 
     wrapper.add(model);
 
-    // If any mesh nodes have non-uniform local scales, bake those scales into their geometry
-    // to avoid hierarchical scale distortion while preserving rotations/translations.
     function bakeNodeScales(root) {
       root.traverse((child) => {
         if (child.isMesh && child.geometry) {
@@ -736,7 +659,6 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
               if (child.geometry.computeBoundingBox) child.geometry.computeBoundingBox();
               if (child.geometry.computeBoundingSphere) child.geometry.computeBoundingSphere();
             } catch (e) {
-              // ignore failures on exotic geometries
             }
           }
         }
@@ -745,17 +667,13 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
 
     try { bakeNodeScales(model); } catch (e) {}
 
-    // Compute bounding box on the raw model, then center the model inside the wrapper
     const box = new Box3().setFromObject(model);
     const size = box.getSize(new Vector3());
     const center = box.getCenter(new Vector3());
-    console.log(`[slide ${slideIndex}] model bbox size:`, size, 'center:', center);
-    // Center the wrapper by offsetting the model (geometry baked into children)
     model.position.x = -center.x;
     model.position.y = -center.y;
     model.position.z = -center.z;
 
-    // Apply initial rotation tilt for specific models
     if (modelConfig.rotation) {
       wrapper.rotation.set(modelConfig.rotation.x || 0, modelConfig.rotation.y || 0, modelConfig.rotation.z || 0);
     }
@@ -771,8 +689,6 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
         window.preloader.markModelLoaded();
       }
     } catch (e) {}
-
-      // compute bounding sphere radius (base, unscaled) and store on instance for camera-edge limits
       let baseSphereRadius = 0;
       try {
         const sphere = new Sphere();
@@ -780,17 +696,12 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
         baseSphereRadius = sphere.radius || 0;
       } catch (e) {}
 
-      // Apply initial scale on wrapper so further scale changes keep model centered
-      // wrapper already contains model
-
-      // Auto-normalize large or tiny models to fit a reasonable viewport fraction.
       try {
         const maxDim = Math.max(size.x || 1e-6, size.y || 1e-6, size.z || 1e-6);
-        const DESIRED_NORMALIZED = 0.6; // target size in world units relative to scale baseline
+        const DESIRED_NORMALIZED = 0.6; 
         const responsiveFactor = getResponsiveModelScaleFactor();
         const baseScale = (modelConfig.scale || 1) * responsiveFactor;
         let autoScale = baseScale * (DESIRED_NORMALIZED / maxDim);
-        // clamp relative to responsive base scale to avoid huge jumps for tiny models
         try {
           const minRel = baseScale * 0.4;
           const maxRel = baseScale * 2.2;
@@ -798,9 +709,7 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
           autoScale = clamp(autoScale, MIN_MODEL_SCALE, MAX_MODEL_SCALE);
         } catch (e) {}
         wrapper.scale.set(autoScale, autoScale, autoScale);
-        // update stored base bounding radius to reflect applied wrapper scale
         if (threeInstances[slideIndex]) threeInstances[slideIndex].baseBoundingRadius = baseSphereRadius * (autoScale || 1);
-        console.log(`[slide ${slideIndex}] applied autoScale=${autoScale.toFixed(4)} (maxDim=${maxDim.toFixed(4)})`);
       } catch (e) {
         const responsiveScale = (modelConfig.scale || 1) * getResponsiveModelScaleFactor();
         wrapper.scale.set(responsiveScale, responsiveScale, responsiveScale);
@@ -809,7 +718,6 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
 
     inst.scene.add(wrapper);
     inst.modelGroup = wrapper;
-    // Ensure renderer has proper size after model insertion
     try {
       if (inst && typeof inst.updateRendererSizeToCanvas === 'function') {
         inst.updateRendererSizeToCanvas();
@@ -825,16 +733,13 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
     } catch (e) {
       console.warn('[slide load] failed to resize renderer after model add:', e);
     }
-    // ensure renderer uses current canvas size after model added
     try {
       if (inst.updateRendererSizeToCanvas) inst.updateRendererSizeToCanvas();
     } catch (e) {}
 
-    // guard against empty/no-visible model content
     try {
       const box = new Box3().setFromObject(wrapper);
       if (!box.isEmpty() && box.getSize(new Vector3()).lengthSq() > 0) {
-        // good
       } else {
         throw new Error('model bounding box empty');
       }
@@ -845,10 +750,8 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
       return loadModelIntoSlide(slideIndex, modelConfig);
     }
 
-    // Wait two frames to ensure layout/renderer stabilized (fixes DevTools-dependent race).
     try {
       await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-      // Recompute bbox from the wrapper (after any world updates) and reapply a stable autoScale
       try {
         if (typeof wrapper.updateWorldMatrix === 'function') wrapper.updateWorldMatrix(true, true);
         const finalBox = new Box3().setFromObject(wrapper);
@@ -865,18 +768,15 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
           finalAutoScale = clamp(finalAutoScale, MIN_MODEL_SCALE, MAX_MODEL_SCALE);
         } catch (e) { finalAutoScale = clamp(finalAutoScale, MIN_MODEL_SCALE, MAX_MODEL_SCALE); }
         wrapper.scale.set(finalAutoScale, finalAutoScale, finalAutoScale);
-        // update stored base bounding radius to reflect applied wrapper scale
         try {
           const sphere = new Sphere();
           finalBox.getBoundingSphere(sphere);
           if (threeInstances[slideIndex]) threeInstances[slideIndex].baseBoundingRadius = sphere.radius * (finalAutoScale || 1);
         } catch (e) {}
-        console.log(`[slide ${slideIndex}] re-applied finalAutoScale=${finalAutoScale.toFixed(4)} (finalMaxDim=${finalMaxDim.toFixed(4)})`);
       } catch (e) {}
     } catch (e) {}
 
     updateModelScale(inst, slideIndex === currentSlideIndex, modelConfig);
-    // make sure camera aspect matches the slide's client size after stabilization
     try {
       const slEl = inst && inst.slideElement ? inst.slideElement : null;
       const cw = Math.max(1, Math.floor((slEl && slEl.clientWidth) || 0));
@@ -888,27 +788,22 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
     } catch (e) {}
     applyCameraSettings(inst);
     try {
-      // Ensure world matrices are updated so bounding calculations are correct
       if (model && typeof model.updateWorldMatrix === 'function') model.updateWorldMatrix(true, true);
       const ws = new Vector3();
       try { model.getWorldScale(ws); } catch (e) { ws.set(1,1,1); }
-      console.log(`[slide ${slideIndex}] model worldScale=${ws.toArray().map(v=>v.toFixed(4))}`);
-      console.log(`[slide ${slideIndex}] camera pos ${JSON.stringify(inst.camera.position.toArray())} target ${JSON.stringify(inst.controls.target.toArray())} aspect=${inst.camera.aspect}`);
     } catch (e) {}
 
-    // Poll briefly for devicePixelRatio changes (opening/closing DevTools can change DPR)
     try {
       const start = performance.now();
       let lastDpr = getPreferredDPR();
-      const pollInterval = 100; // ms
-      const maxDuration = 1200; // ms
+      const pollInterval = 100;
+      const maxDuration = 1200;
       const pollId = setInterval(() => {
         try {
           const now = performance.now();
           const curDpr = getPreferredDPR();
           if (curDpr !== lastDpr) {
             lastDpr = curDpr;
-            // update renderer pixelRatio and sizes
             try {
               const usedDpr = curDpr;
               inst.renderer.setPixelRatio(usedDpr);
@@ -920,7 +815,6 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
                 inst.camera.aspect = displayW / displayH;
                 inst.camera.updateProjectionMatrix();
               }
-              // recompute bbox and reapply scale
               try {
                 if (typeof wrapper.updateWorldMatrix === 'function') wrapper.updateWorldMatrix(true, true);
                 const finalBox2 = new Box3().setFromObject(wrapper);
@@ -938,7 +832,6 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
                 } catch (e) { finalAutoScale2 = clamp(finalAutoScale2, MIN_MODEL_SCALE, MAX_MODEL_SCALE); }
                 wrapper.scale.set(finalAutoScale2, finalAutoScale2, finalAutoScale2);
                 try { const sph = new Sphere(); finalBox2.getBoundingSphere(sph); if (threeInstances[slideIndex]) threeInstances[slideIndex].baseBoundingRadius = sph.radius * (finalAutoScale2 || 1); } catch (e) {}
-                console.log(`[slide ${slideIndex}] DPR change handled: set pixelRatio=${usedDpr}, finalAutoScale=${finalAutoScale2.toFixed(4)}`);
               } catch (e) {}
             } catch (e) {}
           }
@@ -949,12 +842,10 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
       }, pollInterval);
     } catch (e) {}
 
-    // Final stabilization: re-sync renderer size and recompute a stable auto-scale once layout/DPR settled.
     try {
       setTimeout(async () => {
         try {
           if (inst && inst.updateRendererSizeToCanvas) inst.updateRendererSizeToCanvas();
-          // wait two frames to ensure any layout changes applied
           await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
           if (typeof wrapper.updateWorldMatrix === 'function') wrapper.updateWorldMatrix(true, true);
           const stableBox = new Box3().setFromObject(wrapper);
@@ -984,13 +875,10 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
               inst.camera.updateProjectionMatrix();
             } catch (e) {}
           }
-          console.log(`[slide ${slideIndex}] final stabilization applied stableAutoScale=${stableAutoScale.toFixed(4)}`);
         } catch (e) {}
       }, 160);
     } catch (e) {}
 
-    // No debug markers in production build.
-    console.log(`✅ Модель "${modelConfig.name}" успешно загружена с улучшенным освещением`);
   } catch (err) {
     console.error(`❌ Ошибка загрузки модели "${modelConfig.name}":`, err);
     try {
@@ -998,7 +886,6 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
         window.__carouselDiagnostics__.errors.push({ slideIndex, modelPath, ts: Date.now(), error: String(err && (err.message || err)) });
       }
     } catch (e) {}
-    // Создаем простую фигуру-заглушку
     const geometry = new SphereGeometry(0.5, 32, 32);
     const material = new MeshStandardMaterial({ color: 0x666666, metalness: 0.7, roughness: 0.3 });
     const fallbackMesh = new Mesh(geometry, material);
@@ -1010,9 +897,6 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
 }
 
 async function initThreeForSlide(slideElement, modelConfig, slideIndex) {
-  // Ensure the slide has non-zero layout size before creating canvas/renderer.
-  // Sometimes the element is still hidden/0-sized (transitions), which leads to canvases with 0x0
-  // and invisible renderers. Wait a short time for layout to stabilize.
   async function waitForNonZeroSize(el, timeout = 1600) {
     const start = performance.now();
     return new Promise((resolve) => {
@@ -1021,7 +905,6 @@ async function initThreeForSlide(slideElement, modelConfig, slideIndex) {
           const r = el.getBoundingClientRect();
           if ((r.width >= 8 && r.height >= 8) || (performance.now() - start) > timeout) return resolve(true);
         } catch (e) {
-          // ignore
         }
         requestAnimationFrame(check);
       }
@@ -1032,14 +915,9 @@ async function initThreeForSlide(slideElement, modelConfig, slideIndex) {
   await waitForNonZeroSize(slideElement);
 
   const canvas = document.createElement('canvas');
-  // Возвращаем прозрачный фон canvas
-  // Сделаем canvas позиционированным и используем CSS cover-подход,
-  // чтобы сохранить aspect-ratio, одновременно покрывая контейнер.
-  // Ensure slide is absolutely positioned at top/left so slides overlay horizontally
   slideElement.style.position = 'absolute';
   slideElement.style.top = '50%';
   slideElement.style.left = '50%';
-  // slideElement.style.left = 'width: max(50%, calc(92% - 3.89vh));';
   slideElement.style.width = slideElement.style.width || '100%';
   if (window.innerWidth <= 768)  {
     slideElement.style.height = slideElement.style.height;
@@ -1059,7 +937,6 @@ async function initThreeForSlide(slideElement, modelConfig, slideIndex) {
   canvas.style.minHeight = '1px';
   canvas.style.display = 'block';
   canvas.style.background = 'transparent';
-  // On mobile, canvas intercepts touch and prevents page scrolling — disable pointer events by default.
   try {
     if (window && window.innerWidth <= 768) {
       canvas.style.pointerEvents = 'none';
@@ -1070,46 +947,33 @@ async function initThreeForSlide(slideElement, modelConfig, slideIndex) {
   slideElement.appendChild(canvas);
 
   const renderer = createModelRenderer(canvas);
-  // renderer.outputColorSpace = THREE.SRGBColorSpace;
-  // renderer.toneMapping = THREE.ACESFilmicToneMapping;
 
-  
-  
-  // renderer.outputColorSpace = THREE.SRGBColorSpace;
-  // renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 0.75;
 
-  // Helper: set renderer drawing buffer size to the displayed canvas size (in CSS pixels * DPR)
   function updateRendererSizeToCanvas() {
     try {
-      // Prefer the slide element's layout size (more stable) instead of canvas bounding rect
       let displayW = Math.max(1, Math.floor(slideElement.clientWidth || 0));
       let displayH = Math.max(1, Math.floor(slideElement.clientHeight || 0));
-      // Fallback to canvas bounding rect if client sizes are not yet available
       if (!displayW || !displayH) {
         const rect = canvas.getBoundingClientRect();
         displayW = Math.max(1, Math.floor(rect.width));
         displayH = Math.max(1, Math.floor(rect.height));
       }
-      // Defensive clamps to avoid absurd sizes (causes invisible rendering or browser issues)
       const maxViewport = Math.max(window.innerWidth || 1024, window.innerHeight || 1024);
       const cap = Math.max(1024, Math.min(8192, Math.floor(maxViewport * 2)));
       if (displayW > cap) displayW = cap;
       if (displayH > cap) displayH = cap;
       const usedDpr = getPreferredDPR();
       renderer.setPixelRatio(usedDpr);
-      // setSize expects CSS pixel dimensions; three.js will multiply by pixelRatio internally.
       renderer.setSize(displayW, displayH, false);
       if (instance && instance.camera) {
         instance.camera.aspect = displayW / displayH;
         instance.camera.updateProjectionMatrix();
       }
     } catch (e) {
-      // ignore
     }
   }
 
-  // Включаем тени
   renderer.shadowMap.enabled = true;
 
   const scene = new Scene();
@@ -1117,7 +981,6 @@ async function initThreeForSlide(slideElement, modelConfig, slideIndex) {
 
     setupLighting(scene);
 
-  // Compute initial aspect from the slide element's client size (more stable than getBoundingClientRect)
   let initialAspect = 1;
   try {
     const dw = Math.max(1, Math.floor(slideElement.clientWidth || 0));
@@ -1142,7 +1005,6 @@ async function initThreeForSlide(slideElement, modelConfig, slideIndex) {
   controls.enableDamping = true;
   controls.dampingFactor = 0.07;
   controls.autoRotate = false;
-  // Disable OrbitControls zoom entirely to prevent scroll-based scale/zoom changes
   controls.enableZoom = false;
   controls.zoomSpeed = 0.6;
   controls.enablePan = false;
@@ -1152,8 +1014,6 @@ async function initThreeForSlide(slideElement, modelConfig, slideIndex) {
     CAMERA_SETTINGS.target.z,
   );
   controls.update();
-
-  // Keep zoom disabled for all slides; do not toggle on hover.
 
   const instance = {
     scene,
@@ -1171,18 +1031,14 @@ async function initThreeForSlide(slideElement, modelConfig, slideIndex) {
   };
 
   threeInstances[slideIndex] = instance;
-  // store base camera distance for inside-model zoom behavior
   try {
     instance.baseCameraDistance = instance.camera.position.distanceTo(instance.controls.target);
   } catch (e) {
     instance.baseCameraDistance = CAMERA_SETTINGS.position.z || 5.8;
   }
 
-  // make updateRendererSizeToCanvas available for this instance
   if (typeof updateRendererSizeToCanvas === 'function') {
-    // attach helper to instance for external calls
     instance.updateRendererSizeToCanvas = updateRendererSizeToCanvas;
-    // update on slide resize as well, not only on window resize
     if (typeof ResizeObserver !== 'undefined') {
       try {
         instance.resizeObserver = new ResizeObserver(() => {
@@ -1197,11 +1053,9 @@ async function initThreeForSlide(slideElement, modelConfig, slideIndex) {
         console.warn('[buildCarousel] ResizeObserver failed:', observerErr);
       }
     }
-    // call once to sync initial size
     updateRendererSizeToCanvas();
   }
 
-  // Загружаем модель
   try {
     await loadModelIntoSlide(slideIndex, modelConfig);
   } catch (e) {
@@ -1210,7 +1064,6 @@ async function initThreeForSlide(slideElement, modelConfig, slideIndex) {
 
   function animateModels() {
     if (!slideElement.isConnected) return;
-    // per-frame timing
     const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
     const prev = instance._animatePrevTime || now;
     let dt = (now - prev) / 1000;
@@ -1226,16 +1079,13 @@ async function initThreeForSlide(slideElement, modelConfig, slideIndex) {
       instance.modelGroup.rotation.y = baseRotY + Math.sin(time * 0.5) * 0.02;
     }
 
-    // apply continuous, constant scaling while wheel direction is active for this instance
     try {
-      // Apply integrated wheel velocity for smooth continuous scaling.
       const vel = instance._wheelVelocity || 0;
       if (Math.abs(vel) > 1e-4 && instance.modelGroup && slideElement.classList.contains('center')) {
         const cur = instance.modelGroup.scale.x || 1;
         const change = vel * SCALE_RATE * dt * CENTER_SCROLL_MULTIPLIER;
         const next = clamp(cur + change, MIN_MODEL_SCALE, MAX_MODEL_SCALE);
         try {
-          // prevent camera intersection when scaling in (skip for mock images to avoid heavy repositioning)
           try {
             if (!(instance.modelGroup && instance.modelGroup.isMockImage)) {
               const baseRadius = instance.baseBoundingRadius || 0.5;
@@ -1257,7 +1107,6 @@ async function initThreeForSlide(slideElement, modelConfig, slideIndex) {
             }
           } catch (e) {}
           instance.modelGroup.scale.set(next, next, next);
-          // If this instance uses a mock image, sync its CSS transform immediately
           try {
             if (instance.modelGroup && instance.modelGroup.isMockImage && instance.mockImage) {
               const img = instance.mockImage;
@@ -1273,7 +1122,6 @@ async function initThreeForSlide(slideElement, modelConfig, slideIndex) {
           instance.modelGroup.scale.set(next, next, next);
         }
 
-        // update darkness/lights similar to previous behavior using magnitude of change
         try {
           const base = clamp((next - MIN_MODEL_SCALE) / (MAX_MODEL_SCALE - MIN_MODEL_SCALE), 0, 1);
           if (vel > 0) instance.darknessAccumulator = clamp((instance.darknessAccumulator || 0) + Math.abs(change) * 0.02, 0, 1);
@@ -1290,14 +1138,12 @@ async function initThreeForSlide(slideElement, modelConfig, slideIndex) {
           }
         } catch (e) {}
 
-        // apply damping to velocity so it decays smoothly
         try {
-          const damping = Math.exp(-6 * dt); // 6 is damping rate (tunable)
+          const damping = Math.exp(-6 * dt);
           instance._wheelVelocity *= damping;
           if (Math.abs(instance._wheelVelocity) < 0.0005) instance._wheelVelocity = 0;
         } catch (e) {}
       } else {
-        // ensure velocity cleared
         if (instance._wheelVelocity && Math.abs(instance._wheelVelocity) < 1e-6) instance._wheelVelocity = 0;
       }
     } catch (e) {}
@@ -1323,7 +1169,6 @@ function updateSlidePositions() {
   const shouldPlaySound = typeof updateSlidePositions._prevSlideIndex === 'number' && updateSlidePositions._prevSlideIndex !== currentSlideIndex;
   threeInstances.forEach((inst, idx) => {
     const slideEl = slidesArray[idx];
-    // If renderer exists, resize it to match the current slide size (important when a slide becomes center/fullscreen)
     try {
       if (inst && inst.renderer && slideEl) {
         const canvas = inst.renderer.domElement;
@@ -1336,7 +1181,6 @@ function updateSlidePositions() {
             displayH = Math.max(1, Math.floor(rect.height));
           }
         } catch (e) {}
-        // clamp display sizes before setting renderer buffer
         const maxViewport = Math.max(window.innerWidth || 1024, window.innerHeight || 1024);
         const cap = Math.max(1024, Math.min(8192, Math.floor(maxViewport * 2)));
         if (displayW > cap) displayW = cap;
@@ -1350,10 +1194,8 @@ function updateSlidePositions() {
         }
       }
     } catch (e) {
-      // ignore resize errors
     }
 
-    // If this instance uses a mock image instead of a 3D model, sync CSS transform
     try {
       if (instance.modelGroup && instance.modelGroup.isMockImage && instance.mockImage) {
         const img = instance.mockImage;
@@ -1361,7 +1203,7 @@ function updateSlidePositions() {
         const rotY = (instance.modelGroup.rotation && instance.modelGroup.rotation.y) ? instance.modelGroup.rotation.y : 0;
         const scale = (instance.modelGroup.scale && instance.modelGroup.scale.x) ? instance.modelGroup.scale.x : 1;
         const ty = Math.round(posY * 100);
-        const ry = rotY * 57.2958; // rad -> deg
+        const ry = rotY * 57.2958;
         img.style.transform = `translate(-50%, calc(-50% + ${ty}px)) scale(${scale})`;
       }
     } catch (e) {}
@@ -1370,14 +1212,12 @@ function updateSlidePositions() {
       updateModelScale(inst, idx === currentSlideIndex, inst.modelConfig);
     }
   });
-  // Debug: log slide/renderer status to help diagnose visibility issues
+  
   try {
     slidesArray.forEach((slide, idx) => {
       const inst = threeInstances[idx];
       const canvas = inst && inst.renderer ? inst.renderer.domElement : null;
       const rect = canvas ? canvas.getBoundingClientRect() : null;
-      console.log(`[slide-status ${idx}] classes=${slide.className}`, 'hasModel=', !!(inst && inst.modelGroup), 'canvasRect=', rect, 'rendererSize=', inst && inst.renderer ? `${inst.renderer.domElement.width}x${inst.renderer.domElement.height}` : null);
-      // ensure renderer drawing buffer follows actual displayed canvas
       try {
         if (inst && inst.updateRendererSizeToCanvas) inst.updateRendererSizeToCanvas();
       } catch (e) {}
@@ -1395,7 +1235,6 @@ function updateSlidePositions() {
   updateSlidePositions._prevSlideIndex = currentSlideIndex;
 }
 
-// ========== ГЛАВНАЯ СИНХРОННАЯ СМЕНА ==========
 async function syncChangeSlide(newSlideIndex) {
   if (isTransitioning || newSlideIndex === currentSlideIndex) return;
   isTransitioning = true;
@@ -1448,7 +1287,6 @@ function setupDragAndDrop() {
     e.preventDefault();
     const files = Array.from(e.dataTransfer.files);
     for (const file of files) {
-      // ... drag and drop logic ...
     }
   });
 }
@@ -1479,7 +1317,6 @@ async function buildCarousel() {
       await new Promise((r) => setTimeout(r, 450 + orderIndex * 350));
     }
 
-    // Initialize slide; if size/layout problems occur, retry a few times
     let attempts = 0;
     const MAX_ATTEMPTS = (window.innerWidth <= 768) ? 6 : 4;
     let inst = null;
@@ -1490,16 +1327,13 @@ async function buildCarousel() {
         console.warn(`[buildCarousel] initThreeForSlide attempt ${attempts} failed for index ${i}:`, e);
       }
       inst = threeInstances[i];
-      // Ensure renderer and model are present and renderer has non-zero drawing buffer
       const hasRenderer = inst && inst.renderer && inst.renderer.domElement;
       const rendererSizeOk = hasRenderer && inst.renderer.domElement.width > 0 && inst.renderer.domElement.height > 0;
       const hasModel = inst && inst.modelGroup;
       if (hasRenderer && rendererSizeOk && hasModel) break;
-      // try to force a resize and retry loading model
       try {
         console.warn(`[buildCarousel] retrying init for slide ${i} — rendererSizeOk=${rendererSizeOk} hasModel=${!!hasModel}`);
         if (inst && inst.updateRendererSizeToCanvas) inst.updateRendererSizeToCanvas();
-        // if model missing, try loading again
         if (inst && !hasModel) {
           await loadModelIntoSlide(i, MODELS_CONFIG[i]);
         }
@@ -1507,7 +1341,6 @@ async function buildCarousel() {
         console.warn(`[buildCarousel] retry helper failed for slide ${i}:`, e);
       }
       attempts++;
-      // small backoff
       await new Promise(r => setTimeout(r, 180 * attempts));
     }
   }
@@ -1626,34 +1459,27 @@ async function buildCarousel() {
   });
 
   setupDragAndDrop();
-  // After carousel built, run stabilization for each instance as-if the slide was shifted
-  // (this mirrors the fixes that happen when user shifts the carousel) without changing colors.
   try {
     threeInstances.forEach((inst, idx) => {
-      // stagger a bit to avoid blocking layout
       setTimeout(() => {
         try { stabilizeInstanceAsIfShifted(inst, idx); } catch (e) {}
       }, 120 + idx * 80);
     });
   } catch (e) {}
-  console.log('✅ Синхронная карусель готова!');
 
   window.addEventListener('wheel', () => {
     threeInstances.forEach((inst, idx) => {
       if (!inst || !inst.modelGroup || !inst.modelConfig) return;
-      // Never reset the currently centered model here; allow center wheel handler to control it
       if (idx === currentSlideIndex) return;
       try {
         const resetScale = (inst.modelConfig.scale || 1) * getResponsiveModelScaleFactor();
         inst.modelGroup.scale.set(resetScale, resetScale, resetScale);
       } catch (e) {
-        // ignore
       }
     });
   }, { passive: true });
 }
 
-// ========== УПРАВЛЕНИЕ С КЛАВИАТУРЫ ==========
 function initKeyboardControls() {
   window.addEventListener('keydown', (e) => {
     const choiseBtn = document.getElementById('choiseBtn')
@@ -1664,8 +1490,6 @@ function initKeyboardControls() {
   })
 }
 
-
-// кнопка Выбрать
 function initChoiseButton() {
     const choiseButton = document.querySelector('.choise-button');
     
@@ -1673,7 +1497,6 @@ function initChoiseButton() {
         choiseButton.addEventListener('click', (e) => {
             e.stopPropagation();
             
-            // Воспроизводим звук
             if (window.audioManager && typeof window.audioManager.play === 'function') {
               window.audioManager.play('chelk', { loop: false, volume: 0.54, forceImmediate: true });
             } else {
@@ -1694,17 +1517,14 @@ function initChoiseButton() {
             const bracketsContainer = choiseButton.querySelector('.choise-button__brackets');
             
             if (bracketsContainer) {
-                // Убираем возможность обратной анимации при наведении
                 choiseButton.style.pointerEvents = 'none';
                 
-                // Отключаем hover эффект, убирая transition у brackets
                 const brackets = choiseButton.querySelector('.choise-button__brackets');
                 brackets.style.setProperty('transition', 'none', 'important');
                 
                 const leftBracket = bracketsContainer.querySelector('svg:first-child').cloneNode(true);
                 const rightBracket = bracketsContainer.querySelector('svg:last-child').cloneNode(true);
                 
-                // Первая дополнительная (ближняя)
                 const leftClone1 = leftBracket.cloneNode(true);
                 leftClone1.style.cssText = 'position:absolute; left:0px; top:50%; transform:translateY(-50%) scale(1); opacity:1; pointer-events:none; transition:all 0.8s cubic-bezier(0.15, 0.85, 0.3, 1.05) !important';
                 choiseButton.appendChild(leftClone1);
@@ -1713,7 +1533,6 @@ function initChoiseButton() {
                 rightClone1.style.cssText = 'position:absolute; right:0px; top:50%; transform:translateY(-50%) scale(1); opacity:1; pointer-events:none; transition:all 0.8s cubic-bezier(0.15, 0.85, 0.3, 1.05) !important';
                 choiseButton.appendChild(rightClone1);
                 
-                // Вторая дополнительная (дальняя)
                 const leftClone2 = leftBracket.cloneNode(true);
                 leftClone2.style.cssText = 'position:absolute; left:0px; top:50%; transform:translateY(-50%) scale(1); opacity:1; pointer-events:none; transition:all 1s cubic-bezier(0.15, 0.85, 0.3, 1.05) !important';
                 choiseButton.appendChild(leftClone2);
@@ -1722,16 +1541,13 @@ function initChoiseButton() {
                 rightClone2.style.cssText = 'position:absolute; right:0px; top:50%; transform:translateY(-50%) scale(1); opacity:1; pointer-events:none; transition:all 1s cubic-bezier(0.15, 0.85, 0.3, 1.05) !important';
                 choiseButton.appendChild(rightClone2);
                 
-                // Анимация для brand
                 const brandElement = choiseButton.querySelector('.choise-button__brand');
                 const textElement = choiseButton.querySelector('.choise-button__text');
                 
                 if (brandElement) {
-                // Сначала показываем brand
                 brandElement.style.setProperty('transition', 'opacity 0.2s ease-out, transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1)', 'important');
                 brandElement.style.setProperty('opacity', '1', 'important');
                     
-                // Анимация увеличения и возврата
                 brandElement.style.setProperty('transform', 'scale(2.2)', 'important');
                     
                 setTimeout(() => {
@@ -1744,7 +1560,6 @@ function initChoiseButton() {
                   textElement.style.setProperty('opacity', '0', 'important');
                 }
                 
-                // Запускаем анимацию скобок
                 requestAnimationFrame(() => {
                     leftClone1.style.left = '-35px';
                     leftClone1.style.transform = 'translateY(-50%) scale(1.5)';
@@ -1761,16 +1576,13 @@ function initChoiseButton() {
                     rightClone2.style.setProperty('opacity', '0', 'important');
                 });
                 
-                // Удаляем дубликаты скобок и плавно исчезаем
                 setTimeout(() => {
                     const clones = [leftClone1, rightClone1, leftClone2, rightClone2];
                     clones.forEach(clone => clone.remove());
                     
-                    // Плавное исчезновение всей кнопки
                     choiseButton.style.setProperty('transition', 'opacity 0.8s ease-out', 'important');
                     choiseButton.style.setProperty('opacity', '0', 'important');
                     
-                    // Удаляем кнопку из верстки после исчезновения
                     setTimeout(() => {
                         if (choiseButton && choiseButton.parentNode) {
                             choiseButton.remove();
@@ -2032,7 +1844,6 @@ function initHelpToggle() {
 
 initHelpToggle();
 
-// --- Three.js and controls imports ---
 import { Scene, PerspectiveCamera, Group, Matrix4, Mesh, MeshStandardMaterial, Sphere, SphereGeometry, Vector3, Box3 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
