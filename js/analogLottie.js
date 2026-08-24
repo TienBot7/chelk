@@ -1060,7 +1060,6 @@ if (mixBtn) {
           analogSection.style.right = '0%'
           analogSection.style.display = 'block'
           analogSection.style.visibility = 'visible'
-          analogSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
           const comp = getComputedStyle(analogSection)
           if (comp.position === 'static') analogSection.style.position = 'relative'
           analogSection.style.setProperty('z-index', '20')

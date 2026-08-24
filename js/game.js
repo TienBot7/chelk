@@ -364,7 +364,8 @@ function createLiquidCanvas(color) {
   try {
     const ua = (navigator && navigator.userAgent) || ''
     const isSafari = /Safari/.test(ua) && !/Chrome/.test(ua) && !/Chromium/.test(ua) && !/Android/.test(ua)
-    if (!isSafari) {
+    const isAndroid = /Android/.test(ua)
+    if (!isSafari && !isAndroid) {
       canvas.style.filter = 'url(#chelkLiquidGooeyFilter)'
       canvas.style.webkitFilter = 'url(#chelkLiquidGooeyFilter)'
     } else {

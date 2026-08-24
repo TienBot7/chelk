@@ -8,6 +8,15 @@
   z-index: -5;
 }
 
+@media (max-width: 500px) {
+  .analogSection {
+    top: 0;
+    bottom: 0;
+    height: 100svh;
+    min-height: 100svh;
+  }
+}
+
 .content {
   position: relative;
   z-index: 25;

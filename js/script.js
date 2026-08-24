@@ -115,7 +115,7 @@ function onTouchEndScale() {
 
 const SCALE_SENSITIVITY = 0.00009;
 const SCALE_RATE = 0.7;
-const CENTER_SCROLL_MULTIPLIER = window.innerWidth <= 500 ? 2.6 : 4.2;
+const CENTER_SCROLL_MULTIPLIER = window.innerWidth <= 500 ? 2.6 : window.innerWidth <= 1024 ? 6.5 : 4.2;
 const MOBILE_TOUCH_SCALE_MULTIPLIER = 3.0;
 const CAMERA_MOVE_SENSITIVITY = 0.025;
 const CAMERA_MIN_DISTANCE = 0.2;
@@ -1409,37 +1409,54 @@ async function buildCarousel() {
     navigateCarousel('next');
   });
 
-  let touchStartX = 0;
-  let touchStartY = 0;
+  let swipeStartX = 0;
+  let swipeStartY = 0;
+  let swipePointerId = null;
+  let isHorizontalSwipe = false;
   const swipeThreshold = 60;
   const shouldEnableCarouselSwipe = () => typeof window !== 'undefined' && window.innerWidth <= 1024;
 
-  const handleCarouselTouchStart = (e) => {
-    if (!shouldEnableCarouselSwipe() || !e.changedTouches || !e.changedTouches.length) return;
-    const touch = e.changedTouches[0];
-    touchStartX = touch.clientX;
-    touchStartY = touch.clientY;
+  const handleCarouselPointerDown = (e) => {
+    if (!shouldEnableCarouselSwipe() || e.pointerType === 'mouse' || !e.isPrimary) return;
+    swipePointerId = e.pointerId;
+    swipeStartX = e.clientX;
+    swipeStartY = e.clientY;
+    isHorizontalSwipe = false;
+    try { carouselViewport.setPointerCapture(e.pointerId); } catch (error) {}
   };
 
-  const handleCarouselTouchEnd = (e) => {
-    if (!shouldEnableCarouselSwipe() || !e.changedTouches || !e.changedTouches.length || isTransitioning) return;
-    const touch = e.changedTouches[0];
-    const touchEndX = touch.clientX;
-    const touchEndY = touch.clientY;
-    const deltaX = touchEndX - touchStartX;
-    const deltaY = touchEndY - touchStartY;
-
-    if (Math.abs(deltaX) < swipeThreshold || Math.abs(deltaX) < Math.abs(deltaY)) {
-      return;
+  const handleCarouselPointerMove = (e) => {
+    if (e.pointerId !== swipePointerId) return;
+    const deltaX = e.clientX - swipeStartX;
+    const deltaY = e.clientY - swipeStartY;
+    if (!isHorizontalSwipe && Math.abs(deltaX) > 8 && Math.abs(deltaX) > Math.abs(deltaY)) {
+      isHorizontalSwipe = true;
     }
+    if (isHorizontalSwipe && e.cancelable) e.preventDefault();
+  };
+
+  const handleCarouselPointerUp = (e) => {
+    if (!shouldEnableCarouselSwipe() || e.pointerId !== swipePointerId || isTransitioning) return;
+    const deltaX = e.clientX - swipeStartX;
+    const deltaY = e.clientY - swipeStartY;
+    swipePointerId = null;
+
+    try { carouselViewport.releasePointerCapture(e.pointerId); } catch (error) {}
+    if (Math.abs(deltaX) < swipeThreshold || !isHorizontalSwipe || Math.abs(deltaX) < Math.abs(deltaY)) return;
 
     if (deltaX < 0) navigateCarousel('next');
     else navigateCarousel('prev');
   };
 
-  if (carouselViewport && shouldEnableCarouselSwipe()) {
-    carouselViewport.addEventListener('touchstart', handleCarouselTouchStart, { passive: true });
-    carouselViewport.addEventListener('touchend', handleCarouselTouchEnd, { passive: true });
+  const handleCarouselPointerCancel = (e) => {
+    if (e.pointerId === swipePointerId) swipePointerId = null;
+  };
+
+  if (carouselViewport) {
+    carouselViewport.addEventListener('pointerdown', handleCarouselPointerDown, { passive: true });
+    carouselViewport.addEventListener('pointermove', handleCarouselPointerMove, { passive: false });
+    carouselViewport.addEventListener('pointerup', handleCarouselPointerUp, { passive: true });
+    carouselViewport.addEventListener('pointercancel', handleCarouselPointerCancel, { passive: true });
   }
 
   window.addEventListener('resize', () => {

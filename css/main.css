@@ -663,7 +663,8 @@ section.loading.hide {
 .controls-wrapper.visible {
   display: flex !important;
   opacity: 1;
-  pointer-events: auto !important;
+  /* pointer-events: auto !important; */
+  pointer-events: none !important;
 }
 
 .nav-arrow {
