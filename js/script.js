@@ -1330,12 +1330,15 @@ async function buildCarousel() {
       inst = threeInstances[i];
       const hasRenderer = inst && inst.renderer && inst.renderer.domElement;
       const rendererSizeOk = hasRenderer && inst.renderer.domElement.width > 0 && inst.renderer.domElement.height > 0;
-      const hasModel = inst && inst.isRealModel === true;
-      if (hasRenderer && rendererSizeOk && hasModel) break;
+      const isSmallMobile = window.innerWidth <= 500;
+      const hasExpectedModel = isSmallMobile
+        ? !!(inst && inst.modelGroup && inst.modelGroup.isMockImage === true)
+        : !!(inst && inst.isRealModel === true);
+      if (hasRenderer && rendererSizeOk && hasExpectedModel) break;
       try {
-        console.warn(`[buildCarousel] retrying init for slide ${i} — rendererSizeOk=${rendererSizeOk} hasModel=${!!hasModel}`);
+        console.warn(`[buildCarousel] retrying init for slide ${i} — rendererSizeOk=${rendererSizeOk} hasModel=${hasExpectedModel}`);
         if (inst && inst.updateRendererSizeToCanvas) inst.updateRendererSizeToCanvas();
-        if (inst && !hasModel) {
+        if (inst && !hasExpectedModel) {
           await loadModelIntoSlide(i, MODELS_CONFIG[i]);
         }
       } catch (e) {
@@ -1345,16 +1348,23 @@ async function buildCarousel() {
       await new Promise(r => setTimeout(r, 180 * attempts));
     }
 
-    if (!inst || inst.isRealModel !== true) {
-      if (window.preloader && typeof window.preloader.showError === 'function') {
+    const isSmallMobile = window.innerWidth <= 500;
+    const hasExpectedModel = isSmallMobile
+      ? !!(inst && inst.modelGroup && inst.modelGroup.isMockImage === true)
+      : !!(inst && inst.isRealModel === true);
+    if (!hasExpectedModel) {
+      if (!isSmallMobile && window.preloader && typeof window.preloader.showError === 'function') {
         window.preloader.showError();
       }
       throw new Error(`GLB model failed to load for slide ${i}: ${MODELS_CONFIG[i].file}`);
     }
   }
   
-  const hasRealModel = threeInstances.length === MODELS_CONFIG.length &&
-    threeInstances.every((inst) => inst && inst.isRealModel === true);
+  const hasRealModel = window.innerWidth <= 500
+    ? threeInstances.length === MODELS_CONFIG.length &&
+      threeInstances.every((inst) => inst && inst.modelGroup && inst.modelGroup.isMockImage === true)
+    : threeInstances.length === MODELS_CONFIG.length &&
+      threeInstances.every((inst) => inst && inst.isRealModel === true);
   if (!hasRealModel && shouldPrioritizeAndroidSlideLoad() && carouselBuildRetryCount < 1) {
     carouselBuildRetryCount += 1;
     console.warn('[buildCarousel] no real model group on Android after build; retrying once in 1200ms');

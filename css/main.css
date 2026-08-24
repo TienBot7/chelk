@@ -1094,13 +1094,13 @@ section.loading.hide {
     width: 350px;
   }
   .letter {
-    font-size: 144px;
+    font-size: 36.92vw;
   }
   .word-slide[data-word-idx="0"] .letter{
-    font-size: 114px;
+    font-size: 29.23vw;
   }
   .word-slide[data-word-idx="2"] .letter{
-    font-size: 114px;
+    font-size: 29.23vw;
   }
   .slide {
     width: 100vw;

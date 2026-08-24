@@ -747,7 +747,7 @@ export function runPreloader({ onComplete }) {
 
     try {
       if (typeof window !== 'undefined' && window.innerWidth <= 500) {
-        carouselModels = carouselModels.filter((u) => !/head\.glb$/.test(u));
+        carouselModels = [];
       }
     } catch (e) {}
 
