@@ -750,7 +750,7 @@
         </div>
         <div class="form__bottom-content">
           <form class="form__bottom" id="requestForm" action="https://formsubmit.co/aaa5efa0056521d7cb2a15484e629d7b"
-            method="POST" target="_top" novalidate>
+            method="POST" target="formsubmit-frame" novalidate>
             <input type="hidden" name="_subject" value="Новая заявка с сайта Щёлк">
             <input type="hidden" name="_captcha" value="false">
             <input type="hidden" name="_template" value="table">
@@ -803,6 +803,7 @@
               </button>
             </div>
           </form>
+          <iframe name="formsubmit-frame" title="Form submission" hidden></iframe>
           <p class="form__copyright">© Щёлк <span id="current-year"></span>. Все права защищены.</p>
         </div>
       </div>
@@ -976,7 +977,12 @@
           return;
         }
 
-        form.submit();
+        const submitButton = form.querySelector('button[type="submit"]');
+        if (submitButton) submitButton.disabled = true;
+        HTMLFormElement.prototype.submit.call(form);
+        window.setTimeout(() => {
+          window.location.assign(form.querySelector('input[name="_next"]')?.value || 'thank-you.html');
+        }, 2000);
       });
     });
   </script>
