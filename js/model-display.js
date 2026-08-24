@@ -8,15 +8,6 @@ export function createModelRenderer(canvas) {
   const isAndroidDevice = typeof navigator !== 'undefined' && /Android/i.test(userAgent);
   let renderer;
 
-  function tryGetContext(c, attrs) {
-    try {
-      if (!c || !c.getContext) return null;
-      return c.getContext('webgl2', attrs) || c.getContext('webgl', attrs) || c.getContext('experimental-webgl', attrs) || null;
-    } catch (e) {
-      return null;
-    }
-  }
-
   function createRendererWithRetries(targetCanvas) {
     const maxAttempts = isLowPowerDevice ? 2 : 3;
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -28,29 +19,14 @@ export function createModelRenderer(canvas) {
         ];
         for (let a = 0; a < attrsList.length; a++) {
           const attrs = attrsList[a];
-          const ctx = tryGetContext(targetCanvas, attrs);
-          if (ctx) {
-            return new WebGLRenderer({ canvas: targetCanvas, alpha: true, antialias: !isLowPowerDevice, preserveDrawingBuffer: false, powerPreference: attrs.powerPreference || 'default' });
-          }
-
-          try {
-            const ep = document.createElement('canvas');
-            ep.width = Math.max(1, targetCanvas ? targetCanvas.clientWidth : 64);
-            ep.height = Math.max(1, targetCanvas ? targetCanvas.clientHeight : 64);
-            const epCtx = tryGetContext(ep, attrs);
-            if (epCtx) {
-              const rend = new WebGLRenderer({ canvas: ep, alpha: true, antialias: !isLowPowerDevice, preserveDrawingBuffer: false, powerPreference: attrs.powerPreference || 'default' });
-              if (targetCanvas && targetCanvas.parentNode && rend.domElement) {
-                rend.domElement.style.width = '100%';
-                rend.domElement.style.height = '100%';
-                rend.domElement.style.display = 'block';
-                try {
-                  targetCanvas.parentNode.replaceChild(rend.domElement, targetCanvas);
-                } catch (e) {}
-              }
-              return rend;
-            }
-          } catch (e) {}
+          const renderer = new WebGLRenderer({
+            canvas: targetCanvas,
+            alpha: true,
+            antialias: !isLowPowerDevice,
+            preserveDrawingBuffer: false,
+            powerPreference: attrs.powerPreference || 'default',
+          });
+          if (renderer.getContext()) return renderer;
         }
       } catch (e) {
       }

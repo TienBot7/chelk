@@ -1307,7 +1307,11 @@ function spawnDrop(forceColor = false) {
   bubble.style.top = `-${bubbleSize}px`
   bubble.style.cursor = 'default'
 
-  const colorOptions = forceColor || !initialColoredSpawned ? [selectedColorVariant] : gameColors
+  const colorOptions = forceColor || !initialColoredSpawned
+    ? [selectedColorVariant]
+    : window.innerWidth <= 768
+      ? [selectedColorVariant, selectedColorVariant, selectedColorVariant, selectedColorVariant, grayColor]
+      : gameColors
   const color = colorOptions[Math.floor(Math.random() * colorOptions.length)]
   if (color !== grayColor) initialColoredSpawned = true
   bubble.style.setProperty('--bubble-color', color)
@@ -1912,10 +1916,11 @@ function updatePlatformPosition(clientX) {
   const pEl = platform.querySelector('.device-rotator') || platform
   const pW = pEl.offsetWidth || 220
   const edgeMargin = window.innerWidth <= 768 ? 0 : 150
-  const minX = edgeMargin
-  const maxX = Math.max(minX, rect.width - edgeMargin - pW)
+  const minX = Math.max(edgeMargin, -rect.left)
+  const maxX = Math.min(window.innerWidth - pW - edgeMargin - rect.left, rect.width - edgeMargin - pW)
+  const boundedMaxX = Math.max(minX, maxX)
   let x = clientX - rect.left - pW / 2
-  x = clamp(x, minX, maxX)
+  x = clamp(x, minX, boundedMaxX)
   platform.style.left = x + 'px'
 }
 
@@ -1926,9 +1931,10 @@ bubblesContainer.addEventListener('mousemove', (e) => {
 bubblesContainer.addEventListener(
   'touchmove',
   (e) => {
+    e.preventDefault()
     if (e.touches && e.touches[0]) updatePlatformPosition(e.touches[0].clientX)
   },
-  { passive: true },
+  { passive: false }
 )
 
 function checkCollisions() {
@@ -2017,8 +2023,8 @@ function checkCollisions() {
         if (b.parentNode) b.parentNode.removeChild(b)
       }
 
-      if (score >= TARGET_SCORE) {
-      // if (score >= 1) {
+      // if (score >= TARGET_SCORE) {
+      if (score >= 1) {
         endGame()
         break
       }

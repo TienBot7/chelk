@@ -784,7 +784,7 @@
               <input class="form__input" type="text" name="контакты" placeholder="Контакты" required>
 
               <label class="form__custom-checkbox">
-                <input type="checkbox" class="custom-checkbox__input" name="согласие" checked required>
+                <input type="checkbox" class="custom-checkbox__input" name="согласие" required>
                 <span class="custom-checkbox__checkmark"></span>
                 <span class="custom-checkbox__label">
                   Даю согласие на обработку персональных данных<br>и принимаю <a target="_blank"
@@ -950,7 +950,22 @@
         let valid = true;
         requiredFields.forEach((field) => {
           if (field.type === 'checkbox') {
-            if (!field.checked) valid = false;
+            if (!field.checked) {
+              valid = false;
+              const checkmark = field.nextElementSibling;
+              if (checkmark) {
+                const colors = {
+                  Хорека: '#C4142D',
+                  Одежда: '#1D737B',
+                  Косметика: '#7B1D7B'
+                };
+                const selectedObject = (window.mainObject || document.getElementById('mainObject')?.textContent || '').trim();
+                checkmark.style.setProperty('--checkbox-accent-color', colors[selectedObject] || '#1D737B');
+                checkmark.classList.remove('invalid');
+                void checkmark.offsetWidth;
+                checkmark.classList.add('invalid');
+              }
+            }
           } else if (!field.value.trim()) {
             valid = false;
           }

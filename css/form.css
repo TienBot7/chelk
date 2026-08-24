@@ -222,6 +222,19 @@
   margin-top: 2px;
 }
 
+@keyframes checkbox-invalid {
+  0%, 100% {
+    border-color: #fff;
+  }
+  25%, 75% {
+    border-color: var(--checkbox-accent-color, #1D737B);
+  }
+}
+
+.custom-checkbox__checkmark.invalid {
+  animation: checkbox-invalid 1s ease;
+}
+
 .custom-checkbox__input:checked + .custom-checkbox__checkmark {
   border-color: #414244;
 }

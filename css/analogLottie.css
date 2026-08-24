@@ -1,5 +1,5 @@
 .analogSection {
-  height: 100vh;
+  height: 100dvh;
   position: fixed;
   overflow: hidden;
   top: 0;
@@ -12,7 +12,7 @@
   position: relative;
   z-index: 25;
   text-align: center;
-  height: 100vh;
+  height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -165,61 +165,61 @@
 
 @media (max-aspect-ratio: 16/9) {
   .cans-image {
-    width: 6.7vh;
+    width: 6.7dvh;
   }
   .tubes-image {
-    width: 3vh;
+    width: 3dvh;
   }
   .t-shirts-image.tshirt-0 {
-    width: 32vh;
+    width: 32dvh;
   }
   .t-shirts-image.tshirt-1 {
-    width: 36vh;
+    width: 36dvh;
   }
   #person1 {
-    height: 102.7vh;
+    height: 102.7dvh;
   }
   #person2 {
-    height: 89.9vh;
+    height: 89.9dvh;
     right: -40%;
   }
   #person3 {
-    height: 98.54vh;
+    height: 98.54dvh;
   }
   .green-cloud1 {
-    width: 56.7vh;
+    width: 56.7dvh;
   }
   .green-cloud2 {
-    width: 70.9vh;
+    width: 70.9dvh;
   }
   .red-cloud1 {
-    width: 17.3vh;
+    width: 17.3dvh;
   }
   .red-cloud2 {
-    width: 18.6vh;
+    width: 18.6dvh;
   }
   .red-cloud3 {
-    width: 19.8vh;
+    width: 19.8dvh;
   }
   .red-cloud4 {
-    width: 23.5vh;
+    width: 23.5dvh;
   }
   .purple-cloud1 {
-    width: 15.5vh;
+    width: 15.5dvh;
   }
   .purple-cloud2 {
-    width: 18.1vh;
+    width: 18.1dvh;
   }
   .purple-cloud3 {
-    width: 20.5vh;
+    width: 20.5dvh;
   }
   .purple-cloud4 {
-    width: 15.5vh;
+    width: 15.5dvh;
   }
   .purple-cloud5 {
-    width: 18.6vh;
+    width: 18.6dvh;
   }
   .purple-cloud6 {
-    width: 22.5vh;
+    width: 22.5dvh;
   }
 }

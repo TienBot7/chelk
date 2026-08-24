@@ -910,7 +910,7 @@ function drawLiquid() {
 function animate() {
   if (!isPaused) {
     if (isFilling && fillLevel < targetFill) {
-      const riseFactor = height > width ? 0.015 : 0.01
+      const riseFactor = 0.015
       fillLevel += (targetFill - fillLevel) * riseFactor //скорость поднятия экрана с жидкостью
     }
 
