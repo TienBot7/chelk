@@ -2024,7 +2024,7 @@ function checkCollisions() {
       }
 
       // if (score >= TARGET_SCORE) {
-      if (score >= 2) {
+      if (score >= 3) {
         endGame()
         break
       }
