@@ -990,7 +990,8 @@
           });
 
           const result = await response.json().catch(() => null);
-          if (!response.ok || !result || result.success !== true) {
+          const isSuccessful = result && (result.success === true || result.success === 'true');
+          if (!response.ok || !isSuccessful) {
             throw new Error('FormSubmit rejected the request');
           }
 
