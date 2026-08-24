@@ -171,7 +171,7 @@
     font-size: 12.8vw;
   }
   .head__title.left{
-    top: 100px;
+    top: 80px;
     font-size: calc(5.19vw + 5.19vh);
     gap: calc(1.62vw + 1.62vh);
   }

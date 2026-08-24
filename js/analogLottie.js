@@ -1005,7 +1005,6 @@ function positionShopImageByChoice(selectedChoice) {
 function startFilling(selectedChoice) {
   if (isFilling) return
   choice = selectedChoice
-  setShopImageByChoice(selectedChoice)
   positionPerson(person1, 'initial', { duration: 0 })
   positionPerson(person2, 'initial', { duration: 0 })
   positionPerson(person3, 'initial', { duration: 0 })
@@ -1054,6 +1053,7 @@ if (mixBtn) {
   mixBtn.addEventListener('click', () => {
     if (!isFilling) {
       start = syncStartFromSelection()
+      setShopImageByChoice(start)
 
       try {
         if (analogSection) {

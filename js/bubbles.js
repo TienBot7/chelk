@@ -787,7 +787,7 @@ function spawnThreeWithStagger(done, forcedGroup, sourcePoint, options = {}) {
   ]
   const fixedTargets500 = [
     { edge: 'left', fy: 0.29 },
-    { edge: 'right', fy: 0.48 },
+    { edge: 'right', fy: 0.4 },
   ]
   const fixedTargets = options.fixedTargets || (() => {
     const width = window.innerWidth

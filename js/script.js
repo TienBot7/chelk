@@ -115,7 +115,7 @@ function onTouchEndScale() {
 
 const SCALE_SENSITIVITY = 0.00009;
 const SCALE_RATE = 0.7;
-const CENTER_SCROLL_MULTIPLIER = 2.6;
+const CENTER_SCROLL_MULTIPLIER = window.innerWidth <= 500 ? 2.6 : 4.2;
 const MOBILE_TOUCH_SCALE_MULTIPLIER = 3.0;
 const CAMERA_MOVE_SENSITIVITY = 0.025;
 const CAMERA_MIN_DISTANCE = 0.2;

@@ -327,10 +327,30 @@ canvas {
 }
 
 @media (max-width: 500px) {
+  .thank-you__circles.pressed {
+    --circle-scale: 1.5;
+  }
+
+  .thank-you__circles.animate-click {
+    animation-name: expandThenShrinkMobile;
+  }
+
   vfx-js-canvas,
   canvas {
     transform-origin: center center !important;
     transform: scale(1.28) !important;
+  }
+}
+
+@keyframes expandThenShrinkMobile {
+  0% {
+    transform: scale(1);
+  }
+  12% {
+    transform: scale(1.5);
+  }
+  100% {
+    transform: scale(1);
   }
 }
 
