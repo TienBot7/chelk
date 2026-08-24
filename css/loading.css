@@ -153,6 +153,10 @@
   gap: 0;
   overflow: hidden;
 }
+.counter-container.preloader-error {
+  width: auto;
+  gap: 0;
+}
 .digit {
   position: relative;
   width: 20px;

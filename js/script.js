@@ -575,7 +575,7 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
       return;
     }
   } catch (e) {}
-  
+
   const loader = new GLTFLoader();
   const modelPath = `./models/${modelConfig.file}`;
   try {
@@ -718,6 +718,7 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
 
     inst.scene.add(wrapper);
     inst.modelGroup = wrapper;
+    inst.isRealModel = true;
     try {
       if (inst && typeof inst.updateRendererSizeToCanvas === 'function') {
         inst.updateRendererSizeToCanvas();
@@ -886,13 +887,13 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
         window.__carouselDiagnostics__.errors.push({ slideIndex, modelPath, ts: Date.now(), error: String(err && (err.message || err)) });
       }
     } catch (e) {}
-    const geometry = new SphereGeometry(0.5, 32, 32);
-    const material = new MeshStandardMaterial({ color: 0x666666, metalness: 0.7, roughness: 0.3 });
-    const fallbackMesh = new Mesh(geometry, material);
-    fallbackMesh.scale.set(0.8, 0.8, 0.8);
-    inst.scene.add(fallbackMesh);
-    inst.modelGroup = fallbackMesh;
-    try { if (inst) inst._loadFailed = true; } catch (e) {}
+    try {
+      if (inst) {
+        inst._loadFailed = true;
+        inst.isRealModel = false;
+      }
+    } catch (e) {}
+    throw err;
   }
 }
 
@@ -1329,7 +1330,7 @@ async function buildCarousel() {
       inst = threeInstances[i];
       const hasRenderer = inst && inst.renderer && inst.renderer.domElement;
       const rendererSizeOk = hasRenderer && inst.renderer.domElement.width > 0 && inst.renderer.domElement.height > 0;
-      const hasModel = inst && inst.modelGroup;
+      const hasModel = inst && inst.isRealModel === true;
       if (hasRenderer && rendererSizeOk && hasModel) break;
       try {
         console.warn(`[buildCarousel] retrying init for slide ${i} — rendererSizeOk=${rendererSizeOk} hasModel=${!!hasModel}`);
@@ -1343,9 +1344,17 @@ async function buildCarousel() {
       attempts++;
       await new Promise(r => setTimeout(r, 180 * attempts));
     }
+
+    if (!inst || inst.isRealModel !== true) {
+      if (window.preloader && typeof window.preloader.showError === 'function') {
+        window.preloader.showError();
+      }
+      throw new Error(`GLB model failed to load for slide ${i}: ${MODELS_CONFIG[i].file}`);
+    }
   }
   
-  const hasRealModel = hasAnyRealModel();
+  const hasRealModel = threeInstances.length === MODELS_CONFIG.length &&
+    threeInstances.every((inst) => inst && inst.isRealModel === true);
   if (!hasRealModel && shouldPrioritizeAndroidSlideLoad() && carouselBuildRetryCount < 1) {
     carouselBuildRetryCount += 1;
     console.warn('[buildCarousel] no real model group on Android after build; retrying once in 1200ms');
@@ -1844,7 +1853,7 @@ function initHelpToggle() {
 
 initHelpToggle();
 
-import { Scene, PerspectiveCamera, Group, Matrix4, Mesh, MeshStandardMaterial, Sphere, SphereGeometry, Vector3, Box3 } from 'three';
+import { Scene, PerspectiveCamera, Group, Matrix4, Sphere, Vector3, Box3 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { createModelRenderer, setupLighting, enhanceMaterials } from './model-display.js';

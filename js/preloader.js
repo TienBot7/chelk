@@ -60,6 +60,7 @@ export function runPreloader({ onComplete }) {
   let targetPercent = 0;
   let animationFrame = null;
   let finished = false;
+  let hasError = false;
   let soundBtnClicked = false;
   const MAX_WAIT_MS = 15000;
 
@@ -70,6 +71,7 @@ export function runPreloader({ onComplete }) {
   }
 
   function renderPercent(value) {
+    if (hasError) return;
     const percent = Math.min(99, Math.max(0, Math.round(value)));
     const tens = Math.floor(percent / 10);
     const units = percent % 10;
@@ -103,7 +105,19 @@ export function runPreloader({ onComplete }) {
   }
 
   function updatePreloaderProgress() {
+    if (hasError) return;
     setLoadingPercent(getCombinedProgress() * 100);
+  }
+
+  function showError() {
+    if (finished || hasError) return;
+    hasError = true;
+    if (animationFrame) cancelAnimationFrame(animationFrame);
+    const counter = document.querySelector('.counter-container');
+    if (counter) {
+      counter.textContent = 'ERROR';
+      counter.classList.add('preloader-error');
+    }
   }
 
   function reportModelProgress(loaded, total) {
@@ -178,6 +192,7 @@ export function runPreloader({ onComplete }) {
     window.preloader.reportModelProgress = reportModelProgress;
     window.preloader.markModelLoaded = markModelLoaded;
     window.preloader.markCarouselModelsReady = markCarouselModelsReady;
+    window.preloader.showError = showError;
     window.preloader.markRequiredAssetsLoaded = markRequiredAssetsLoaded;
     window.preloader.markWindowLoaded = markWindowLoaded;
     window.preloader.addWaitTask = addWaitTask;
