@@ -5,11 +5,11 @@ const soundAudioCache = {
   pop1: new Audio('audio/pop1.mp3'),
   pop2: new Audio('audio/pop2.mp3'),
 };
-const shopAssetUrls = {
-  Хорека: './img/shop/red.webp',
-  Одежда: './img/shop/green.webp',
-  Косметика: './img/shop/purple.webp',
-};
+const shopAssetUrls = [
+  './img/shop/red.webp',
+  './img/shop/green.webp',
+  './img/shop/purple.webp',
+];
 
 const goodsAssetUrls = [
   './img/goods/cosmetic-black.webp',
@@ -667,26 +667,20 @@ export function runPreloader({ onComplete }) {
     }, 900);
   }
 
-  function preloadShopImageForSelection(selection) {
-    const url = shopAssetUrls[selection] || shopAssetUrls.Одежда;
-    try {
-      const img = new Image();
-      img.decoding = 'async';
-      img.loading = 'eager';
-      img.src = url;
-    } catch (e) {}
-  }
-
-  function getSelectedShopObject() {
-    return document.getElementById('mainObject')?.textContent?.trim() || window.mainObject || 'Одежда';
-  }
-
-  function preloadSelectedShopImage() {
-    preloadShopImageForSelection(getSelectedShopObject());
+  function preloadShopImages() {
+    if (typeof window !== 'undefined' && window.innerWidth <= 500) return;
+    shopAssetUrls.forEach((url) => {
+      try {
+        const img = new Image();
+        img.decoding = 'async';
+        img.loading = 'eager';
+        img.src = url;
+      } catch (e) {}
+    });
   }
 
   function startPreloader() {
-    preloadSelectedShopImage();
+    preloadShopImages();
     try {
       if (typeof window !== 'undefined' && window.innerWidth <= 500) {
         addWaitTask(preloadGoodsImages(mobilePriorityUrls));
@@ -707,10 +701,6 @@ export function runPreloader({ onComplete }) {
       }
     }, MAX_WAIT_MS);
   }
-
-  window.addEventListener('mainObjectChange', (event) => {
-    preloadShopImageForSelection(event.detail || getSelectedShopObject());
-  });
 
   function preloadGoodsImages(urls = null, timeoutMs = 10000) {
     const sources = Array.isArray(urls) && urls.length ? urls.slice() : (Array.isArray(goodsAssetUrls) ? goodsAssetUrls.slice() : []);
@@ -748,7 +738,7 @@ export function runPreloader({ onComplete }) {
   }
 
   function startBackgroundAssetLoading() {
-    preloadSelectedShopImage();
+    preloadShopImages();
     let carouselModels = [
       './models/t-shirt-black.glb',
       './models/soda_black.glb',
