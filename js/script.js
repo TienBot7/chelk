@@ -7,6 +7,12 @@ const BACKGROUND_HEX = 0x121315;
 const isMobileDevice = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 const isAndroidDevice = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent);
 
+function shouldUseMobileFallbackFor3d() {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') return false;
+  if (window.innerWidth > 768) return false;
+  return /Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent || '');
+}
+
 function getPreferredDPR() {
   return isMobileDevice ? 1 : Math.min(window.devicePixelRatio || 1, 2);
 }
@@ -537,7 +543,7 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
   }
 
   try {
-    if (typeof window !== 'undefined' && window.innerWidth <= 500) {
+    if (shouldUseMobileFallbackFor3d()) {
       const slideEl = inst.slideElement;
       if (slideEl) {
         const imgEl = document.createElement('img');

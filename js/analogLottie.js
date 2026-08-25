@@ -12,6 +12,24 @@ const formScreen = document.getElementById('formScreen')
 
 let choice = null
 let start = 'purple'
+const shopImageSources = {
+  red: './img/shop/red.webp',
+  green: './img/shop/green.webp',
+  purple: './img/shop/purple.webp',
+}
+const preloadedShopImages = new Map()
+
+function preloadShopImageByChoice(selectedChoice) {
+  const key = selectedChoice === 'green' ? 'green' : selectedChoice === 'purple' ? 'purple' : 'red'
+  const src = shopImageSources[key]
+  if (!src || preloadedShopImages.has(src)) return
+
+  const img = new Image()
+  img.decoding = 'async'
+  img.loading = 'eager'
+  img.src = src
+  preloadedShopImages.set(src, img)
+}
 
 function resolveStartFromSelection(value = '') {
   const rawValue = String(value || document.getElementById('mainObject')?.textContent || window.mainObject || '').trim().toLowerCase()
@@ -1053,6 +1071,7 @@ if (mixBtn) {
   mixBtn.addEventListener('click', () => {
     if (!isFilling) {
       start = syncStartFromSelection()
+      preloadShopImageByChoice(start)
       setShopImageByChoice(start)
 
       try {
@@ -1082,7 +1101,9 @@ if (mixBtn) {
 }
 
 window.addEventListener('mainObjectChange', () => {
-  syncStartFromSelection()
+  const selectedChoice = syncStartFromSelection()
+  preloadShopImageByChoice(selectedChoice)
+  if (window.innerWidth <= 500) setShopImageByChoice(selectedChoice)
 })
 
 const headCanvas = document.getElementById('canvas')

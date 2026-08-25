@@ -5,7 +5,7 @@ import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js'
 
 const isAndroidDevice = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent)
 const isMobileDevice = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-const useHeadImageFallback = () => window.innerWidth <= 500
+const useHeadImageFallback = () => typeof window !== 'undefined' && window.innerWidth <= 768 && isMobileDevice
 const isLowPowerHeadRender = isMobileDevice && window.innerWidth <= 768
 const MAX_HEAD_CANVAS_HEIGHT = 1080
 const HEAD_RENDER_INTERVAL = isLowPowerHeadRender ? 33 : 16

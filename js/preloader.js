@@ -667,15 +667,39 @@ export function runPreloader({ onComplete }) {
     }, 900);
   }
 
+  function getShopAssetUrlByChoice(value = '') {
+    const raw = String(value || (typeof window !== 'undefined' ? (window.mainObject || '') : '') || '').trim().toLowerCase();
+    if (raw.includes('хор') || raw.includes('soda') || raw.includes('red')) return './img/shop/red.webp';
+    if (raw.includes('одеж') || raw.includes('cloth') || raw.includes('t-shirt') || raw.includes('green')) return './img/shop/green.webp';
+    if (raw.includes('косм') || raw.includes('cos') || raw.includes('purple')) return './img/shop/purple.webp';
+    return './img/shop/red.webp';
+  }
+
   function preloadShopImages() {
-    shopAssetUrls.forEach((url) => {
+    const selectedChoice = typeof window !== 'undefined' ? (window.mainObject || '') : '';
+    const selectedUrl = getShopAssetUrlByChoice(selectedChoice);
+    if (typeof window !== 'undefined' && window.innerWidth <= 500) return;
+    if (!selectedUrl) return;
+
+    try {
+      const img = new Image();
+      img.decoding = 'async';
+      img.loading = 'eager';
+      img.src = selectedUrl;
+    } catch (e) {}
+  }
+
+  if (typeof window !== 'undefined') {
+    window.preloadShopImageByChoice = (choice = '') => {
+      const selectedUrl = getShopAssetUrlByChoice(choice || (window.mainObject || ''));
+      if (!selectedUrl || window.innerWidth <= 500) return;
       try {
         const img = new Image();
         img.decoding = 'async';
         img.loading = 'eager';
-        img.src = url;
+        img.src = selectedUrl;
       } catch (e) {}
-    });
+    };
   }
 
   function startPreloader() {

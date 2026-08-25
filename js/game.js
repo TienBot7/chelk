@@ -2025,8 +2025,8 @@ function checkCollisions() {
       }
 
       if (score >= TARGET_SCORE) {
-      // if (score >= 0) {
-        endGame()
+      if (score >= 0) {
+        // endGame()
         break
       }
     }
