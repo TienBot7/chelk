@@ -235,7 +235,8 @@
   font-size: 16px;
 }
 
-.custom-checkbox__label a {
+.custom-checkbox__label a:link,
+.custom-checkbox__label a:visited {
   color: #fff;
   text-decoration: none;
   transition: color 0.3s ease;

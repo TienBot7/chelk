@@ -967,6 +967,7 @@
       form.addEventListener('submit', (event) => {
         event.preventDefault();
         const consentMessage = form.querySelector('.form__item12');
+        const consentCheckbox = form.querySelector('.form__custom-checkbox input[type="checkbox"]');
 
         const honey = form.querySelector('input[name="_honey"]');
         if (honey && honey.value) {
@@ -976,15 +977,18 @@
         const requiredFields = form.querySelectorAll('input[required]');
         let valid = true;
         requiredFields.forEach((field) => {
-          if (field.type === 'checkbox') {
-            if (!field.checked) {
-              valid = false;
-              consentMessage?.classList.add('visible');
-            }
-          } else if (!field.value.trim()) {
+          if (field.type !== 'checkbox' && !field.value.trim()) {
             valid = false;
           }
         });
+
+        if (consentCheckbox && !consentCheckbox.checked) {
+          valid = false;
+          consentMessage?.classList.remove('success');
+          consentMessage?.classList.add('visible');
+        } else {
+          consentMessage?.classList.remove('visible');
+        }
 
         if (!valid) {
           return;
