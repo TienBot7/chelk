@@ -8,7 +8,8 @@
   <link rel="icon" type="image/png" href="favicon.png">
   <link rel="preload" href="./fonts/Comforter/Comforter-Regular.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="preload" href="./fonts/Аvеnіr_Nехt_W1G/Avenir_Next_W1G_Medium.ttf" as="font" type="font/ttf" crossorigin>
-  <link rel="preload" href="./fonts/Аvеnіr_Nехt_W1G/Avenir_Next_W1G_UltraLight.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="./fonts/Аvеnіr_Nехt_W1G/Avenir_Next_W1G_UltraLight.ttf" as="font" type="font/ttf"
+    crossorigin>
   <link rel="preload" href="./fonts/Аvеnіr_Nехt_W1G/Avenir_Next_W1G_Regular.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="stylesheet" href="./css/style.css">
   <script src="./js/audio-manager.js"></script>
@@ -319,7 +320,8 @@
             </button>
           </div>
           <div class="scroll-card__content">
-            <p>Это выражение уникальной сути бренда через эстетику, которая передаёт ценности, характер и обещание бренда</p>
+            <p>Это выражение уникальной сути бренда через эстетику, которая передаёт ценности, характер и обещание
+              бренда</p>
           </div>
         </div>
       </div>
@@ -429,7 +431,8 @@
             </button>
           </div>
           <div class="scroll-card__content">
-            <p>Свободные сегменты рынка со слабым визуальным присутствием конкурентов, где бренд становится лидером через уникальный визуальный код</p>
+            <p>Свободные сегменты рынка со слабым визуальным присутствием конкурентов, где бренд становится лидером
+              через уникальный визуальный код</p>
           </div>
         </div>
       </div>
@@ -802,6 +805,24 @@
                 </span>
               </button>
             </div>
+            <div class="form__item12">
+              <div class="form__message">
+                <svg class="form__message-error-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 7V13" stroke="#C4142D" stroke-width="1.5" stroke-linecap="round" />
+                  <path
+                    d="M12 17C12.5523 17 13 16.5523 13 16C13 15.4477 12.5523 15 12 15C11.4477 15 11 15.4477 11 16C11 16.5523 11.4477 17 12 17Z"
+                    fill="#C4142D" />
+                  <path
+                    d="M9.216 3C10.396 2.333 11.17 2 12 2C13.114 2 14.128 2.6 16.157 3.802L16.843 4.208C18.872 5.41 19.886 6.011 20.443 7C21 7.99 21 9.19 21 11.594V12.406C21 14.809 21 16.011 20.443 17C19.886 17.989 18.872 18.59 16.843 19.791L16.157 20.198C14.128 21.399 13.114 22 12 22C10.886 22 9.872 21.4 7.843 20.198L7.157 19.791C5.128 18.591 4.114 17.989 3.557 17C3 16.01 3 14.81 3 12.406V11.594C3 9.19 3 7.989 3.557 7C3.996 6.22 4.719 5.682 6 4.9"
+                    stroke="#C4142D" stroke-width="1.5" stroke-linecap="round" />
+                </svg>
+                <svg class="form__message-success-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M9.216 3C10.396 2.333 11.17 2 12 2C13.114 2 14.128 2.6 16.157 3.802L16.843 4.208C18.872 5.41 19.886 6.011 20.443 7C21 7.99 21 9.19 21 11.594V12.406C21 14.809 21 16.011 20.443 17C19.886 17.989 18.872 18.59 16.843 19.791L16.157 20.198C14.128 21.399 13.114 22 12 22C10.886 22 9.872 21.4 7.843 20.198L7.157 19.791C5.128 18.591 4.114 17.989 3.557 17C3 16.01 3 14.81 3 12.406V11.594C3 9.19 3 7.989 3.557 7C3.996 6.22 4.719 5.682 6 4.9" stroke="white" stroke-width="1.5" stroke-linecap="round" />
+                  <path d="M8 12L11.5 15L17 9.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <p>Необходимо дать согласие на обработку персональных данных и политику конфиденциальности.</p>
+              </div>
+            </div>
           </form>
           <iframe name="formsubmit-frame" title="Form submission" hidden></iframe>
           <p class="form__copyright">© Щёлк <span id="current-year"></span>. Все права защищены.</p>
@@ -855,7 +876,7 @@
             if (window.innerWidth <= 768 && window.preloader && typeof window.preloader.addWaitTask === 'function') {
               window.preloader.addWaitTask(buildPromise);
             }
-          } catch (e) {}
+          } catch (e) { }
         }
       });
     };
@@ -920,14 +941,14 @@
         console.error('Runtime error', ev && ev.error ? ev.error : ev);
         const loadingSection = document.querySelector && document.querySelector('section.loading');
         if (loadingSection) loadingSection.classList.remove('hide');
-      } catch (e) {}
+      } catch (e) { }
     });
     window.addEventListener && window.addEventListener('unhandledrejection', (ev) => {
       try {
         console.error('Unhandled rejection', ev && ev.reason ? ev.reason : ev);
         const loadingSection = document.querySelector && document.querySelector('section.loading');
         if (loadingSection) loadingSection.classList.remove('hide');
-      } catch (e) {}
+      } catch (e) { }
     });
 
     if (document.readyState === 'loading') {
@@ -942,6 +963,7 @@
 
       form.addEventListener('submit', (event) => {
         event.preventDefault();
+        const consentMessage = form.querySelector('.form__item12');
 
         const honey = form.querySelector('input[name="_honey"]');
         if (honey && honey.value) {
@@ -954,19 +976,7 @@
           if (field.type === 'checkbox') {
             if (!field.checked) {
               valid = false;
-              const checkmark = field.nextElementSibling;
-              if (checkmark) {
-                const colors = {
-                  Хорека: '#C4142D',
-                  Одежда: '#1D737B',
-                  Косметика: '#7B1D7B'
-                };
-                const selectedObject = (window.mainObject || document.getElementById('mainObject')?.textContent || '').trim();
-                checkmark.style.setProperty('--checkbox-accent-color', colors[selectedObject] || '#1D737B');
-                checkmark.classList.remove('invalid');
-                void checkmark.offsetWidth;
-                checkmark.classList.add('invalid');
-              }
+              consentMessage?.classList.add('visible');
             }
           } else if (!field.value.trim()) {
             valid = false;
@@ -975,6 +985,12 @@
 
         if (!valid) {
           return;
+        }
+
+        if (consentMessage) {
+          consentMessage.classList.add('visible', 'success');
+          const messageText = consentMessage.querySelector('.form__message p');
+          if (messageText) messageText.textContent = 'Спасибо, Ваша форма отправлена!';
         }
 
         const submitButton = form.querySelector('button[type="submit"]');
@@ -992,7 +1008,7 @@
   <script src="./js/bubbles.js"></script>
   <script src="./js/game.js"></script>
   <script type="module" src="./js/analogLottie.js"></script>
-  
+
 </body>
 
 </html>

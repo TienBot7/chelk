@@ -252,8 +252,13 @@ function getLiquidColors() {
 function resize() {
   width = analogSection.clientWidth
   height = analogSection.clientHeight
-  wavesCanvas.width = width
-  wavesCanvas.height = height
+  const pixelRatio = Math.min(window.devicePixelRatio || 1, 2)
+  wavesCanvas.width = Math.round(width * pixelRatio)
+  wavesCanvas.height = Math.round(height * pixelRatio)
+  wavesCanvas.style.width = `${width}px`
+  wavesCanvas.style.height = `${height}px`
+  ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0)
+  ctx.imageSmoothingEnabled = true
   if (choice) {
     updatePersonLayout()
   }
@@ -1060,6 +1065,7 @@ if (mixBtn) {
           analogSection.style.right = '0%'
           analogSection.style.display = 'block'
           analogSection.style.visibility = 'visible'
+          analogSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
           const comp = getComputedStyle(analogSection)
           if (comp.position === 'static') analogSection.style.position = 'relative'
           analogSection.style.setProperty('z-index', '20')

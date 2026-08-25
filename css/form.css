@@ -90,10 +90,51 @@
 .form__item9  { grid-column: 3 / 4; }
 .form__item10 { grid-column: 4 / 5; }
 .form__item11 { grid-column: 5 / 6; }
+.form__item12 {
+  grid-column: 3 / 5;
+  display: none;
+}
+
+.form__item12.visible {
+  display: block;
+}
+.form__message{
+  font-family: 'Avenir_Next_W1G_Medium';
+  font-size: 16px;
+  padding: 3px 25px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  background: #1E1E21;
+  border-radius: 75px;
+  width: fit-content;
+  line-height: 140%;
+  letter-spacing: 2%;
+}
 
 .form__content p{
     color:white;
     width: 100%;
+}
+.form__message p{
+  color: #C4142D;
+}
+
+.form__message-success-icon {
+  display: none;
+}
+
+.form__item12.success .form__message-error-icon {
+  display: none;
+}
+
+.form__item12.success .form__message-success-icon {
+  display: block;
+}
+
+.form__item12.success .form__message p {
+  color: #fff;
 }
 
 .form__quotes{
@@ -220,19 +261,6 @@
   flex-shrink: 0;
   vertical-align: middle;
   margin-top: 2px;
-}
-
-@keyframes checkbox-invalid {
-  0%, 100% {
-    border-color: #fff;
-  }
-  25%, 75% {
-    border-color: var(--checkbox-accent-color, #1D737B);
-  }
-}
-
-.custom-checkbox__checkmark.invalid {
-  animation: checkbox-invalid 1s ease;
 }
 
 .custom-checkbox__input:checked + .custom-checkbox__checkmark {
@@ -438,6 +466,10 @@
   .form__item11{
     grid-column: 1 / -1;
   }
+  .form__item12 { 
+    grid-column: 1 / 3;
+    grid-row: 6; 
+  }
 }
 
 @media (max-width: 768px), (max-height: 600px) {
@@ -494,6 +526,9 @@
   }
   .form__bottom-content{
     gap: 23px;
+  }
+  .form__message{
+    font-size: 12px;
   }
 }
 
@@ -610,6 +645,9 @@
     grid-column: 1 / -1;
     padding-top: 25px;
   }
+  .form__item12 { 
+    grid-row: 7; 
+  }
   .custom-checkbox__label{
     line-height: 1.5;
   }
@@ -639,5 +677,9 @@
   }
   .form__bottom-content{
     gap: 46px;
+  }
+  .form__message{
+    font-size: 11px;
+    padding: 3.5px 11px;
   }
 }

@@ -136,7 +136,7 @@ h2 {
 }
 
 .thank-you__circles.pressed {
-  --circle-scale: 3;
+  --circle-scale: 1.5;
 }
 
 .thank-you__circles.animate-click {
@@ -165,7 +165,7 @@ canvas.visible-vfx {
     transform: scale(1);
   }
   12% {
-    transform: scale(3);
+    transform: scale(1.5);
   }
   100% {
     transform: scale(1);
