@@ -1082,8 +1082,7 @@ if (mixBtn) {
 }
 
 window.addEventListener('mainObjectChange', () => {
-  const selectedChoice = syncStartFromSelection()
-  if (window.innerWidth <= 500) setShopImageByChoice(selectedChoice)
+  syncStartFromSelection()
 })
 
 const headCanvas = document.getElementById('canvas')

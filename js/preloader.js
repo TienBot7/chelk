@@ -668,7 +668,6 @@ export function runPreloader({ onComplete }) {
   }
 
   function preloadShopImages() {
-    if (typeof window !== 'undefined' && window.innerWidth <= 500) return;
     shopAssetUrls.forEach((url) => {
       try {
         const img = new Image();
