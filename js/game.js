@@ -1,3 +1,4 @@
+const TARGET_SCORE = 7
 const bubblesContainer = document.querySelector('.bubbles-container2')
 const grayColor = '#9E9E9E'
 const MAIN_OBJECT_COLORS = {
@@ -1368,7 +1369,6 @@ let gameActive = false
 let gameSessionId = 0
 let allowStart = true
 let platformRowShown = false
-const TARGET_SCORE = 7
 const SPAWN_INTERVAL = 1500
 let spawnIntervalId = null
 let spawnTimeoutIds = []
@@ -2024,9 +2024,8 @@ function checkCollisions() {
         if (b.parentNode) b.parentNode.removeChild(b)
       }
 
-      // if (score >= TARGET_SCORE) {
+      if (score >= TARGET_SCORE) {
       // if (score >= 1) {
-      if (score >= 7) {
         endGame()
         break
       }
