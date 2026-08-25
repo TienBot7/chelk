@@ -2024,8 +2024,9 @@ function checkCollisions() {
         if (b.parentNode) b.parentNode.removeChild(b)
       }
 
-      if (score >= TARGET_SCORE) {
+      // if (score >= TARGET_SCORE) {
       // if (score >= 1) {
+      if (score >= 7) {
         endGame()
         break
       }
