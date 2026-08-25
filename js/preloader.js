@@ -62,8 +62,8 @@ export function runPreloader({ onComplete }) {
   let finished = false;
   let hasError = false;
   let soundBtnClicked = false;
-  const MAX_WAIT_MS = 6000;
-  const MOBILE_EARLY_FINISH_MS = 3500;
+  const MAX_WAIT_MS = 5000;
+  const MOBILE_EARLY_FINISH_MS = 1800;
   const preloaderStartedAt = Date.now();
 
   function animateDigit(element, newValue) {
@@ -707,12 +707,28 @@ export function runPreloader({ onComplete }) {
   }
 
   function startPreloader() {
+    if (typeof window !== 'undefined' && window.innerWidth <= 500) {
+      preloadShopImages();
+      displayedPercent = 1;
+      targetPercent = 1;
+      renderPercent(1);
+      animateProgress();
+      setTimeout(() => {
+        if (!finished) {
+          preloaderState.modelLoaded = true;
+          preloaderState.requiredAssetsLoaded = true;
+          preloaderState.windowLoaded = true;
+          updatePreloaderProgress();
+          tryFinishPreloader();
+        }
+      }, 1500);
+      return;
+    }
+
     preloadShopImages();
     try {
-      if (typeof window !== 'undefined' && window.innerWidth <= 500) {
-        addWaitTask(preloadGoodsImages(mobilePriorityUrls));
-        addWaitTask(preloadGoodsImages());
-      }
+      addWaitTask(preloadGoodsImages(mobilePriorityUrls));
+      addWaitTask(preloadGoodsImages());
     } catch (e) {}
     displayedPercent = 1;
     targetPercent = 1;
@@ -816,18 +832,24 @@ export function runPreloader({ onComplete }) {
     });
   }
 
-  if (document.readyState === 'complete') {
+  function handleReadyState() {
     markWindowLoaded();
     if (preloaderHasRun) {
       markModelLoaded();
     }
     startPreloader();
-  } else {
-    window.addEventListener('load', () => {
-      markWindowLoaded();
-      startPreloader();
-    });
   }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', handleReadyState, { once: true });
+  } else {
+    handleReadyState();
+  }
+
+  window.addEventListener('load', () => {
+    markWindowLoaded();
+  }, { once: true });
+
   preloaderHasRun = true;
 }
 

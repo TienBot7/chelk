@@ -533,6 +533,32 @@ function updateModelScale(instance, isActive, modelConfig) {
   instance.modelGroup.scale.set(targetScale, targetScale, targetScale);
 }
 
+function getFallbackImageCandidates(modelConfig) {
+  const fileName = (modelConfig && modelConfig.file) ? modelConfig.file.toLowerCase() : '';
+  const name = (modelConfig && modelConfig.name) ? modelConfig.name.toLowerCase() : '';
+  const baseFile = fileName.replace(/\.glb$/i, '');
+  const candidates = [];
+
+  if (baseFile) {
+    candidates.push(`${baseFile}.webp`);
+    candidates.push(`${baseFile.replace(/_black$/, '')}.webp`);
+  }
+
+  if (name.includes('хор') || name.includes('soda') || name.includes('red')) {
+    candidates.unshift('soda_black.webp', 'soda.webp', 'red.webp');
+  }
+  if (name.includes('одеж') || name.includes('t-shirt') || name.includes('cloth')) {
+    candidates.push('t-shirt-black.webp', 't-shirt.webp');
+  }
+  if (name.includes('косм') || name.includes('cos') || name.includes('purple')) {
+    candidates.push('cosmetic-black.webp', 'cosmetic.webp');
+  }
+
+  candidates.push('placeholder.webp');
+
+  return [...new Set(candidates.filter(Boolean))].map((path) => `./img/goods/${path}`);
+}
+
 async function loadModelIntoSlide(slideIndex, modelConfig) {
   const inst = threeInstances[slideIndex];
   if (!inst) return;
@@ -547,9 +573,29 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
       const slideEl = inst.slideElement;
       if (slideEl) {
         const imgEl = document.createElement('img');
-        const imgFile = (modelConfig && modelConfig.file) ? modelConfig.file.replace(/\.glb$/i, '.webp') : 'placeholder.webp';
-        imgEl.src = `./img/goods/${imgFile}`;
+        const candidates = getFallbackImageCandidates(modelConfig);
+        let candidateIndex = 0;
+
+        const setNextFallbackImage = () => {
+          const src = candidates[candidateIndex] || './img/goods/placeholder.webp';
+          imgEl.src = src;
+          imgEl.onload = () => {
+            imgEl.style.display = 'block';
+            imgEl.style.opacity = '1';
+          };
+          imgEl.onerror = () => {
+            candidateIndex += 1;
+            if (candidateIndex < candidates.length) {
+              setNextFallbackImage();
+            } else {
+              imgEl.style.display = 'none';
+            }
+          };
+        };
+
         imgEl.alt = modelConfig && modelConfig.name ? modelConfig.name : '';
+        imgEl.loading = 'eager';
+        imgEl.decoding = 'async';
         imgEl.className = 'model-fallback-image';
         imgEl.style.position = 'absolute';
         imgEl.style.left = '50%';
@@ -562,6 +608,7 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
         imgEl.style.transition = 'transform 160ms ease-out, opacity 200ms ease-out';
         imgEl.style.transformOrigin = 'center center';
         imgEl.style.willChange = 'transform, opacity';
+        setNextFallbackImage();
         slideEl.appendChild(imgEl);
 
         const mock = {

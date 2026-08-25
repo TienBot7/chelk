@@ -868,8 +868,17 @@
       import('./js/script.js').then(script => {
         if (script && script.initTextSlides) script.initTextSlides();
         if (script && script.initKeyboardControls) script.initKeyboardControls();
+
         if (script && script.buildCarousel) {
-          const buildPromise = script.buildCarousel();
+          const isSmallMobile = window.innerWidth <= 768;
+          const buildPromise = isSmallMobile
+            ? new Promise((resolve) => {
+                window.setTimeout(() => {
+                  Promise.resolve(script.buildCarousel()).then(resolve).catch(() => resolve());
+                }, 450);
+              })
+            : script.buildCarousel();
+
           window.carouselBuildPromise = buildPromise;
         }
       });

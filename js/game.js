@@ -15,14 +15,19 @@ function getSelectedColorVariant() {
 let selectedColorVariant = getSelectedColorVariant()
 const lottiePatternElement = document.querySelector('.lottie-pattern')
 const popSoundPaths = ['./audio/pop1.mp3', './audio/pop2.mp3']
+const isSmallMobile = typeof window !== 'undefined' && window.innerWidth <= 500
 const preloadedAudio = {
   chelk: new Audio('audio/chelk.mp3'),
   pop1: new Audio('audio/pop1.mp3'),
   pop2: new Audio('audio/pop2.mp3'),
 }
 Object.values(preloadedAudio).forEach((audio) => {
-  audio.preload = 'auto'
-  audio.load()
+  audio.preload = isSmallMobile ? 'none' : 'auto'
+  if (!isSmallMobile) {
+    try {
+      audio.load()
+    } catch (e) {}
+  }
 })
 
 function getPreloadedAudio(url) {
@@ -697,6 +702,10 @@ function preloadAudioFiles() {
 const cachedLottieJson = {}
 
 function preloadSingleLottieResource(selectionValue = '') {
+  if (typeof window !== 'undefined' && window.innerWidth <= 500) {
+    return Promise.resolve(null)
+  }
+
   const color =
     selectionValue && typeof selectionValue === 'string' && MAIN_OBJECT_COLORS[selectionValue]
       ? MAIN_OBJECT_COLORS[selectionValue]
@@ -722,6 +731,10 @@ function preloadSingleLottieResource(selectionValue = '') {
 }
 
 function preloadStartupResources() {
+  if (typeof window !== 'undefined' && window.innerWidth <= 500) {
+    return
+  }
+
   const tasks = [preloadAudioFiles(), preloadSingleLottieResource(window.mainObject || '')]
   if (typeof window !== 'undefined' && window.preloader && typeof window.preloader.addWaitTask === 'function') {
     tasks.forEach((task) => window.preloader.addWaitTask(task))
