@@ -62,7 +62,9 @@ export function runPreloader({ onComplete }) {
   let finished = false;
   let hasError = false;
   let soundBtnClicked = false;
-  const MAX_WAIT_MS = 15000;
+  const MAX_WAIT_MS = 6000;
+  const MOBILE_EARLY_FINISH_MS = 3500;
+  const preloaderStartedAt = Date.now();
 
   function animateDigit(element, newValue) {
     const oldValue = element.textContent;
@@ -175,15 +177,17 @@ export function runPreloader({ onComplete }) {
     const canFinishBase = preloaderState.windowLoaded && preloaderState.requiredAssetsLoaded;
     const isMobile = (typeof window !== 'undefined') && (window.innerWidth <= 768);
     if (!canFinishBase) return;
+
     if (isMobile) {
       const sliderReady = typeof window !== 'undefined' && window.__sliderModelsReady__ === true;
-
-      if (sliderReady && areWaitTasksComplete()) {
-        setTimeout(finishPreloader, 300);
+      const forcedMobileFinish = Date.now() - preloaderStartedAt >= MOBILE_EARLY_FINISH_MS;
+      if (sliderReady || forcedMobileFinish || areWaitTasksComplete()) {
+        setTimeout(finishPreloader, 200);
       }
-    } else {
-      setTimeout(finishPreloader, 300);
+      return;
     }
+
+    setTimeout(finishPreloader, 300);
   }
 
   if (typeof window !== 'undefined') {

@@ -871,12 +871,6 @@
         if (script && script.buildCarousel) {
           const buildPromise = script.buildCarousel();
           window.carouselBuildPromise = buildPromise;
-          // On mobile treat carousel build as a critical task so models are ready
-          try {
-            if (window.innerWidth <= 768 && window.preloader && typeof window.preloader.addWaitTask === 'function') {
-              window.preloader.addWaitTask(buildPromise);
-            }
-          } catch (e) { }
         }
       });
     };
