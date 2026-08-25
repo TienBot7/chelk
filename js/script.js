@@ -578,7 +578,6 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
 
         const setNextFallbackImage = () => {
           const src = candidates[candidateIndex] || './img/goods/placeholder.webp';
-          imgEl.src = src;
           imgEl.onload = () => {
             imgEl.style.display = 'block';
             imgEl.style.opacity = '1';
@@ -591,6 +590,7 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
               imgEl.style.display = 'none';
             }
           };
+          imgEl.src = src;
         };
 
         imgEl.alt = modelConfig && modelConfig.name ? modelConfig.name : '';
@@ -608,8 +608,9 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
         imgEl.style.transition = 'transform 160ms ease-out, opacity 200ms ease-out';
         imgEl.style.transformOrigin = 'center center';
         imgEl.style.willChange = 'transform, opacity';
-        setNextFallbackImage();
+        imgEl.style.zIndex = '2';
         slideEl.appendChild(imgEl);
+        setNextFallbackImage();
 
         const mock = {
           isMockImage: true,
@@ -1345,7 +1346,19 @@ function setupDragAndDrop() {
   });
 }
 
-async function buildCarousel() {
+let activeCarouselBuildPromise = null;
+
+function buildCarousel() {
+  if (activeCarouselBuildPromise) return activeCarouselBuildPromise;
+
+  activeCarouselBuildPromise = buildCarouselInternal().finally(() => {
+    activeCarouselBuildPromise = null;
+  });
+
+  return activeCarouselBuildPromise;
+}
+
+async function buildCarouselInternal() {
   sliderModelsReady = false;
   window.__sliderModelsReady__ = false;
   carouselBuildRetryCount = 0;
@@ -1421,8 +1434,8 @@ async function buildCarousel() {
   if (!hasRealModel && shouldPrioritizeAndroidSlideLoad() && carouselBuildRetryCount < 1) {
     carouselBuildRetryCount += 1;
     console.warn('[buildCarousel] no real model group on Android after build; retrying once in 1200ms');
-    setTimeout(() => buildCarousel(), 1200);
-    return;
+    await new Promise((resolve) => setTimeout(resolve, 1200));
+    return buildCarouselInternal();
   }
 
   if (window.preloader && typeof window.preloader.markCarouselModelsReady === 'function') {
