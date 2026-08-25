@@ -9,8 +9,15 @@ const isAndroidDevice = typeof navigator !== 'undefined' && /Android/i.test(navi
 
 function shouldUseMobileFallbackFor3d() {
   if (typeof window === 'undefined' || typeof navigator === 'undefined') return false;
-  if (window.innerWidth > 768) return false;
-  return /Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent || '');
+  const userAgent = navigator.userAgent || '';
+  const isSmallMobile = window.innerWidth <= 768;
+  const matchesMobileUA = /Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+
+  if (isAndroidDevice) {
+    return true;
+  }
+
+  return isSmallMobile && matchesMobileUA;
 }
 
 function getPreferredDPR() {
@@ -18,7 +25,7 @@ function getPreferredDPR() {
 }
 
 function shouldPrioritizeAndroidSlideLoad() {
-  return !!isAndroidDevice && window.innerWidth <= 768;
+  return !!isAndroidDevice;
 }
 
 function hasAnyRealModel() {
@@ -562,7 +569,73 @@ function getFallbackImageCandidates(modelConfig) {
 async function loadModelIntoSlide(slideIndex, modelConfig) {
   const inst = threeInstances[slideIndex];
   if (!inst) return;
-  
+
+  if (shouldUseMobileFallbackFor3d()) {
+    if (inst.modelGroup) {
+      try { if (inst.scene && inst.scene.remove) inst.scene.remove(inst.modelGroup); } catch (e) {}
+      try { if (inst.mockImage && inst.mockImage.parentNode) inst.mockImage.parentNode.removeChild(inst.mockImage); } catch (e) {}
+    }
+
+    const slideEl = inst.slideElement;
+    if (slideEl) {
+      const imgEl = document.createElement('img');
+      const candidates = getFallbackImageCandidates(modelConfig);
+      let candidateIndex = 0;
+
+      const setNextFallbackImage = () => {
+        const src = candidates[candidateIndex] || './img/goods/placeholder.webp';
+        imgEl.onload = () => {
+          imgEl.style.display = 'block';
+          imgEl.style.opacity = '1';
+        };
+        imgEl.onerror = () => {
+          candidateIndex += 1;
+          if (candidateIndex < candidates.length) {
+            setNextFallbackImage();
+          } else {
+            imgEl.style.display = 'none';
+          }
+        };
+        imgEl.src = src;
+      };
+
+      imgEl.alt = modelConfig && modelConfig.name ? modelConfig.name : '';
+      imgEl.loading = 'eager';
+      imgEl.decoding = 'async';
+      imgEl.className = 'model-fallback-image';
+      imgEl.style.position = 'absolute';
+      imgEl.style.left = '50%';
+      imgEl.style.top = '50%';
+      imgEl.style.transform = 'translate(-50%, -50%)';
+      imgEl.style.width = '85%';
+      imgEl.style.height = '100%';
+      imgEl.style.objectFit = 'contain';
+      imgEl.style.pointerEvents = 'none';
+      imgEl.style.transition = 'transform 160ms ease-out, opacity 200ms ease-out';
+      imgEl.style.transformOrigin = 'center center';
+      imgEl.style.willChange = 'transform, opacity';
+      imgEl.style.zIndex = '2';
+      slideEl.appendChild(imgEl);
+      setNextFallbackImage();
+
+      const mock = {
+        isMockImage: true,
+        position: { x: 0, y: 0, z: 0 },
+        rotation: { x: (modelConfig.rotation && modelConfig.rotation.x) || 0, y: (modelConfig.rotation && modelConfig.rotation.y) || 0, z: 0 },
+        scale: { x: (modelConfig.scale || 1), y: (modelConfig.scale || 1), z: (modelConfig.scale || 1), set(x,y,z){ this.x = x; this.y = y; this.z = z; } },
+        userData: { baseRotation: { y: (modelConfig.rotation && modelConfig.rotation.y) || 0 } },
+        traverse: function() {},
+        updateWorldMatrix: function() {},
+      };
+      inst.mockImage = imgEl;
+      inst.modelGroup = mock;
+      inst.isRealModel = false;
+
+      try { imgEl.style.transform = `translate(-50%, calc(-50% + ${mock.position.y * 100}px)) scale(${mock.scale.x})`; } catch (e) {}
+    }
+    return;
+  }
+
   if (inst.modelGroup) {
     try { if (inst.scene && inst.scene.remove) inst.scene.remove(inst.modelGroup); } catch (e) {}
     try { if (inst.mockImage && inst.mockImage.parentNode) inst.mockImage.parentNode.removeChild(inst.mockImage); } catch (e) {}
