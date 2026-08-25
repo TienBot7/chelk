@@ -975,24 +975,32 @@
         }
 
         const requiredFields = form.querySelectorAll('input[required]');
-        let valid = true;
+        let hasEmptyRequiredField = false;
         requiredFields.forEach((field) => {
           if (field.type !== 'checkbox' && !field.value.trim()) {
-            valid = false;
+            hasEmptyRequiredField = true;
           }
         });
 
         if (consentCheckbox && !consentCheckbox.checked) {
-          valid = false;
           consentMessage?.classList.remove('success');
           consentMessage?.classList.add('visible');
-        } else {
-          consentMessage?.classList.remove('visible');
-        }
-
-        if (!valid) {
+          const messageText = consentMessage?.querySelector('.form__message p');
+          if (messageText) {
+            messageText.textContent = 'Необходимо дать согласие на обработку персональных данных и политику конфиденциальности.';
+          }
           return;
         }
+
+        if (hasEmptyRequiredField) {
+          consentMessage?.classList.remove('success');
+          consentMessage?.classList.add('visible');
+          const messageText = consentMessage?.querySelector('.form__message p');
+          if (messageText) messageText.textContent = 'Необходимо заполнить все поля';
+          return;
+        }
+
+        consentMessage?.classList.remove('visible');
 
         if (consentMessage) {
           consentMessage.classList.add('visible', 'success');
