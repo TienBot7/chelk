@@ -1,6 +1,7 @@
 import { WebGLRenderer, Scene, PerspectiveCamera, Color, AmbientLight, PointLight, Group, Raycaster, Vector2, Vector3, Box3 } from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js'
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js'
 
 const isAndroidDevice = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent)
@@ -324,6 +325,10 @@ function updateHeadFallbackTransform() {
 }
 
 const loader = new GLTFLoader()
+// Настройка Draco декодера для загрузки сжатых моделей
+const dracoLoader = new DRACOLoader()
+dracoLoader.setDecoderPath('./libs/')
+loader.setDRACOLoader(dracoLoader)
 
 function getHeadModelScaleFactor() {
   const width = window.innerWidth

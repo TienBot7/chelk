@@ -703,7 +703,7 @@ async function loadModelIntoSlide(slideIndex, modelConfig) {
     }
   } catch (e) {}
 
-  const loader = new GLTFLoader();
+  const loader = createGLTFLoaderWithDraco();
   const modelPath = `./models/${modelConfig.file}`;
   try {
     if (typeof window !== 'undefined' && window.__carouselDiagnostics__) {
@@ -2021,5 +2021,21 @@ initHelpToggle();
 
 import { Scene, PerspectiveCamera, Group, Matrix4, Sphere, Vector3, Box3 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { createModelRenderer, setupLighting, enhanceMaterials } from './model-display.js';
+
+// Инициализация Draco декодера для GLTFLoader
+function setupDRACOLoader() {
+  const dracoLoader = new DRACOLoader();
+  dracoLoader.setDecoderPath('./libs/');
+  return dracoLoader;
+}
+
+// Функция для создания GLTFLoader с Draco поддержкой
+function createGLTFLoaderWithDraco() {
+  const loader = new GLTFLoader();
+  const dracoLoader = setupDRACOLoader();
+  loader.setDRACOLoader(dracoLoader);
+  return loader;
+}
