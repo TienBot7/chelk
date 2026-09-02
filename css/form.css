@@ -372,7 +372,7 @@
   justify-self: end;
   text-align: right;
   color: rgba(255, 255, 255, 0.5) !important;
-  font-size: 12px;
+  font-size: 16px;
   letter-spacing: -0.03em;
 }
 
@@ -536,6 +536,9 @@
     grid-template-columns: 1fr 1fr 0.41fr 1.56fr;
   }
   .form__copyright{
+    font-size: 12px;
+  }
+  .form__developer{
     font-size: 12px;
   }
   .form__info-content{
@@ -710,5 +713,6 @@
   }
   .form__developer{
     text-align: center;
+    font-size: 12px;
   }
 }
